@@ -91,9 +91,12 @@ async function runMigration() {
 
   // 1. Validate File Existence
   if (!fs.existsSync(opts.filePath)) {
-    console.error(`\n[FATAL] JSON file not found: ${opts.filePath}`);
-    process.exit(1);
+    console.log(`\n[INFO] Migration already completed.`);
+    console.log(`The legacy '${opts.filePath}' was cleaned up as part of the MongoDB migration.`);
+    console.log(`To run migration with an external backup file, specify: npm run migrate:json-to-mongo -- --file <path/to/backup.json>`);
+    return;
   }
+
 
   // 2. Parse db.json
   let rawJson: any;

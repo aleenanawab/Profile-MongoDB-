@@ -100,7 +100,9 @@ export async function uploadToCloudinary(
       error: 'Cloudinary upload succeeded but did not return a valid secure URL.'
     };
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
+    const errorMsg = (err && typeof err === 'object' && 'message' in err)
+      ? String((err as { message: unknown }).message)
+      : (err instanceof Error ? err.message : String(err));
     console.error('[Cloudinary Upload Error]:', errorMsg);
     return {
       success: false,

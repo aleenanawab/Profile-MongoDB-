@@ -136,12 +136,29 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   return result;
 }
 
+let indexesPromise: Promise<EnsureIndexesResult> | null = null;
+
 export async function lazyEnsureIndexes(): Promise<void> {
-  if (!indexesEnsured) {
+  if (indexesEnsured) {
+    return;
+  }
+
+  if (indexesPromise) {
     try {
-      await ensureIndexes();
-    } catch (err) {
-      console.warn('[lazyEnsureIndexes] Failed to ensure indexes:', err);
+      await indexesPromise;
+    } catch {
+      // Non-blocking
     }
+    return;
+  }
+
+  try {
+    indexesPromise = ensureIndexes();
+    await indexesPromise;
+  } catch (err: any) {
+    console.warn('[lazyEnsureIndexes] Failed to ensure indexes (non-blocking):', err?.message || err);
+  } finally {
+    // Prevent repeated index runs on failed or glitchy connection in this serverless instance
+    indexesEnsured = true;
   }
 }

@@ -13,25 +13,32 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { identifier } = await params;
-  const profile = await getProfileByIdOrSlug(identifier);
+  try {
+    const { identifier } = await params;
+    const profile = await getProfileByIdOrSlug(identifier);
 
-  if (!profile) {
+    if (!profile) {
+      return {
+        title: 'Profile Not Found | Avtive',
+        description: 'The requested digital identity profile could not be found.'
+      };
+    }
+
     return {
-      title: 'Profile Not Found | Avtive',
-      description: 'The requested digital identity profile could not be found.'
+      title: `${profile.name} | Avtive Digital Profile`,
+      description: profile.shortBio || `${profile.name} - ${profile.designation || 'Professional Profile'} on Avtive`,
+      openGraph: {
+        title: `${profile.name} | Avtive Digital Profile`,
+        description: profile.shortBio || 'View verified digital card and identity pass.',
+        images: profile.avatar ? [{ url: profile.avatar }] : []
+      }
+    };
+  } catch (err) {
+    return {
+      title: 'Profile | Avtive Digital Identity',
+      description: 'View verified digital card and identity pass.'
     };
   }
-
-  return {
-    title: `${profile.name} | Avtive Digital Profile`,
-    description: profile.shortBio || `${profile.name} - ${profile.designation || 'Professional Profile'} on Avtive`,
-    openGraph: {
-      title: `${profile.name} | Avtive Digital Profile`,
-      description: profile.shortBio || 'View verified digital card and identity pass.',
-      images: profile.avatar ? [{ url: profile.avatar }] : []
-    }
-  };
 }
 
 export default async function ProfilePage({ params, searchParams }: PageProps) {
@@ -39,11 +46,19 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const isInitialEdit = resolvedSearchParams?.edit === 'true' || resolvedSearchParams?.edit === '1';
 
-  const session = await getSession();
+  let session: any = null;
+  try {
+    session = await getSession();
+  } catch {}
 
-  const profile = await getProfileByIdOrSlug(identifier);
+  let profile: any = null;
+  try {
+    profile = await getProfileByIdOrSlug(identifier);
+  } catch (err) {
+    console.error(`[ProfilePage] Database lookup error for "${identifier}":`, err);
+  }
 
-  // 1. If Profile was not found on server, use ProfileNotFoundFallback to hydrate from localStorage if available
+  // 1. If Profile was not found on server or DB error, use ProfileNotFoundFallback
   if (!profile) {
     return (
       <ProfileNotFoundFallback 

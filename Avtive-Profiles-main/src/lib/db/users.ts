@@ -84,6 +84,12 @@ export async function createUser(data: {
     throw new Error('Valid email address is required.');
   }
 
+  // Check if existing user with same email already in DB
+  const existingUser = await usersCol.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    throw new Error('An account with this email address already exists.');
+  }
+
   const userId = data.id || `usr-${crypto.randomUUID()}`;
   const now = new Date().toISOString();
 
@@ -103,11 +109,7 @@ export async function createUser(data: {
   };
 
   try {
-    await usersCol.updateOne(
-      { $or: [{ _id: userId as any }, { email: normalizedEmail }] },
-      { $setOnInsert: userDoc },
-      { upsert: true }
-    );
+    await usersCol.insertOne(userDoc);
   } catch (err: any) {
     if (err.code === 11000) {
       throw new Error('An account with this email address already exists.');
@@ -115,7 +117,7 @@ export async function createUser(data: {
     throw err;
   }
 
-  const savedUser = await getUserById(userId) || mapDocToUserRecord(userDoc);
+  const savedUser = mapDocToUserRecord(userDoc);
 
   let profile: ProfileData | undefined;
   if (data.createProfile) {

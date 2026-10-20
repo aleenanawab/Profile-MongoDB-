@@ -37,6 +37,14 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   const membersCol = db.collection(COLLECTIONS.COMPANY_MEMBERS);
   const connectionsCol = db.collection(COLLECTIONS.CONNECTIONS);
 
+  // If old unique index on userId was created, drop it so users can own both individual and company profiles
+  try {
+    const pIdxs = await profilesCol.indexes();
+    if (pIdxs.some((i) => i.name === 'idx_profiles_userId_unique')) {
+      await profilesCol.dropIndex('idx_profiles_userId_unique');
+    }
+  } catch {}
+
   async function hasIndex(col: Collection, name: string): Promise<boolean> {
     try {
       const idxs: IndexDescription[] = await col.indexes();
@@ -78,11 +86,11 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   // 1. Users
   await safeCreateIndex(usersCol, COLLECTIONS.USERS, { email: 1 }, 'idx_users_email_unique', true);
 
-  // 2. Profiles
+  // 2. Profiles (slug unique; userId indexed)
   await safeCreateIndex(profilesCol, COLLECTIONS.PROFILES, { slug: 1 }, 'idx_profiles_slug_unique', true);
-  await safeCreateIndex(profilesCol, COLLECTIONS.PROFILES, { userId: 1 }, 'idx_profiles_userId_unique', true);
+  await safeCreateIndex(profilesCol, COLLECTIONS.PROFILES, { userId: 1 }, 'idx_profiles_user_id', false);
 
-  // 3. Companies
+  // 3. Companies (slug unique; ownerUserId indexed)
   await safeCreateIndex(companiesCol, COLLECTIONS.COMPANIES, { slug: 1 }, 'idx_companies_slug_unique', true);
   await safeCreateIndex(companiesCol, COLLECTIONS.COMPANIES, { ownerUserId: 1 }, 'idx_companies_owner_user_id', false);
 

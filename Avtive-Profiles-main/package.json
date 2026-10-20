@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx tests/oauth-and-stabilization.test.ts",
-    "migrate:json-to-mongo": "tsx scripts/migrate-json-to-mongo.ts"
+    "migrate:json-to-mongo": "tsx legacy/migrate-json-to-mongo.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.3",

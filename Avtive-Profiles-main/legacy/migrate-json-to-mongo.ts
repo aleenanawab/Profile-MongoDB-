@@ -41,7 +41,10 @@ function parseCliArgs(): CliOptions {
   const allowProd = args.includes('--allow-prod');
   const dryRun = !confirm || args.includes('--dry-run');
 
-  let filePath = path.join(process.cwd(), 'src', 'data', 'db.json');
+  let filePath = path.join(process.cwd(), 'legacy', 'db.json');
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(process.cwd(), 'src', 'data', 'db.json');
+  }
   const fileArgIdx = args.indexOf('--file');
   if (fileArgIdx !== -1 && args[fileArgIdx + 1]) {
     filePath = path.resolve(process.cwd(), args[fileArgIdx + 1]);

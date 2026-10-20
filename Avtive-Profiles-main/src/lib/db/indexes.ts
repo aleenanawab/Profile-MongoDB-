@@ -1,4 +1,4 @@
-import { Db, IndexDescription, Collection } from 'mongodb';
+import { Db, IndexDescription, Collection, CreateIndexesOptions } from 'mongodb';
 import { getMongoDb, COLLECTIONS } from './client';
 
 let indexesEnsured = false;
@@ -70,23 +70,24 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     name: string,
     unique: boolean = false,
     sparse: boolean = false,
-    partialFilterExpression?: Record<string, any>
+    partialFilterExpression?: Record<string, unknown>
   ) {
     try {
       if (await hasIndex(col, name)) {
         result.indexesExisting.push(`${colName}.${name}`);
         return;
       }
-      const indexOpts: any = { name, unique, background: true };
+      const indexOpts: CreateIndexesOptions = { name, unique, background: true };
       if (partialFilterExpression) {
         indexOpts.partialFilterExpression = partialFilterExpression;
       } else if (sparse) {
         indexOpts.sparse = true;
       }
-      await col.createIndex(key as any, indexOpts);
+      await col.createIndex(key, indexOpts);
       result.indexesCreated.push(`${colName}.${name}`);
-    } catch (err: any) {
-      if (err.code === 11000 || err.codeName === 'DuplicateKey') {
+    } catch (err: unknown) {
+      const mongoErr = err as { code?: number; codeName?: string; message?: string };
+      if (mongoErr.code === 11000 || mongoErr.codeName === 'DuplicateKey') {
         result.conflicts.push({
           collection: colName,
           field: name,
@@ -95,7 +96,7 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
         });
         result.success = false;
       } else {
-        console.warn(`[ensureIndexes] Warning creating ${colName}.${name}:`, err.message);
+        console.warn(`[ensureIndexes] Warning creating ${colName}.${name}:`, mongoErr?.message || String(err));
       }
     }
   }

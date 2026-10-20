@@ -11,7 +11,7 @@ export async function GET() {
 
     const [dbUser, profile, profiles] = await Promise.all([
       getUserById(session.id),
-      getProfileByUserId(session.id, session.role as any),
+      getProfileByUserId(session.id, session.role as import('@/types/profile').ProfileType | undefined),
       getProfilesByUserId(session.id)
     ]);
 

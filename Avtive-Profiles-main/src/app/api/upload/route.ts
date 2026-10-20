@@ -26,6 +26,8 @@ function getExtension(mimeType: string, originalName?: string): string {
   return '.jpg';
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // 1. Authentication check - strictly server-enforced
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
       let formData: FormData;
       try {
         formData = await request.formData();
-      } catch (formErr) {
+      } catch {
         return NextResponse.json(
           { error: 'Invalid form data. Please upload a valid image file.' },
           { status: 400 }
@@ -160,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Validate MIME type
     const isAllowedType = ALLOWED_MIME_PREFIXES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
-    const isAllowedExt = originalName ? ALLOWED_EXTENSIONS.some(ext => originalName!.toLowerCase().endsWith(ext)) : true;
+    const isAllowedExt = originalName ? ALLOWED_EXTENSIONS.some(ext => originalName.toLowerCase().endsWith(ext)) : false;
     if (!isAllowedType && !isAllowedExt) {
       return NextResponse.json(
         { error: 'Invalid file type. Only JPG, PNG, and WebP images are permitted.' },

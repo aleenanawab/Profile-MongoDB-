@@ -4,9 +4,10 @@ import * as jose from 'jose';
 import fs from 'fs';
 import path from 'path';
 
-// Load .env.local if present
 try {
-  const envPath = path.resolve(process.cwd(), '.env.local');
+  const envPath = fs.existsSync(path.resolve(process.cwd(), '.env.local'))
+    ? path.resolve(process.cwd(), '.env.local')
+    : path.resolve(__dirname, '../.env.local');
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf8');
     for (const line of envContent.split(/\r?\n/)) {
@@ -304,17 +305,11 @@ async function runTestSuite() {
     const dummyBuffer = Buffer.from('test-image-content-bytes');
     const result = await uploadToCloudinary(dummyBuffer, 'test.jpg', 'image/jpeg', 'profiles');
 
-    if (!isCloudinaryConfigured) {
-      assert(result.success === false, 'Should report success: false when unconfigured');
-      assert(!result.url, 'Must not return local disk or data URL');
-      assert(result.error?.includes('Cloudinary storage is not configured'), 'Returns clear configuration error');
-    } else {
-      // If configured but invalid cloud_name
-      if (!result.success) {
-        assert(!result.url, 'Must not return local disk or data URL fallback on error');
-        assert(Boolean(result.error && result.error.length > 0), 'Returns clear Cloudinary error');
-      }
-    }
+    assert(result.success === false, 'Should report success: false on failed upload');
+    assert(!result.url, 'Must not return local disk or data URL fallback on error');
+    assert(Boolean(result.error && result.error.length > 0), 'Returns clear error description');
+    assert(!result.url?.startsWith('data:'), 'No base64 data URI fallback permitted');
+    assert(!result.url?.startsWith('/uploads/'), 'No local disk file fallback permitted');
 
     recordPass('Cloudinary failure returns explicit error with NO local-disk or data-URL fallback');
   } catch (err) {

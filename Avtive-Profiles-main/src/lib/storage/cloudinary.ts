@@ -51,13 +51,24 @@ export async function uploadToCloudinary(
   mimeType: string = 'image/jpeg',
   folder: string = 'profiles'
 ): Promise<CloudinaryUploadResult> {
-  if (!isCloudinaryConfigured) {
+  const cName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_NAME || cloudName;
+  const aKey = process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_KEY || apiKey;
+  const aSecret = process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET || apiSecret;
+
+  if (!cName || !aKey || !aSecret) {
     return {
       success: false,
       storage: 'cloudinary',
       error: 'Cloudinary storage is not configured (missing CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, or CLOUDINARY_API_SECRET).'
     };
   }
+
+  cloudinary.config({
+    cloud_name: cName,
+    api_key: aKey,
+    api_secret: aSecret,
+    secure: true
+  });
 
   try {
     const base64Data = `data:${mimeType};base64,${buffer.toString('base64')}`;

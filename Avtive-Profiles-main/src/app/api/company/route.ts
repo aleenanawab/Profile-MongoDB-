@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { createCompany } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/storage';
+import { ensureCloudinaryAssetUrl } from '@/lib/storage';
 import { CreateCompanyInput } from '@/types/company';
 
 export async function POST(request: NextRequest) {
@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
 
     // Auto-upload base64 assets if present using existing upload helper
     if (body.logoUrl) {
-      input.logoUrl = await ensureSupabaseAssetUrl(body.logoUrl, 'profiles');
+      input.logoUrl = await ensureCloudinaryAssetUrl(body.logoUrl, 'profiles');
     }
     if (body.coverUrl) {
-      input.coverUrl = await ensureSupabaseAssetUrl(body.coverUrl, 'profiles');
+      input.coverUrl = await ensureCloudinaryAssetUrl(body.coverUrl, 'profiles');
     }
 
     const result = await createCompany(session.id, input);

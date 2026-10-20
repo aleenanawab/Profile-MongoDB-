@@ -19,7 +19,8 @@ export const COLLECTIONS = {
   PROFILES: 'profiles',
   COMPANIES: 'companies',
   COMPANY_MEMBERS: 'company_members',
-  CONNECTIONS: 'connections'
+  CONNECTIONS: 'connections',
+  SESSIONS: 'sessions'
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

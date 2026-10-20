@@ -113,6 +113,23 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     false
   );
 
+  // 6. Sessions
+  const sessionsCol = db.collection(COLLECTIONS.SESSIONS);
+  await safeCreateIndex(
+    sessionsCol,
+    COLLECTIONS.SESSIONS,
+    { tokenHash: 1 },
+    'idx_sessions_token_hash',
+    false
+  );
+  await safeCreateIndex(
+    sessionsCol,
+    COLLECTIONS.SESSIONS,
+    { expiresAt: 1 },
+    'idx_sessions_expires_at',
+    false
+  );
+
   indexesEnsured = true;
   return result;
 }

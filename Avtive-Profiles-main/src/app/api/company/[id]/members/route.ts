@@ -10,7 +10,7 @@ import {
   getCompanyMemberByUser, 
   addCompanyMember 
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureSupabaseAssetUrl } from '@/lib/storage';
 import { AddCompanyMemberInput } from '@/types/company';
 import { normalizeProfileType } from '@/types/profile';
 

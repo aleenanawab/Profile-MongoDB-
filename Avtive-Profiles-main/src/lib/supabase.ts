@@ -83,40 +83,7 @@ export const SUPABASE_DEFAULT_COVER = `${supabaseUrl}/storage/v1/object/public/p
 export const SUPABASE_DEFAULT_PROJECT_IMAGE = `${supabaseUrl}/storage/v1/object/public/profiles/default-project.png`;
 export const SUPABASE_DEFAULT_LINK_ICON = `${supabaseUrl}/storage/v1/object/public/links/default-link.png`;
 
-import {
-  uploadToCloudinary,
-  ensureCloudinaryAssetUrl as ensureStorageCloudinaryAssetUrl
-} from './storage/cloudinary';
-
-/**
- * Upload a file buffer directly to Cloudinary storage and return its public CDN URL
- */
-export async function uploadToSupabaseStorage(
-  buffer: Buffer,
-  filename: string,
-  contentType: string,
-  preferredBucket: string = PROFILES_STORAGE_BUCKET
-): Promise<{ success: boolean; url?: string; error?: string; bucket?: string }> {
-  const result = await uploadToCloudinary(buffer, filename, contentType, preferredBucket);
-  return {
-    success: result.success,
-    url: result.url,
-    bucket: result.bucket || preferredBucket,
-    error: result.error
-  };
-}
-
-/**
- * Ensure any image asset (base64 Data URI or file buffer) is saved to Cloudinary Storage
- * and returned as a permanent public CDN URL.
- */
-export async function ensureSupabaseAssetUrl(
-  imageSource?: string | null,
-  preferredBucket: string = PROFILES_STORAGE_BUCKET
-): Promise<string> {
-  return ensureStorageCloudinaryAssetUrl(imageSource, preferredBucket);
-}
-
-export const ensureCloudinaryAssetUrl = ensureStorageCloudinaryAssetUrl;
+// Storage methods have been migrated to the server-only @/lib/storage module
+// to prevent server dependencies (fs, cloudinary) from bundling into client components.
 
 

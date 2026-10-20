@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { createCompany } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureSupabaseAssetUrl } from '@/lib/storage';
 import { CreateCompanyInput } from '@/types/company';
 
 export async function POST(request: NextRequest) {

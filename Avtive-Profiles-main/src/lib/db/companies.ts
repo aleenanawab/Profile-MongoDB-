@@ -200,7 +200,7 @@ export async function createCompany(
   const companiesCol = db.collection(COLLECTIONS.COMPANIES);
   const membersCol = db.collection(COLLECTIONS.COMPANY_MEMBERS);
 
-  let ownerUser = await getUserById(ownerUserId);
+  const ownerUser = await getUserById(ownerUserId);
   const rawBase = slugify(data.slug || data.name || 'company');
   let finalSlug = rawBase || `company-${Date.now().toString(36)}`;
 

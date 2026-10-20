@@ -10,7 +10,7 @@ import {
   updateCompany,
   completeUserOnboarding
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureSupabaseAssetUrl } from '@/lib/storage';
 import { ProfileData } from '@/types/profile';
 
 async function handleProfileUpdate(request: NextRequest) {

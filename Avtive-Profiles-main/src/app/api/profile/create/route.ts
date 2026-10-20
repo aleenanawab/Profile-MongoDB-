@@ -7,7 +7,7 @@ import {
   getCompanyByOwnerUserId,
   createCompany
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureSupabaseAssetUrl } from '@/lib/storage';
 import { normalizeProfileType } from '@/types/profile';
 
 export async function POST(request: NextRequest) {

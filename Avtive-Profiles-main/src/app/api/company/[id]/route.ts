@@ -8,7 +8,7 @@ import {
   getCompanyMembers, 
   getCompanyMemberByUser 
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureSupabaseAssetUrl } from '@/lib/storage';
 import { UpdateCompanyInput } from '@/types/company';
 
 interface RouteContext {

@@ -59,14 +59,15 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     colName: string,
     key: Record<string, 1 | -1>,
     name: string,
-    unique: boolean = false
+    unique: boolean = false,
+    sparse: boolean = false
   ) {
     try {
       if (await hasIndex(col, name)) {
         result.indexesExisting.push(`${colName}.${name}`);
         return;
       }
-      await col.createIndex(key as any, { name, unique, background: true });
+      await col.createIndex(key as any, { name, unique, sparse, background: true });
       result.indexesCreated.push(`${colName}.${name}`);
     } catch (err: any) {
       if (err.code === 11000 || err.codeName === 'DuplicateKey') {
@@ -85,6 +86,7 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
 
   // 1. Users
   await safeCreateIndex(usersCol, COLLECTIONS.USERS, { email: 1 }, 'idx_users_email_unique', true);
+  await safeCreateIndex(usersCol, COLLECTIONS.USERS, { googleSub: 1 }, 'idx_users_google_sub_unique', true, true);
 
   // 2. Profiles (slug unique; userId indexed)
   await safeCreateIndex(profilesCol, COLLECTIONS.PROFILES, { slug: 1 }, 'idx_profiles_slug_unique', true);

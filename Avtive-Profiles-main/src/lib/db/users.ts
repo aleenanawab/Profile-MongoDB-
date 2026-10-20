@@ -18,7 +18,8 @@ function mapDocToUserRecord(doc: any): UserRecord {
     resetTokenExpires: doc.resetTokenExpires instanceof Date ? doc.resetTokenExpires.toISOString() : (doc.resetTokenExpires || undefined),
     onboardingCompleted: Boolean(doc.onboardingCompleted),
     recoveryCodeHash: doc.recoveryCodeHash || undefined,
-    preferredTheme: doc.preferredTheme || undefined
+    preferredTheme: doc.preferredTheme || undefined,
+    googleSub: doc.googleSub || undefined
   };
 }
 
@@ -63,6 +64,28 @@ export async function getUserByEmailOrUsername(identifier: string): Promise<User
   return mapDocToUserRecord(doc);
 }
 
+export async function getUserByGoogleSub(googleSub: string): Promise<UserRecord | null> {
+  if (!googleSub || typeof googleSub !== 'string') return null;
+
+  await lazyEnsureIndexes();
+  const db = await getMongoDb();
+  const doc = await db.collection(COLLECTIONS.USERS).findOne({ googleSub: googleSub.trim() });
+  if (!doc) return null;
+  return mapDocToUserRecord(doc);
+}
+
+export async function linkUserGoogleSub(userId: string, googleSub: string): Promise<boolean> {
+  if (!userId || !googleSub) return false;
+
+  await lazyEnsureIndexes();
+  const db = await getMongoDb();
+  const res = await db.collection(COLLECTIONS.USERS).updateOne(
+    { $or: [{ _id: userId as any }, { id: userId }] },
+    { $set: { googleSub: googleSub.trim(), updatedAt: new Date().toISOString() } }
+  );
+  return res.modifiedCount > 0;
+}
+
 export async function createUser(data: {
   id?: string;
   name: string;
@@ -74,6 +97,7 @@ export async function createUser(data: {
   recoveryCodeHash?: string;
   onboardingCompleted?: boolean;
   preferredTheme?: ProfileTheme;
+  googleSub?: string;
 }): Promise<{ user: UserRecord; profile?: ProfileData }> {
   await lazyEnsureIndexes();
   const db = await getMongoDb();
@@ -104,6 +128,7 @@ export async function createUser(data: {
     onboardingCompleted: data.onboardingCompleted !== undefined ? data.onboardingCompleted : (data.createProfile ? true : false),
     recoveryCodeHash: data.recoveryCodeHash || undefined,
     preferredTheme: data.preferredTheme || undefined,
+    googleSub: data.googleSub ? data.googleSub.trim() : undefined,
     createdAt: now,
     updatedAt: now
   };

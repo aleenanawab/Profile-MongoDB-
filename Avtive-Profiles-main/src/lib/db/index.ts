@@ -21,6 +21,8 @@ export {
   getUserByEmail,
   getUserById,
   getUserByEmailOrUsername,
+  getUserByGoogleSub,
+  linkUserGoogleSub,
   createUser,
   completeUserOnboarding
 } from './users';

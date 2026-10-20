@@ -20,8 +20,17 @@ export interface GoogleOAuthConfig {
 }
 
 export function getGoogleOAuthConfig(): GoogleOAuthConfig {
-  const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
-  const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+  let clientId = (process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || '').trim();
+  let clientSecret = (process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || '').trim();
+
+  // Strip accidental wrapping quotes (single or double) from environment variables
+  if ((clientId.startsWith('"') && clientId.endsWith('"')) || (clientId.startsWith("'") && clientId.endsWith("'"))) {
+    clientId = clientId.slice(1, -1).trim();
+  }
+  if ((clientSecret.startsWith('"') && clientSecret.endsWith('"')) || (clientSecret.startsWith("'") && clientSecret.endsWith("'"))) {
+    clientSecret = clientSecret.slice(1, -1).trim();
+  }
+
   return {
     clientId,
     clientSecret,
@@ -30,6 +39,10 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig {
 }
 
 export function getGoogleRedirectUri(origin?: string): string {
+  // If request is made from localhost / 127.0.0.1, prioritize local origin for dev testing
+  if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+    return `${origin.replace(/\/+$/, '')}/api/auth/google/callback`;
+  }
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || origin || 'http://localhost:3000').replace(/\/+$/, '');
   return `${baseUrl}/api/auth/google/callback`;
 }

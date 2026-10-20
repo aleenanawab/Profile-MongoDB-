@@ -1,0 +1,12 @@
+{
+  "name": "avtive-profiles-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix Avtive-Profiles-main run dev",
+    "build": "npm --prefix Avtive-Profiles-main run build",
+    "start": "npm --prefix Avtive-Profiles-main run start",
+    "lint": "npm --prefix Avtive-Profiles-main run lint",
+    "test": "npm --prefix Avtive-Profiles-main test"
+  }
+}

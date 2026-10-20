@@ -7,7 +7,7 @@ import {
   getCompanyByOwnerUserId,
   createCompany
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureCloudinaryAssetUrl } from '@/lib/storage';
 import { normalizeProfileType } from '@/types/profile';
 
 export async function POST(request: NextRequest) {
@@ -25,15 +25,15 @@ export async function POST(request: NextRequest) {
     const name = (body.name || session.name || 'Professional').trim();
     const email = (body.email || session.email || '').trim();
 
-    // Auto-upload base64 images to Supabase Storage
-    const avatar = await ensureSupabaseAssetUrl(body.avatar || session.avatar, 'avatars');
-    const coverImage = await ensureSupabaseAssetUrl(body.coverImage, 'profiles');
+    // Auto-upload base64 images to Cloudinary
+    const avatar = await ensureCloudinaryAssetUrl(body.avatar || session.avatar, 'avatars');
+    const coverImage = await ensureCloudinaryAssetUrl(body.coverImage, 'profiles');
 
     // Process projects images
     const projects = Array.isArray(body.projects) ? [...body.projects] : [];
     for (let i = 0; i < projects.length; i++) {
       if (projects[i] && projects[i].image) {
-        projects[i].image = await ensureSupabaseAssetUrl(projects[i].image, 'profiles');
+        projects[i].image = await ensureCloudinaryAssetUrl(projects[i].image, 'profiles');
       }
     }
 

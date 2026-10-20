@@ -1,12 +1,24 @@
 /**
  * Safe Migration Script: src/data/db.json -> MongoDB
  * ----------------------------------------------------
- * Hard rules:
+ * Required Environment Variables (in .env.local):
+ * - MONGODB_URI: Full MongoDB connection URI (e.g. mongodb+srv://... or mongodb://localhost:27017)
+ * - MONGODB_DB_NAME: Target database name (e.g. avtive_test)
+ *
+ * Exact CLI Commands:
+ * - Dry-Run (Default, safe, zero writes):
+ *     npm run migrate:json-to-mongo
+ * - Test-Database Import (Executes writes):
+ *     npm run migrate:json-to-mongo -- --confirm
+ * - Production Override (If MONGODB_DB_NAME contains 'prod'):
+ *     npm run migrate:json-to-mongo -- --confirm --allow-prod
+ *
+ * Safety & Integrity Rules:
  * - Default mode is --dry-run. No writes occur unless --confirm is explicitly passed.
  * - Upserts are keyed on original string IDs (_id: doc.id). Never deletes data.
  * - Refuses to write if MONGODB_DB_NAME contains 'prod' unless --allow-prod is passed.
  * - Redacts all sensitive fields (passwordHash, recoveryCodeHash, tokens, emails in logs).
- * - Inspects real shape of db.json (handles profiles as Record<string, ProfileData>).
+ * - Inspects real shape of db.json (deduplicates profiles from Record<string, ProfileData>).
  */
 
 import fs from 'fs';

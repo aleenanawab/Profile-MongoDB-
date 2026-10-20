@@ -10,7 +10,7 @@ import {
   getCompanyMemberByUser, 
   addCompanyMember 
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureCloudinaryAssetUrl } from '@/lib/storage';
 import { AddCompanyMemberInput } from '@/types/company';
 import { normalizeProfileType } from '@/types/profile';
 
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     };
 
     if (avatarUrl) {
-      input.avatarUrl = await ensureSupabaseAssetUrl(avatarUrl, 'avatars');
+      input.avatarUrl = await ensureCloudinaryAssetUrl(avatarUrl, 'avatars');
     }
 
     const result = await addCompanyMember(company.id, input, session.id);

@@ -11,7 +11,7 @@ export async function GET() {
 
     const [dbUser, profile, profiles] = await Promise.all([
       getUserById(session.id),
-      getProfileByUserId(session.id),
+      getProfileByUserId(session.id, session.role as any),
       getProfilesByUserId(session.id)
     ]);
 

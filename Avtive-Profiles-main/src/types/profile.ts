@@ -114,9 +114,13 @@ export const DEFAULT_SECTION_ORDER: string[] = [
 
 export interface UserSession {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   avatar?: string;
+  role?: ProfileType;
+  preferredTheme?: ProfileTheme;
+  onboardingCompleted?: boolean;
 }
 
 export interface UserRecord {
@@ -132,6 +136,7 @@ export interface UserRecord {
   onboardingCompleted?: boolean;
   recoveryCodeHash?: string;
   preferredTheme?: ProfileTheme;
+  googleSub?: string;
 }
 
 export interface UserConnection {
@@ -356,7 +361,9 @@ export interface ProfileData {
   tagline?: string;
   coverSlogan?: string;
   avatar: string;
+  avatarPublicId?: string;
   coverImage?: string;
+  coverImagePublicId?: string;
   verified?: boolean;
   pronouns?: string;
   birthday?: string;

@@ -8,7 +8,7 @@ import {
   getCompanyMembers, 
   getCompanyMemberByUser 
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureCloudinaryAssetUrl } from '@/lib/storage';
 import { UpdateCompanyInput } from '@/types/company';
 
 interface RouteContext {
@@ -127,10 +127,10 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 
     // Image uploads
     if (body.logoUrl) {
-      updateInput.logoUrl = await ensureSupabaseAssetUrl(body.logoUrl, 'profiles');
+      updateInput.logoUrl = await ensureCloudinaryAssetUrl(body.logoUrl, 'profiles');
     }
     if (body.coverUrl) {
-      updateInput.coverUrl = await ensureSupabaseAssetUrl(body.coverUrl, 'profiles');
+      updateInput.coverUrl = await ensureCloudinaryAssetUrl(body.coverUrl, 'profiles');
     }
 
     const result = await updateCompany(company.id, updateInput, session.id);

@@ -22,8 +22,6 @@ import {
 import { motion } from 'framer-motion';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 
-import { supabase } from '@/lib/supabase';
-
 export default function RegisterClient() {
   const router = useRouter();
 
@@ -45,25 +43,10 @@ export default function RegisterClient() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback`;
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
+      window.location.href = '/api/auth/google';
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
-      setErrorMessage(err?.message || 'Google authentication could not be initiated. Please check your connection and configuration.');
+      setErrorMessage(err?.message || 'Google authentication could not be initiated.');
       setIsLoading(false);
       setIsGoogleLoading(false);
     }

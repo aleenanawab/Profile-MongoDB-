@@ -15,7 +15,9 @@ export interface CompanyRecord {
   website: string;
   location: string;
   logoUrl: string;
+  logoPublicId?: string;
   coverUrl: string;
+  coverPublicId?: string;
   theme: ProfileTheme;
   visibility: Record<string, boolean>;
   createdAt: string;
@@ -52,7 +54,9 @@ export interface CreateCompanyInput {
   website?: string;
   location?: string;
   logoUrl?: string;
+  logoPublicId?: string;
   coverUrl?: string;
+  coverPublicId?: string;
   theme?: ProfileTheme;
   visibility?: Record<string, boolean>;
 }
@@ -67,7 +71,9 @@ export interface UpdateCompanyInput {
   website?: string;
   location?: string;
   logoUrl?: string;
+  logoPublicId?: string;
   coverUrl?: string;
+  coverPublicId?: string;
   theme?: ProfileTheme;
   visibility?: Record<string, boolean>;
 }

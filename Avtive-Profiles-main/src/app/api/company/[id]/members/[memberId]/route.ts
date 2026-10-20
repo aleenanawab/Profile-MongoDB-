@@ -8,7 +8,7 @@ import {
   updateCompanyMember, 
   removeCompanyMember 
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/supabase';
+import { ensureCloudinaryAssetUrl } from '@/lib/storage';
 import { UpdateCompanyMemberInput } from '@/types/company';
 
 interface RouteContext {
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     if (body.role) input.role = body.role;
 
     if (body.avatarUrl) {
-      input.avatarUrl = await ensureSupabaseAssetUrl(body.avatarUrl, 'avatars');
+      input.avatarUrl = await ensureCloudinaryAssetUrl(body.avatarUrl, 'avatars');
     }
 
     const result = await updateCompanyMember(company.id, memberId, input, session.id);

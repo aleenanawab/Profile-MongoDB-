@@ -1,0 +1,14 @@
+{
+  "extends": "./Avtive-Profiles-main/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./Avtive-Profiles-main",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "Avtive-Profiles-main/src/**/*.ts",
+    "Avtive-Profiles-main/src/**/*.tsx",
+    "Avtive-Profiles-main/tests/**/*.ts"
+  ]
+}

@@ -18,8 +18,6 @@ import {
 } from 'lucide-react';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { usePortfolioTheme } from '@/context/ThemeContext';
-import { supabase } from '@/lib/supabase';
-
 import { sanitizeReturnUrl, resolveReturnUrlForExistingUser } from '@/lib/utils';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
@@ -140,31 +138,11 @@ export default function LoginClient() {
     setErrorMessage(null);
     try {
       const returnUrl = getReturnUrl();
-      if (returnUrl) {
-        try {
-          document.cookie = `auth_return_url=${encodeURIComponent(returnUrl)}; path=/; max-age=600; SameSite=Lax`;
-        } catch {}
-      }
-      const redirectUrl = `${window.location.origin}/auth/callback`;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
+      const authUrl = `/api/auth/google${returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : ''}`;
+      window.location.href = authUrl;
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
-      setErrorMessage(err?.message || 'Google authentication could not be initiated. Please check your connection and configuration.');
+      setErrorMessage(err?.message || 'Google authentication could not be initiated.');
       setIsLoading(false);
       setIsGoogleLoading(false);
     }

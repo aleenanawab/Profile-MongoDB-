@@ -1,0 +1,730 @@
+[
+  {
+    "text": "Profile ",
+    "bbox": [
+      213.0,
+      66.0,
+      257.7,
+      81.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Personal Details",
+    "bbox": [
+      213.0,
+      122.0,
+      317.3,
+      137.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Aleena Nawab",
+    "bbox": [
+      170.5,
+      155.0,
+      275.9,
+      173.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 15.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Full Stack Engineer",
+    "bbox": [
+      186.9,
+      176.0,
+      257.9,
+      185.7
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 8.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Skills",
+    "bbox": [
+      213.0,
+      171.0,
+      247.8,
+      186.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Visible",
+    "bbox": [
+      29.0,
+      212.0,
+      97.7,
+      236.3
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 20.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Profile ",
+    "bbox": [
+      40.0,
+      267.0,
+      80.3,
+      281.6
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 12.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Nam",
+    "bbox": [
+      40.0,
+      283.0,
+      53.1,
+      295.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "e",
+    "bbox": [
+      53.1,
+      283.0,
+      59.1,
+      295.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Enter your name ",
+    "bbox": [
+      42.0,
+      301.0,
+      50.4,
+      313.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "io",
+    "bbox": [
+      42.0,
+      320.0,
+      50.7,
+      332.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Personal  Details",
+    "bbox": [
+      40.0,
+      375.0,
+      136.7,
+      389.6
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 12.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "ail",
+    "bbox": [
+      40.0,
+      394.0,
+      50.9,
+      406.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Phone Numb",
+    "bbox": [
+      39.0,
+      440.0,
+      73.4,
+      452.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "er",
+    "bbox": [
+      73.4,
+      440.0,
+      83.3,
+      452.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "entre your phone number",
+    "bbox": [
+      40.0,
+      460.0,
+      48.4,
+      472.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Add Sk ills ",
+    "bbox": [
+      37.8,
+      523.0,
+      68.7,
+      535.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Enhanc",
+    "bbox": [
+      210.0,
+      526.0,
+      234.1,
+      541.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "e Profile",
+    "bbox": [
+      234.1,
+      526.0,
+      286.6,
+      541.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Search for your skills here ",
+    "bbox": [
+      42.0,
+      545.0,
+      56.1,
+      557.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Projcts",
+    "bbox": [
+      37.0,
+      646.0,
+      70.8,
+      658.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Accou",
+    "bbox": [
+      208.0,
+      645.0,
+      216.0,
+      660.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "nt info",
+    "bbox": [
+      216.0,
+      645.0,
+      257.1,
+      660.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "add your projects here",
+    "bbox": [
+      42.0,
+      669.0,
+      62.8,
+      681.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Hidden",
+    "bbox": [
+      29.0,
+      708.0,
+      100.7,
+      732.3
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 20.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Archiv e ",
+    "bbox": [
+      210.0,
+      705.0,
+      229.5,
+      720.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Edu",
+    "bbox": [
+      30.0,
+      749.0,
+      37.6,
+      763.6
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 12.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "cation",
+    "bbox": [
+      37.6,
+      749.0,
+      73.6,
+      763.6
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 12.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "add your education details",
+    "bbox": [
+      37.0,
+      771.0,
+      70.2,
+      783.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Security ",
+    "bbox": [
+      207.0,
+      768.0,
+      240.5,
+      783.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Social Link",
+    "bbox": [
+      34.0,
+      807.0,
+      67.9,
+      819.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "s ",
+    "bbox": [
+      67.9,
+      807.0,
+      75.9,
+      819.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Full Stack Engineer | Product Enthusiast",
+    "bbox": [
+      40.0,
+      338.0,
+      60.3,
+      350.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Contact I nfo",
+    "bbox": [
+      215.0,
+      338.0,
+      273.2,
+      353.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "enter your emailenter your email",
+    "bbox": [
+      42.0,
+      415.0,
+      47.6,
+      427.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Lim itations",
+    "bbox": [
+      209.0,
+      583.0,
+      261.7,
+      598.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "NodeJs",
+    "bbox": [
+      257.0,
+      580.0,
+      263.2,
+      592.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 1
+  },
+  {
+    "text": "Add +",
+    "bbox": [
+      263.0,
+      599.0,
+      291.6,
+      611.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Social L inks",
+    "bbox": [
+      210.0,
+      401.0,
+      271.5,
+      416.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Password",
+    "bbox": [
+      224.0,
+      394.0,
+      271.4,
+      406.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "enter you passwor d",
+    "bbox": [
+      224.0,
+      415.0,
+      235.7,
+      427.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Experienc",
+    "bbox": [
+      212.0,
+      466.0,
+      245.0,
+      481.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "e",
+    "bbox": [
+      245.0,
+      466.0,
+      252.9,
+      481.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "entre your LinkedIn",
+    "bbox": [
+      222.0,
+      458.0,
+      233.8,
+      470.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Projec",
+    "bbox": [
+      216.0,
+      229.0,
+      237.6,
+      244.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "ts",
+    "bbox": [
+      245.4,
+      229.0,
+      258.0,
+      244.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "ation",
+    "bbox": [
+      216.0,
+      282.0,
+      248.7,
+      297.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Usernam",
+    "bbox": [
+      224.0,
+      284.0,
+      251.2,
+      296.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "e",
+    "bbox": [
+      251.2,
+      284.0,
+      257.1,
+      296.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Enter your username ",
+    "bbox": [
+      226.0,
+      300.0,
+      234.4,
+      312.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "LinkedI",
+    "bbox": [
+      222.0,
+      439.0,
+      242.7,
+      451.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "n",
+    "bbox": [
+      242.7,
+      439.0,
+      248.8,
+      451.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "add your social links",
+    "bbox": [
+      37.0,
+      830.0,
+      57.8,
+      842.2
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 10.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Setting",
+    "bbox": [
+      208.0,
+      822.0,
+      246.6,
+      837.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "s",
+    "bbox": [
+      246.6,
+      822.0,
+      254.1,
+      837.8
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 13.0,
+    "color": "#000000",
+    "flags": 0
+  },
+  {
+    "text": "Next",
+    "bbox": [
+      300.4,
+      882.0,
+      345.6,
+      906.3
+    ],
+    "font": "Type3 (357 0 R)",
+    "size": 20.0,
+    "color": "#000000",
+    "flags": 0
+  }
+]

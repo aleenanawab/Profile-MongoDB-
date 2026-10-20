@@ -88,25 +88,6 @@ export async function POST(request: NextRequest) {
     response.headers.set('Cache-Control', 'no-store, max-age=0');
     setReturningUserCookie(response);
 
-    // Set backup user cache cookie for resilient cross-lambda authentication
-    try {
-      response.cookies.set(
-        'avtive_user_cache',
-        encodeURIComponent(JSON.stringify({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          passwordHash: user.passwordHash
-        })),
-        {
-          path: '/',
-          httpOnly: true,
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 30
-        }
-      );
-    } catch {}
-
     return response;
   } catch (error) {
     console.error('Registration API Error:', error);

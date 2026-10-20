@@ -246,11 +246,18 @@ export async function getProfileByIdOrSlug(idOrSlug: string): Promise<ProfileDat
   return mapDocToProfileData(doc);
 }
 
-export async function getProfileByUserId(userId: string): Promise<ProfileData | null> {
+export async function getProfileByUserId(
+  userId: string,
+  preferredType?: ProfileType
+): Promise<ProfileData | null> {
   if (!userId || typeof userId !== 'string') return null;
 
   await lazyEnsureIndexes();
   const db = await getMongoDb();
+  if (preferredType) {
+    const doc = await db.collection(COLLECTIONS.PROFILES).findOne({ userId, type: preferredType });
+    if (doc) return mapDocToProfileData(doc);
+  }
   const doc = await db.collection(COLLECTIONS.PROFILES).findOne({ userId });
   if (!doc) return null;
   return mapDocToProfileData(doc);
@@ -287,9 +294,19 @@ export async function updateProfile(
     return { success: false, error: 'Profile not found.', status: 404 };
   }
 
-  // Authorization enforcement: User must be profile owner
+  // Authorization enforcement: User must be profile owner or company admin/owner
   if (existing.userId !== sessionUserId) {
-    return { success: false, error: 'Forbidden: You do not own this profile.', status: 403 };
+    let allowed = false;
+    if (existing.companyId) {
+      const { getCompanyMemberByUser } = await import('./members');
+      const member = await getCompanyMemberByUser(existing.companyId, sessionUserId);
+      if (member && (member.role === 'OWNER' || member.role === 'ADMIN')) {
+        allowed = true;
+      }
+    }
+    if (!allowed) {
+      return { success: false, error: 'Forbidden: You do not own this profile.', status: 403 };
+    }
   }
 
   const db = await getMongoDb();

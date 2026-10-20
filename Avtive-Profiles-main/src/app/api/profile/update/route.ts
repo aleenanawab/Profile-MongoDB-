@@ -10,7 +10,7 @@ import {
   updateCompany,
   completeUserOnboarding
 } from '@/lib/db';
-import { ensureSupabaseAssetUrl } from '@/lib/storage';
+import { ensureCloudinaryAssetUrl } from '@/lib/storage';
 import { ProfileData } from '@/types/profile';
 
 async function handleProfileUpdate(request: NextRequest) {
@@ -44,21 +44,42 @@ async function handleProfileUpdate(request: NextRequest) {
       );
     }
 
-    // Process and auto-upload any base64 images to Supabase Storage
+    // Process and auto-upload any base64 images to Cloudinary
     if (updatedData.avatar) {
-      updatedData.avatar = await ensureSupabaseAssetUrl(updatedData.avatar, 'avatars');
+      updatedData.avatar = await ensureCloudinaryAssetUrl(updatedData.avatar, 'avatars');
     }
     if (updatedData.coverImage) {
-      updatedData.coverImage = await ensureSupabaseAssetUrl(updatedData.coverImage, 'profiles');
+      updatedData.coverImage = await ensureCloudinaryAssetUrl(updatedData.coverImage, 'profiles');
     }
     if (Array.isArray(updatedData.projects)) {
       const processedProjects = [...updatedData.projects];
       for (let i = 0; i < processedProjects.length; i++) {
         if (processedProjects[i] && processedProjects[i].image) {
-          processedProjects[i].image = await ensureSupabaseAssetUrl(processedProjects[i].image, 'profiles');
+          processedProjects[i].image = await ensureCloudinaryAssetUrl(processedProjects[i].image, 'profiles');
         }
       }
       updatedData.projects = processedProjects;
+    }
+
+    // Deduplicate dynamicSections by key/id
+    if (Array.isArray(updatedData.dynamicSections)) {
+      const seenSectionKeys = new Set<string>();
+      updatedData.dynamicSections = updatedData.dynamicSections.filter((section: any) => {
+        const key = section?.key || section?.id;
+        if (!key || seenSectionKeys.has(key)) return false;
+        seenSectionKeys.add(key);
+        return true;
+      });
+    }
+
+    // Deduplicate sectionOrder entries
+    if (Array.isArray(updatedData.sectionOrder)) {
+      const seenOrder = new Set<string>();
+      updatedData.sectionOrder = updatedData.sectionOrder.filter((key: any) => {
+        if (!key || typeof key !== 'string' || seenOrder.has(key)) return false;
+        seenOrder.add(key);
+        return true;
+      });
     }
 
     // 2. Perform update with automatic upsert fallback for serverless persistence

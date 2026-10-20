@@ -306,7 +306,7 @@ export function AvtiveDigitalCard({
               : (s === 'socials' 
               ? 'socialLinks' 
               : ((s === 'company' || s === 'team' || s === 'companyInfo') && isCompany ? 'teamMembers' : s));
-            if (!effectiveOrder.includes(normalized) && defaultCardSectionOrder.includes(normalized)) {
+            if (!effectiveOrder.includes(normalized) && allKnownSections.includes(normalized)) {
               effectiveOrder.push(normalized);
             }
           }
@@ -317,7 +317,7 @@ export function AvtiveDigitalCard({
               : (s === 'socials' 
               ? 'socialLinks' 
               : ((s === 'company' || s === 'team' || s === 'companyInfo') && isCompany ? 'teamMembers' : s));
-            if (!effectiveOrder.includes(normalized) && defaultCardSectionOrder.includes(normalized)) {
+            if (!effectiveOrder.includes(normalized) && allKnownSections.includes(normalized)) {
               effectiveOrder.push(normalized);
             }
           }

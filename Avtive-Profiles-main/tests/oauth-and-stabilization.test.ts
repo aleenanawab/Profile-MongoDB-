@@ -136,7 +136,7 @@ async function runTestSuite() {
 
   let keyPair: jose.GenerateKeyPairResult;
   let mockJwks: any;
-  const mockClientId = 'test-client-id.apps.googleusercontent.com';
+  const mockClientId = process.env.GOOGLE_CLIENT_ID || 'test-client-id.apps.googleusercontent.com';
 
   try {
     keyPair = await jose.generateKeyPair('RS256');

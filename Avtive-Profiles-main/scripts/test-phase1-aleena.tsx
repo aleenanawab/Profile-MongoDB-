@@ -6,8 +6,86 @@ import {
   DEFAULT_SHARING_SETTINGS, 
   ProfileData 
 } from '../src/types/profile';
-import { founderProfile, companyProfile } from '../src/data/mockProfiles';
 import { sanitizeProfileForPublic } from '../src/lib/db';
+
+// Local test fixtures for Phase 1 section testing (independent of legacy mock files)
+const founderProfile: ProfileData = {
+  id: 'test-founder',
+  slug: 'test-founder',
+  type: 'individual',
+  theme: 'editorial',
+  name: 'Syed Mesum Raza Shah',
+  designation: 'Strategy-based Artist & Creative Director',
+  company: 'Avtive',
+  location: 'Islamabad, Pakistan',
+  officeAddress: 'NSTP, Islamabad, Pakistan',
+  avatar: '/images/founder-pfp.jpg',
+  shortBio: 'Strategy-based artist with over 10 years of experience creating compelling design solutions that help brands stand out.',
+  fullBio: 'Strategy-based artist with over 10 years of experience focusing on creating compelling design solutions that help brands stand out.',
+  whatsapp: '+92 312 5175041',
+  phone: '+92 312 5175041',
+  email: 'mesum@avtive.app',
+  website: 'https://www.avtive.app',
+  googleMapsUrl: 'https://maps.google.com/?q=NSTP+Islamabad+Pakistan',
+  contactOrder: ['phone', 'whatsapp', 'email', 'website', 'location'],
+  services: [
+    { id: 'srv-1', title: 'Brand Design' },
+    { id: 'srv-2', title: 'Graphic Design' }
+  ],
+  skills: ['Brand Identity', 'Visual Design'],
+  experiences: [
+    {
+      id: 'exp-1',
+      company: 'Avtive',
+      role: 'Creative Direction & Strategy',
+      location: 'NSTP, Islamabad, Pakistan'
+    }
+  ],
+  socials: [
+    {
+      platform: 'linkedin',
+      url: 'https://www.linkedin.com/in/syedmesumraza/',
+      label: 'LinkedIn',
+      handle: 'in/syedmesumraza'
+    }
+  ],
+  companyInfo: {
+    id: 'avtive-company',
+    name: 'Avtive',
+    tagline: 'SaaS Platform for Digital Profiles & Cloud Identity',
+    logo: '/images/avtive-symbol.png',
+    industry: 'Technology',
+    location: 'NSTP, Islamabad, Pakistan',
+    website: 'https://www.avtive.app'
+  }
+};
+
+const companyProfile: ProfileData = {
+  id: 'test-company',
+  slug: 'test-company',
+  type: 'team',
+  theme: 'editorial',
+  name: 'Avtive',
+  designation: 'B2B SaaS Digital Profile & Cloud Identity Platform',
+  company: 'Avtive SaaS Platform',
+  location: 'NSTP, Islamabad, Pakistan',
+  avatar: '/images/avtive-symbol.png',
+  shortBio: 'B2B SaaS platform for intelligent digital profiles.',
+  email: 'contact@avtive.app',
+  website: 'https://www.avtive.app',
+  teamMembers: [
+    {
+      id: 'tm-1',
+      name: 'Syed Mesum Raza Shah',
+      role: 'Founder & Creative Director',
+      avatar: '/images/founder-pfp.jpg',
+      profileSlug: 'founder'
+    }
+  ],
+  sectionOrder: [...DEFAULT_SECTION_ORDER],
+  sectionVisibility: { ...DEFAULT_SECTION_VISIBILITY }
+};
+
 import { AboutSection } from '../src/components/AboutSection';
 import { ProfileContactSection } from '../src/components/ProfileContactSection';
 import { SkillsServicesSection } from '../src/components/SkillsServicesSection';

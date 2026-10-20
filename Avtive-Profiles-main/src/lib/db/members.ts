@@ -144,7 +144,7 @@ export async function addCompanyMember(
     companyId,
     userId: null,
     email: normalizedEmail,
-    name: input.name.trim(),
+    name: input.name?.trim() || normalizedEmail.split('@')[0],
     title: input.title?.trim() || 'Team Member',
     department: input.department?.trim() || 'General',
     bio: input.bio?.trim() || '',

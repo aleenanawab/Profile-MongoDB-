@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
     setReturningUserCookie(response);
 
     return response;
-  } catch (error) {
-    console.error('Registration API Error:', error);
+  } catch (error: unknown) {
+    console.error('Registration API Error:', error instanceof Error ? error.message : String(error));
     return NextResponse.json(
       { error: 'An unexpected error occurred during registration. Please try again.' },
       { status: 500 }

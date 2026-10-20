@@ -99,12 +99,15 @@ export async function uploadToCloudinary(
       storage: 'cloudinary',
       error: 'Cloudinary upload succeeded but did not return a valid secure URL.'
     };
-  } catch (err: any) {
-    console.error('[Cloudinary Upload Error]:', err?.message || err);
+  } catch (err: unknown) {
+    const errorMsg = (err && typeof err === 'object' && 'message' in err)
+      ? String((err as { message: unknown }).message)
+      : (err instanceof Error ? err.message : String(err));
+    console.error('[Cloudinary Upload Error]:', errorMsg);
     return {
       success: false,
       storage: 'cloudinary',
-      error: `Cloudinary upload failed: ${err?.message || 'Unknown Cloudinary error'}`
+      error: `Cloudinary upload failed: ${errorMsg}`
     };
   }
 }

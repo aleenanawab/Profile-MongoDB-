@@ -176,15 +176,16 @@ export async function sendPasswordResetEmail({
         html: generatePasswordResetHtml(resetUrl, name)
       });
 
-      console.log(`[SMTP SUCCESS] Sent email to ${normalizedEmail}, messageId: ${info.messageId}`);
+      console.log(`[SMTP SUCCESS] Password reset email sent, messageId: ${info.messageId}`);
       return {
         success: true,
         messageId: info.messageId,
         provider: 'smtp'
       };
-    } catch (smtpErr: any) {
-      lastError = smtpErr?.message || String(smtpErr);
-      console.error('Nodemailer SMTP sending error:', smtpErr);
+    } catch (smtpErr: unknown) {
+      const errMessage = smtpErr instanceof Error ? smtpErr.message : String(smtpErr);
+      lastError = errMessage;
+      console.error('Nodemailer SMTP sending error:', errMessage);
       // Fall through to other providers if available
     }
   }
@@ -215,10 +216,11 @@ export async function sendPasswordResetEmail({
           provider: 'resend'
         };
       }
-      console.error('Resend API response error:', data);
-    } catch (resendErr: any) {
-      lastError = resendErr?.message || String(resendErr);
-      console.error('Resend API error:', resendErr);
+      console.error('Resend API response error:', data?.message || data?.error || 'Unknown error');
+    } catch (resendErr: unknown) {
+      const errMessage = resendErr instanceof Error ? resendErr.message : String(resendErr);
+      lastError = errMessage;
+      console.error('Resend API error:', errMessage);
     }
   }
 

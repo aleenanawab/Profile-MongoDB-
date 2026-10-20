@@ -5,10 +5,27 @@ import { getMongoDb, COLLECTIONS } from '@/lib/db/client';
 
 export const SESSION_COOKIE_NAME = 'avtive_session';
 export const RETURNING_USER_COOKIE_NAME = 'avtive_returning_user';
-const SESSION_SECRET = process.env.SESSION_SECRET || process.env.JWT_SECRET || 'avtive-super-secret-key-prod-2026-secure-session-auth';
 export const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-export function setReturningUserCookie(response?: any): void {
+export function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('SESSION_SECRET or JWT_SECRET environment variable is missing.');
+    }
+    return 'dev-local-session-secret-min-32-chars-key';
+  }
+  return secret;
+}
+
+export type CookieWritable = {
+  cookies?: {
+    set: (name: string, value: string, options?: Record<string, unknown>) => void;
+    delete?: (name: string) => void;
+  };
+};
+
+export function setReturningUserCookie(response?: CookieWritable): void {
   if (response && response.cookies) {
     try {
       response.cookies.set(RETURNING_USER_COOKIE_NAME, 'true', {
@@ -36,7 +53,7 @@ export function createSessionToken(user: UserSession): string {
 
   const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const signature = crypto
-    .createHmac('sha256', SESSION_SECRET)
+    .createHmac('sha256', getSessionSecret())
     .update(payloadBase64)
     .digest('base64url');
 
@@ -53,7 +70,7 @@ export function verifySessionToken(token: string): UserSession | null {
 
     const [payloadBase64, signature] = parts;
     const expectedSignature = crypto
-      .createHmac('sha256', SESSION_SECRET)
+      .createHmac('sha256', getSessionSecret())
       .update(payloadBase64)
       .digest('base64url');
 
@@ -98,7 +115,7 @@ export async function getSession(): Promise<UserSession | null> {
 /**
  * Set session cookie and record session in MongoDB
  */
-export async function setSessionCookie(user: UserSession, response?: any): Promise<string> {
+export async function setSessionCookie(user: UserSession, response?: CookieWritable): Promise<string> {
   const token = createSessionToken(user);
   const cookieOptions = {
     httpOnly: true,
@@ -143,7 +160,7 @@ export async function setSessionCookie(user: UserSession, response?: any): Promi
 /**
  * Clear session cookie and invalidate session in MongoDB on logout
  */
-export async function clearSessionCookie(response?: any): Promise<void> {
+export async function clearSessionCookie(response?: CookieWritable): Promise<void> {
   let token: string | undefined;
 
   try {
@@ -172,7 +189,9 @@ export async function clearSessionCookie(response?: any): Promise<void> {
         maxAge: 0,
         expires: new Date(0)
       });
-      response.cookies.delete(SESSION_COOKIE_NAME);
+      if (typeof response.cookies.delete === 'function') {
+        response.cookies.delete(SESSION_COOKIE_NAME);
+      }
     } catch {}
   }
 

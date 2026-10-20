@@ -26,17 +26,25 @@ export const COLLECTIONS = {
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];
 
 export function getMongoUri(): string {
-  const uri = process.env.MONGODB_URI;
+  let uri = process.env.MONGODB_URI;
   if (!uri || !uri.trim()) {
     throw new Error('Missing required environment variable: MONGODB_URI');
+  }
+  uri = uri.trim();
+  if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
+    uri = uri.slice(1, -1);
   }
   return uri.trim();
 }
 
 export function getMongoDbName(): string {
-  const dbName = process.env.MONGODB_DB_NAME;
+  let dbName = process.env.MONGODB_DB_NAME;
   if (!dbName || !dbName.trim()) {
     throw new Error('Missing required environment variable: MONGODB_DB_NAME');
+  }
+  dbName = dbName.trim();
+  if ((dbName.startsWith('"') && dbName.endsWith('"')) || (dbName.startsWith("'") && dbName.endsWith("'"))) {
+    dbName = dbName.slice(1, -1);
   }
   return dbName.trim();
 }

@@ -1,4 +1,4 @@
-import { Db, IndexDescription, Collection } from 'mongodb';
+import { Db, IndexDescription, Collection, CreateIndexesOptions } from 'mongodb';
 import { getMongoDb, COLLECTIONS } from './client';
 
 let indexesEnsured = false;
@@ -45,6 +45,15 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     }
   } catch {}
 
+  // If old googleSub index was sparse without partialFilterExpression, upgrade it to prevent null collision
+  try {
+    const uIdxs = await usersCol.indexes();
+    const gIdx = uIdxs.find((i) => i.name === 'idx_users_google_sub_unique');
+    if (gIdx && !(gIdx as any).partialFilterExpression) {
+      await usersCol.dropIndex('idx_users_google_sub_unique');
+    }
+  } catch {}
+
   async function hasIndex(col: Collection, name: string): Promise<boolean> {
     try {
       const idxs: IndexDescription[] = await col.indexes();
@@ -60,17 +69,25 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     key: Record<string, 1 | -1>,
     name: string,
     unique: boolean = false,
-    sparse: boolean = false
+    sparse: boolean = false,
+    partialFilterExpression?: Record<string, unknown>
   ) {
     try {
       if (await hasIndex(col, name)) {
         result.indexesExisting.push(`${colName}.${name}`);
         return;
       }
-      await col.createIndex(key as any, { name, unique, sparse, background: true });
+      const indexOpts: CreateIndexesOptions = { name, unique, background: true };
+      if (partialFilterExpression) {
+        indexOpts.partialFilterExpression = partialFilterExpression;
+      } else if (sparse) {
+        indexOpts.sparse = true;
+      }
+      await col.createIndex(key, indexOpts);
       result.indexesCreated.push(`${colName}.${name}`);
-    } catch (err: any) {
-      if (err.code === 11000 || err.codeName === 'DuplicateKey') {
+    } catch (err: unknown) {
+      const mongoErr = err as { code?: number; codeName?: string; message?: string };
+      if (mongoErr.code === 11000 || mongoErr.codeName === 'DuplicateKey') {
         result.conflicts.push({
           collection: colName,
           field: name,
@@ -79,14 +96,22 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
         });
         result.success = false;
       } else {
-        console.warn(`[ensureIndexes] Warning creating ${colName}.${name}:`, err.message);
+        console.warn(`[ensureIndexes] Warning creating ${colName}.${name}:`, mongoErr?.message || String(err));
       }
     }
   }
 
   // 1. Users
   await safeCreateIndex(usersCol, COLLECTIONS.USERS, { email: 1 }, 'idx_users_email_unique', true);
-  await safeCreateIndex(usersCol, COLLECTIONS.USERS, { googleSub: 1 }, 'idx_users_google_sub_unique', true, true);
+  await safeCreateIndex(
+    usersCol,
+    COLLECTIONS.USERS,
+    { googleSub: 1 },
+    'idx_users_google_sub_unique',
+    true,
+    false,
+    { googleSub: { $type: 'string' } }
+  );
 
   // 2. Profiles (slug unique; userId indexed)
   await safeCreateIndex(profilesCol, COLLECTIONS.PROFILES, { slug: 1 }, 'idx_profiles_slug_unique', true);
@@ -136,12 +161,29 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   return result;
 }
 
+let indexesPromise: Promise<EnsureIndexesResult> | null = null;
+
 export async function lazyEnsureIndexes(): Promise<void> {
-  if (!indexesEnsured) {
+  if (indexesEnsured) {
+    return;
+  }
+
+  if (indexesPromise) {
     try {
-      await ensureIndexes();
-    } catch (err) {
-      console.warn('[lazyEnsureIndexes] Failed to ensure indexes:', err);
+      await indexesPromise;
+    } catch {
+      // Non-blocking
     }
+    return;
+  }
+
+  try {
+    indexesPromise = ensureIndexes();
+    await indexesPromise;
+  } catch (err: any) {
+    console.warn('[lazyEnsureIndexes] Failed to ensure indexes (non-blocking):', err?.message || err);
+  } finally {
+    // Prevent repeated index runs on failed or glitchy connection in this serverless instance
+    indexesEnsured = true;
   }
 }

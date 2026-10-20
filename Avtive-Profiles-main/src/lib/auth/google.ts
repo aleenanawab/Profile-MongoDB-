@@ -1,13 +1,7 @@
 import crypto from 'crypto';
 import * as jose from 'jose';
 
-function getSessionSecret(): string {
-  return (
-    process.env.SESSION_SECRET ||
-    process.env.JWT_SECRET ||
-    'avtive-super-secret-key-prod-2026-secure-session-auth'
-  );
-}
+import { getSessionSecret } from './session';
 
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
@@ -209,9 +203,9 @@ export interface GoogleUserClaims {
   picture?: string;
 }
 
-let cachedJWKS: any = null;
+let cachedJWKS: jose.JWTVerifyGetKey | null = null;
 
-function getGoogleJWKS() {
+function getGoogleJWKS(): jose.JWTVerifyGetKey {
   if (!cachedJWKS) {
     cachedJWKS = jose.createRemoteJWKSet(new URL(GOOGLE_JWKS_URL));
   }
@@ -224,7 +218,7 @@ function getGoogleJWKS() {
 export async function verifyGoogleIdToken(
   idToken: string,
   expectedNonce: string,
-  jwksOverride?: any
+  jwksOverride?: Parameters<typeof jose.jwtVerify>[1]
 ): Promise<GoogleUserClaims> {
   const { clientId } = getGoogleOAuthConfig();
   const jwks = jwksOverride || getGoogleJWKS();

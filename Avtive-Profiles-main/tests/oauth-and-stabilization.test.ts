@@ -16,7 +16,10 @@ try {
       const eqIdx = trimmed.indexOf('=');
       if (eqIdx > 0) {
         const k = trimmed.substring(0, eqIdx).trim();
-        const v = trimmed.substring(eqIdx + 1).trim();
+        let v = trimmed.substring(eqIdx + 1).trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+          v = v.slice(1, -1);
+        }
         if (!process.env[k]) {
           process.env[k] = v;
         }
@@ -300,16 +303,21 @@ async function runTestSuite() {
   // ──────────────────────────────────────────────────────────
   console.log('\n--- TEST GROUP 4: Cloudinary Upload Hardening ---');
 
-  // Test 4.1: Ensure no fallback to local disk or data-URL when Cloudinary fails
+  // Test 4.1: Ensure no fallback to local disk or data-URL when Cloudinary fails or succeeds
   try {
     const dummyBuffer = Buffer.from('test-image-content-bytes');
     const result = await uploadToCloudinary(dummyBuffer, 'test.jpg', 'image/jpeg', 'profiles');
 
-    assert(result.success === false, 'Should report success: false on failed upload');
-    assert(!result.url, 'Must not return local disk or data URL fallback on error');
-    assert(Boolean(result.error && result.error.length > 0), 'Returns clear error description');
-    assert(!result.url?.startsWith('data:'), 'No base64 data URI fallback permitted');
-    assert(!result.url?.startsWith('/uploads/'), 'No local disk file fallback permitted');
+    if (result.success) {
+      assert(result.url?.includes('cloudinary.com') || result.url?.includes('res.cloudinary.com'), 'Upload returns secure Cloudinary URL');
+      assert(!result.url?.startsWith('data:'), 'No base64 data URI fallback permitted');
+      assert(!result.url?.startsWith('/uploads/'), 'No local disk file fallback permitted');
+    } else {
+      assert(!result.url, 'Must not return local disk or data URL fallback on error');
+      assert(Boolean(result.error && result.error.length > 0), 'Returns clear error description');
+      assert(!result.url?.startsWith('data:'), 'No base64 data URI fallback permitted');
+      assert(!result.url?.startsWith('/uploads/'), 'No local disk file fallback permitted');
+    }
 
     recordPass('Cloudinary failure returns explicit error with NO local-disk or data-URL fallback');
   } catch (err) {

@@ -83,8 +83,13 @@ export const SUPABASE_DEFAULT_COVER = `${supabaseUrl}/storage/v1/object/public/p
 export const SUPABASE_DEFAULT_PROJECT_IMAGE = `${supabaseUrl}/storage/v1/object/public/profiles/default-project.png`;
 export const SUPABASE_DEFAULT_LINK_ICON = `${supabaseUrl}/storage/v1/object/public/links/default-link.png`;
 
+import {
+  uploadToCloudinary,
+  ensureCloudinaryAssetUrl as ensureStorageCloudinaryAssetUrl
+} from './storage/cloudinary';
+
 /**
- * Upload a file buffer directly to Supabase Storage and return its permanent public CDN URL
+ * Upload a file buffer directly to Cloudinary storage and return its public CDN URL
  */
 export async function uploadToSupabaseStorage(
   buffer: Buffer,
@@ -92,108 +97,26 @@ export async function uploadToSupabaseStorage(
   contentType: string,
   preferredBucket: string = PROFILES_STORAGE_BUCKET
 ): Promise<{ success: boolean; url?: string; error?: string; bucket?: string }> {
-  try {
-    const bucketsToTry = [preferredBucket, ...CANDIDATE_BUCKETS.filter(b => b !== preferredBucket)];
-
-    let lastError: any = null;
-
-    for (const bucket of bucketsToTry) {
-      // 1. Try uploading to bucket
-      const { data, error } = await supabaseAdmin.storage
-        .from(bucket)
-        .upload(filename, buffer, {
-          contentType,
-          upsert: true
-        });
-
-      if (!error && data?.path) {
-        const { data: pubData } = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path);
-        return {
-          success: true,
-          url: pubData.publicUrl,
-          bucket
-        };
-      }
-
-      lastError = error;
-
-      // If bucket does not exist, try creating it with public access
-      if (error && (error.message?.includes('Bucket not found') || error.message?.includes('not found') || (error as any).statusCode === '404')) {
-        try {
-          const { error: createErr } = await supabaseAdmin.storage.createBucket(bucket, {
-            public: true,
-            fileSizeLimit: 10485760 // 10MB
-          });
-
-          if (!createErr) {
-            // Retry upload after creating bucket
-            const { data: retryData, error: retryErr } = await supabaseAdmin.storage
-              .from(bucket)
-              .upload(filename, buffer, {
-                contentType,
-                upsert: true
-              });
-
-            if (!retryErr && retryData?.path) {
-              const { data: pubData } = supabaseAdmin.storage.from(bucket).getPublicUrl(retryData.path);
-              return {
-                success: true,
-                url: pubData.publicUrl,
-                bucket
-              };
-            }
-          }
-        } catch {}
-      }
-    }
-
-    return {
-      success: false,
-      error: lastError?.message || 'Storage upload failed'
-    };
-  } catch (err: any) {
-    return {
-      success: false,
-      error: err?.message || 'Unexpected upload error'
-    };
-  }
+  const result = await uploadToCloudinary(buffer, filename, contentType, preferredBucket);
+  return {
+    success: result.success,
+    url: result.url,
+    bucket: result.bucket || preferredBucket,
+    error: result.error
+  };
 }
 
 /**
- * Ensure any image asset (base64 Data URI or file buffer) is saved to Supabase Storage
+ * Ensure any image asset (base64 Data URI or file buffer) is saved to Cloudinary Storage
  * and returned as a permanent public CDN URL.
  */
 export async function ensureSupabaseAssetUrl(
   imageSource?: string | null,
   preferredBucket: string = PROFILES_STORAGE_BUCKET
 ): Promise<string> {
-  if (!imageSource || typeof imageSource !== 'string') return '';
-  
-  // If already a hosted URL (CDN or external), keep as is
-  if (imageSource.startsWith('http://') || imageSource.startsWith('https://')) {
-    return imageSource;
-  }
-
-  // If base64 data URI, upload directly to Supabase storage
-  if (imageSource.startsWith('data:')) {
-    try {
-      const matches = imageSource.match(/^data:([a-zA-Z0-9/+.-]+);base64,(.+)$/);
-      if (matches && matches[2]) {
-        const mimeType = matches[1] || 'image/jpeg';
-        const buffer = Buffer.from(matches[2], 'base64');
-        const ext = mimeType.includes('png') ? '.png' : mimeType.includes('webp') ? '.webp' : '.jpg';
-        const filename = `${preferredBucket}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
-
-        const uploadRes = await uploadToSupabaseStorage(buffer, filename, mimeType, preferredBucket);
-        if (uploadRes.success && uploadRes.url) {
-          return uploadRes.url;
-        }
-      }
-    } catch (err) {
-      console.warn('Auto Supabase asset upload fallback:', err);
-    }
-  }
-
-  return imageSource;
+  return ensureStorageCloudinaryAssetUrl(imageSource, preferredBucket);
 }
+
+export const ensureCloudinaryAssetUrl = ensureStorageCloudinaryAssetUrl;
+
 

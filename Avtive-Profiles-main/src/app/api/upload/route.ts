@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { uploadToSupabaseStorage, DEFAULT_STORAGE_BUCKET } from '@/lib/supabase';
+import { uploadToCloudinary } from '@/lib/storage';
 import fs from 'fs';
 import path from 'path';
 
@@ -141,61 +141,25 @@ export async function POST(request: NextRequest) {
     const ext = getExtension(mimeType, originalName);
     const filename = `${requestedBucket}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // 1. PRIMARY STORAGE: Upload directly to Supabase Storage Bucket (profiles / links)
-    // ──────────────────────────────────────────────────────────────────────────
-    const supabaseResult = await uploadToSupabaseStorage(buffer, filename, mimeType, requestedBucket);
+    // Upload to Cloudinary (with automatic fallback to local disk and data-url)
+    const uploadResult = await uploadToCloudinary(buffer, filename, mimeType, requestedBucket);
 
-    if (supabaseResult.success && supabaseResult.url) {
+    if (uploadResult.success && uploadResult.url) {
       return NextResponse.json({
         success: true,
-        url: supabaseResult.url,
-        filename,
-        bucket: supabaseResult.bucket || requestedBucket,
-        storage: 'supabase',
-        size: buffer.length,
-        mimeType
+        url: uploadResult.url,
+        filename: uploadResult.filename || filename,
+        bucket: uploadResult.bucket || requestedBucket,
+        storage: uploadResult.storage,
+        size: uploadResult.size || buffer.length,
+        mimeType: uploadResult.mimeType || mimeType
       });
     }
 
-    console.warn('Supabase storage upload fallback:', supabaseResult.error);
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // 2. SECONDARY FALLBACK: Local disk storage (if Supabase key is missing / dev)
-    // ──────────────────────────────────────────────────────────────────────────
-    try {
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      const filePath = path.join(uploadDir, filename);
-      await fs.promises.writeFile(filePath, buffer);
-
-      const publicUrl = `/uploads/${filename}`;
-      return NextResponse.json({
-        success: true,
-        url: publicUrl,
-        filename,
-        storage: 'local',
-        size: buffer.length,
-        mimeType
-      });
-    } catch (fsError) {
-      // ──────────────────────────────────────────────────────────────────────────
-      // 3. TERTIARY FALLBACK: Base64 Data URL so the user is never stuck
-      // ──────────────────────────────────────────────────────────────────────────
-      const dataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
-      return NextResponse.json({
-        success: true,
-        url: dataUrl,
-        filename,
-        storage: 'data-url',
-        size: buffer.length,
-        mimeType
-      });
-    }
+    return NextResponse.json(
+      { error: uploadResult.error || 'Failed to upload image. Please try again.' },
+      { status: 400 }
+    );
   } catch (error: any) {
     console.error('File Upload API Error:', error);
     return NextResponse.json(

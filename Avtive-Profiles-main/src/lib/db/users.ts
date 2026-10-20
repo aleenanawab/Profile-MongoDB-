@@ -117,26 +117,38 @@ export async function createUser(data: {
   const userId = data.id || `usr-${crypto.randomUUID()}`;
   const now = new Date().toISOString();
 
-  const userDoc = {
-    _id: userId as any,
+  const userDoc: Record<string, any> = {
+    _id: userId,
     id: userId,
     name: data.name.trim(),
     email: normalizedEmail,
     passwordHash: data.passwordHash || '',
-    avatar: data.avatar || undefined,
-    role: data.role ? normalizeProfileType(data.role) : undefined,
-    onboardingCompleted: data.onboardingCompleted !== undefined ? data.onboardingCompleted : (data.createProfile ? true : false),
-    recoveryCodeHash: data.recoveryCodeHash || undefined,
-    preferredTheme: data.preferredTheme || undefined,
-    googleSub: data.googleSub ? data.googleSub.trim() : undefined,
     createdAt: now,
     updatedAt: now
   };
+
+  if (data.avatar) userDoc.avatar = data.avatar;
+  if (data.role) userDoc.role = normalizeProfileType(data.role);
+  if (data.onboardingCompleted !== undefined) {
+    userDoc.onboardingCompleted = data.onboardingCompleted;
+  } else if (data.createProfile) {
+    userDoc.onboardingCompleted = true;
+  } else {
+    userDoc.onboardingCompleted = false;
+  }
+  if (data.recoveryCodeHash) userDoc.recoveryCodeHash = data.recoveryCodeHash;
+  if (data.preferredTheme) userDoc.preferredTheme = data.preferredTheme;
+  if (data.googleSub && typeof data.googleSub === 'string' && data.googleSub.trim()) {
+    userDoc.googleSub = data.googleSub.trim();
+  }
 
   try {
     await usersCol.insertOne(userDoc);
   } catch (err: any) {
     if (err.code === 11000) {
+      if (err.keyPattern?.googleSub || err.message?.includes('googleSub')) {
+        throw new Error('This Google account is already linked to another user.');
+      }
       throw new Error('An account with this email address already exists.');
     }
     throw err;

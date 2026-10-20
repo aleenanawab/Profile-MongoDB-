@@ -45,6 +45,15 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     }
   } catch {}
 
+  // If old googleSub index was sparse without partialFilterExpression, upgrade it to prevent null collision
+  try {
+    const uIdxs = await usersCol.indexes();
+    const gIdx = uIdxs.find((i) => i.name === 'idx_users_google_sub_unique');
+    if (gIdx && !(gIdx as any).partialFilterExpression) {
+      await usersCol.dropIndex('idx_users_google_sub_unique');
+    }
+  } catch {}
+
   async function hasIndex(col: Collection, name: string): Promise<boolean> {
     try {
       const idxs: IndexDescription[] = await col.indexes();
@@ -60,14 +69,21 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     key: Record<string, 1 | -1>,
     name: string,
     unique: boolean = false,
-    sparse: boolean = false
+    sparse: boolean = false,
+    partialFilterExpression?: Record<string, any>
   ) {
     try {
       if (await hasIndex(col, name)) {
         result.indexesExisting.push(`${colName}.${name}`);
         return;
       }
-      await col.createIndex(key as any, { name, unique, sparse, background: true });
+      const indexOpts: any = { name, unique, background: true };
+      if (partialFilterExpression) {
+        indexOpts.partialFilterExpression = partialFilterExpression;
+      } else if (sparse) {
+        indexOpts.sparse = true;
+      }
+      await col.createIndex(key as any, indexOpts);
       result.indexesCreated.push(`${colName}.${name}`);
     } catch (err: any) {
       if (err.code === 11000 || err.codeName === 'DuplicateKey') {
@@ -86,7 +102,15 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
 
   // 1. Users
   await safeCreateIndex(usersCol, COLLECTIONS.USERS, { email: 1 }, 'idx_users_email_unique', true);
-  await safeCreateIndex(usersCol, COLLECTIONS.USERS, { googleSub: 1 }, 'idx_users_google_sub_unique', true, true);
+  await safeCreateIndex(
+    usersCol,
+    COLLECTIONS.USERS,
+    { googleSub: 1 },
+    'idx_users_google_sub_unique',
+    true,
+    false,
+    { googleSub: { $type: 'string' } }
+  );
 
   // 2. Profiles (slug unique; userId indexed)
   await safeCreateIndex(profilesCol, COLLECTIONS.PROFILES, { slug: 1 }, 'idx_profiles_slug_unique', true);

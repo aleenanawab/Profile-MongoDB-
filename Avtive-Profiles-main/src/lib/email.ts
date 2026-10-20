@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import { supabase, supabaseAdmin } from './supabase';
 
 export interface SendPasswordResetEmailParams {
   to: string;
@@ -10,7 +9,7 @@ export interface SendPasswordResetEmailParams {
 export interface EmailSendResult {
   success: boolean;
   messageId?: string;
-  provider?: 'smtp' | 'resend' | 'supabase';
+  provider?: 'smtp' | 'resend';
   error?: string;
 }
 
@@ -223,26 +222,6 @@ export async function sendPasswordResetEmail({
     }
   }
 
-  // Supabase Auth reset is only used if explicitly enabled and SMTP is not present,
-  // but note that Supabase requires custom SMTP in the dashboard for production delivery.
-  if (process.env.USE_SUPABASE_EMAIL === 'true') {
-    try {
-      const { error: sbError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: resetUrl
-      });
-
-      if (!sbError) {
-        return {
-          success: true,
-          provider: 'supabase'
-        };
-      }
-      console.warn('Supabase auth resetPasswordForEmail notice:', sbError.message);
-    } catch (sbErr: any) {
-      lastError = sbErr?.message || String(sbErr);
-      console.error('Supabase Auth reset exception:', sbErr);
-    }
-  }
 
   // If no email provider successfully delivered the message
   return {

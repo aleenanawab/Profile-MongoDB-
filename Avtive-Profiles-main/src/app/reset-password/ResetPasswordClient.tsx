@@ -14,7 +14,6 @@ import {
   Check
 } from 'lucide-react';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
-import { supabase } from '@/lib/supabase';
 
 export default function ResetPasswordClient() {
   const router = useRouter();
@@ -102,18 +101,6 @@ export default function ResetPasswordClient() {
       const data = await res.json();
 
       if (!res.ok) {
-        // Check if Supabase client can handle hash recovery token as fallback
-        if (token) {
-          try {
-            const { error: sbErr } = await supabase.auth.updateUser({ password: newPassword });
-            if (!sbErr) {
-              setIsSuccess(true);
-              setIsLoading(false);
-              return;
-            }
-          } catch {}
-        }
-
         setErrorMessage(data.error || 'Failed to reset password. The link may have expired.');
         setIsLoading(false);
         return;

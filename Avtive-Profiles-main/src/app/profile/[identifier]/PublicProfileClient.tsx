@@ -13,7 +13,7 @@ import { HeaderNav } from '@/components/HeaderNav';
 import { AvtiveDigitalCard } from '@/components/AvtiveDigitalCard';
 import { PhonePreview } from '@/components/PhonePreview';
 import { getThemeConfig } from '@/components/themeStyles';
-import { ShareModal } from '@/components/ShareModal';
+import { ShareModal } from '@/components/share/ShareModal';
 import { ExchangeContactModal } from '@/components/ExchangeContactModal';
 import { QRFullscreenModal } from '@/components/QRFullscreenModal';
 import { ResumeViewerModal } from '@/components/ResumeViewerModal';

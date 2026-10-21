@@ -24,7 +24,7 @@
 import fs from 'fs';
 import path from 'path';
 import { MongoClient, Db } from 'mongodb';
-import { COLLECTIONS, ensureIndexes } from '../src/lib/mongodb';
+import { COLLECTIONS, ensureIndexes } from '../src/lib/db';
 
 // ─── CLI ARGUMENTS ────────────────────────────────────────────────────────────
 

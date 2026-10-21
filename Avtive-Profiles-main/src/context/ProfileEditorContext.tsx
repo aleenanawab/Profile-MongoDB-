@@ -972,10 +972,13 @@ export function ProfileEditorProvider({
         }),
       });
 
-      const data = await res.json();
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await res.json().catch(() => ({})) : null;
 
       if (!res.ok) {
-        const errorMsg = data.error || 'Failed to save changes.';
+        const errorMsg = res.status === 413
+          ? 'Profile payload is too large. Please select a photo under 4.5MB.'
+          : (data?.error || `Failed to save changes (${res.status}).`);
         setStatusMessage({ type: 'error', text: errorMsg });
         showToast(errorMsg);
         setIsSaving(false);

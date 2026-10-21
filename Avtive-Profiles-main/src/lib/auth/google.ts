@@ -46,11 +46,11 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig {
 }
 
 export function getGoogleRedirectUri(origin?: string): string {
-  // If request is made from localhost / 127.0.0.1, prioritize local origin for dev testing
-  if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+  // Prioritize request origin if provided (works dynamically for localhost, preview, and production domains)
+  if (origin && typeof origin === 'string' && origin.startsWith('http')) {
     return `${origin.replace(/\/+$/, '')}/api/auth/google/callback`;
   }
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || origin || 'http://localhost:3000').replace(/\/+$/, '');
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
   return `${baseUrl}/api/auth/google/callback`;
 }
 

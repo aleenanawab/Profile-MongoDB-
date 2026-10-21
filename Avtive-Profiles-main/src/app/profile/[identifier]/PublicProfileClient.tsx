@@ -26,6 +26,7 @@ import { ProfileSectionTabBar } from '@/components/profiles/ProfileSectionTabBar
 import { Edit3, Save, X, Loader2, LayoutGrid, Sun, Moon, LogOut } from 'lucide-react';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { usePortfolioTheme } from '@/context/ThemeContext';
+import { uploadImageToStorage } from '@/lib/imageCompression';
 
 export interface PublicProfileClientProps {
   initialProfile: ProfileData;
@@ -502,6 +503,22 @@ function PublicProfileClientInner({
         certifications: sanitizedCertifications
       };
 
+      // Pre-upload raw base64 images to Cloudinary to avoid 413 Payload Too Large on /api/profile/update
+      if (payload.avatar && typeof payload.avatar === 'string' && payload.avatar.startsWith('data:')) {
+        try {
+          payload.avatar = await uploadImageToStorage(payload.avatar, 'avatars');
+        } catch (uploadErr) {
+          console.warn('Avatar pre-upload warning:', uploadErr);
+        }
+      }
+      if (payload.coverImage && typeof payload.coverImage === 'string' && payload.coverImage.startsWith('data:')) {
+        try {
+          payload.coverImage = await uploadImageToStorage(payload.coverImage, 'profiles');
+        } catch (uploadErr) {
+          console.warn('Cover pre-upload warning:', uploadErr);
+        }
+      }
+
       const res = await fetch('/api/profile/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -510,11 +527,18 @@ function PublicProfileClientInner({
           updatedData: payload
         })
       });
-      const data = await res.json();
+
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await res.json().catch(() => ({})) : null;
+
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to save changes.');
+        if (res.status === 413) {
+          throw new Error('Profile payload is too large. Please select a photo under 4.5MB.');
+        }
+        throw new Error(data?.error || `Failed to save changes (${res.status}).`);
       }
-      setProfile(data.profile || payload);
+
+      setProfile(data?.profile || payload);
       setIsEditing(false);
       showToast('Profile saved successfully!');
     } catch (err: any) {
@@ -526,19 +550,38 @@ function PublicProfileClientInner({
 
   const handleSavePartial = async (partialData: Partial<ProfileData>): Promise<ProfileData> => {
     try {
+      const sanitizedPartial = { ...partialData };
+      if (sanitizedPartial.avatar && typeof sanitizedPartial.avatar === 'string' && sanitizedPartial.avatar.startsWith('data:')) {
+        try {
+          sanitizedPartial.avatar = await uploadImageToStorage(sanitizedPartial.avatar, 'avatars');
+        } catch {}
+      }
+      if (sanitizedPartial.coverImage && typeof sanitizedPartial.coverImage === 'string' && sanitizedPartial.coverImage.startsWith('data:')) {
+        try {
+          sanitizedPartial.coverImage = await uploadImageToStorage(sanitizedPartial.coverImage, 'profiles');
+        } catch {}
+      }
+
       const res = await fetch('/api/profile/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileId: profile.id,
-          updatedData: partialData
+          updatedData: sanitizedPartial
         })
       });
-      const data = await res.json();
+
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await res.json().catch(() => ({})) : null;
+
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to save changes.');
+        if (res.status === 413) {
+          throw new Error('Section update payload is too large.');
+        }
+        throw new Error(data?.error || `Failed to save changes (${res.status}).`);
       }
-      const updated = data.profile || { ...profile, ...partialData };
+
+      const updated = data?.profile || { ...profile, ...sanitizedPartial };
       setProfile(updated);
       setCurrentDraft(updated);
       try {

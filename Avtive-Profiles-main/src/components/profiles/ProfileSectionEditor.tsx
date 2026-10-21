@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { ProfileData, ProfileTheme, ProfileType, CustomFieldItem, normalizeProfileType } from '@/types/profile';
 import { InlineAvatarPicker } from './InlineAvatarPicker';
+import { compressImageFile } from '@/lib/imageCompression';
 
 export interface ProfileSectionEditorProps {
   /** Initial mode for the editor */
@@ -326,22 +327,32 @@ export function ProfileSectionEditor({
       setStatusFeedback({ type: 'error', text: 'Please select a valid image file.' });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        setCoverImage(reader.result as string);
-        onLiveUpdate?.({ coverImage: reader.result as string });
-      }
-    };
-    reader.readAsDataURL(file);
+    let toUpload = file;
+    try {
+      const { dataUrl, file: compressedFile } = await compressImageFile(file);
+      setCoverImage(dataUrl);
+      onLiveUpdate?.({ coverImage: dataUrl });
+      toUpload = compressedFile;
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          setCoverImage(reader.result as string);
+          onLiveUpdate?.({ coverImage: reader.result as string });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
 
     setIsUploadingCover(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', toUpload);
+      formData.append('bucket', 'profiles');
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (res.ok && data.url) {
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await res.json().catch(() => ({})) : null;
+      if (res.ok && data?.url) {
         setCoverImage(data.url);
         onLiveUpdate?.({ coverImage: data.url });
       }
@@ -357,22 +368,32 @@ export function ProfileSectionEditor({
       setStatusFeedback({ type: 'error', text: 'Please select a valid image file.' });
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        setAvatar(reader.result as string);
-        onLiveUpdate?.({ avatar: reader.result as string });
-      }
-    };
-    reader.readAsDataURL(file);
+    let toUpload = file;
+    try {
+      const { dataUrl, file: compressedFile } = await compressImageFile(file);
+      setAvatar(dataUrl);
+      onLiveUpdate?.({ avatar: dataUrl });
+      toUpload = compressedFile;
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          setAvatar(reader.result as string);
+          onLiveUpdate?.({ avatar: reader.result as string });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
 
     setIsUploadingAvatar(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', toUpload);
+      formData.append('bucket', 'avatars');
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (res.ok && data.url) {
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      const data = isJson ? await res.json().catch(() => ({})) : null;
+      if (res.ok && data?.url) {
         setAvatar(data.url);
         onLiveUpdate?.({ avatar: data.url });
       }
@@ -473,9 +494,13 @@ export function ProfileSectionEditor({
           })
         });
 
-        const data = await res.json();
+        const isJson = res.headers.get('content-type')?.includes('application/json');
+        const data = isJson ? await res.json().catch(() => ({})) : null;
         if (!res.ok) {
-          setStatusFeedback({ type: 'error', text: data.error || 'Failed to update profile.' });
+          const errorMsg = res.status === 413
+            ? 'Profile payload is too large. Please select a photo under 4.5MB.'
+            : (data?.error || `Failed to update profile (${res.status}).`);
+          setStatusFeedback({ type: 'error', text: errorMsg });
           setIsSaving(false);
           return;
         }

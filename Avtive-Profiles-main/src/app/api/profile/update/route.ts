@@ -8,7 +8,8 @@ import {
   getCompanyByOwnerUserId,
   getCompanyBySlug,
   updateCompany,
-  completeUserOnboarding
+  completeUserOnboarding,
+  createProfileForUser
 } from '@/lib/db';
 import { ensureCloudinaryAssetUrl } from '@/lib/storage';
 import { ProfileData } from '@/types/profile';

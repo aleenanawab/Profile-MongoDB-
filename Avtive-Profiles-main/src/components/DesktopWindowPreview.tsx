@@ -48,6 +48,7 @@ import {
   CustomFieldItem 
 } from '@/types/profile';
 import { SUPABASE_DEFAULT_AVATAR } from '@/lib/supabase';
+import { compressImageFile } from '@/lib/imageCompression';
 
 // Stylized Avtive double-chevron "A" Logo
 export function AvtiveLogoIcon({ className = 'w-5 h-5 text-white' }: { className?: string }) {
@@ -322,27 +323,37 @@ export function DesktopWindowPreview({
   };
 
   // Avatar upload
-  const handleAvatarFile = (file: File) => {
+  const handleAvatarFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        handleFieldChange('avatar', reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { dataUrl } = await compressImageFile(file);
+      handleFieldChange('avatar', dataUrl);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          handleFieldChange('avatar', reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Cover upload
-  const handleCoverFile = (file: File) => {
+  const handleCoverFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        handleFieldChange('coverImage', reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { dataUrl } = await compressImageFile(file);
+      handleFieldChange('coverImage', dataUrl);
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result) {
+          handleFieldChange('coverImage', reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const identifier = profile.slug || profile.id || 'aleenanawab';

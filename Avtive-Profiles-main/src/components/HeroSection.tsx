@@ -13,6 +13,7 @@ import { SUPABASE_DEFAULT_AVATAR, SUPABASE_DEFAULT_COVER } from '@/lib/supabase'
 import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from './ui/formControls';
 import { SearchableCombobox } from './forms/SearchableCombobox';
 import { COUNTRIES } from '@/data/countriesDataset';
+import { compressImageFile, uploadImageToStorage } from '@/lib/imageCompression';
 
 interface HeroSectionProps {
   profile: ProfileData;
@@ -72,28 +73,48 @@ export function HeroSection({
   const avatarUrl = profile.avatar || SUPABASE_DEFAULT_AVATAR;
   const sharing = profile.sharingSettings || {};
 
-  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onUpdateField?.('coverImage', reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { dataUrl, file: compressedFile } = await compressImageFile(file);
+      onUpdateField?.('coverImage', dataUrl);
+      uploadImageToStorage(compressedFile, 'profiles')
+        .then((cdnUrl) => {
+          if (cdnUrl) onUpdateField?.('coverImage', cdnUrl);
+        })
+        .catch((err) => console.warn('Background cover upload failed, will upload on save:', err));
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          onUpdateField?.('coverImage', reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onUpdateField?.('avatar', reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const { dataUrl, file: compressedFile } = await compressImageFile(file);
+      onUpdateField?.('avatar', dataUrl);
+      uploadImageToStorage(compressedFile, 'avatars')
+        .then((cdnUrl) => {
+          if (cdnUrl) onUpdateField?.('avatar', cdnUrl);
+        })
+        .catch((err) => console.warn('Background avatar upload failed, will upload on save:', err));
+    } catch {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          onUpdateField?.('avatar', reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const normalizedType = normalizeProfileType(profile.type);

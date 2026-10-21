@@ -81,10 +81,15 @@ export function EditProfileModal({
         })
       });
 
-      const result = await response.json();
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      const result = isJson ? await response.json().catch(() => ({})) : null;
 
       if (!response.ok) {
-        setErrorMessage(result.error || 'Permission Denied: Unable to update profile.');
+        setErrorMessage(
+          response.status === 413
+            ? 'Profile data is too large. Please select a photo under 4.5MB.'
+            : (result?.error || `Unable to update profile (${response.status}).`)
+        );
         setIsSaving(false);
         return;
       }

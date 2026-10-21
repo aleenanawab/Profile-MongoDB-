@@ -80,3 +80,71 @@ export function getProfileLandingDestination(
     mode: 'preview'
   };
 }
+
+/**
+ * CANONICAL ROUTING RULE HELPER:
+ *   not authenticated        → /login
+ *   authenticated, no role   → role selection (/onboarding/role)
+ *   role, no theme           → theme selection (/onboarding/theme?role=...)
+ *   role + theme, no profile → profile form (/onboarding/details?role=...&theme=...)
+ *   everything done          → profile VIEW page (/profile/[slug])
+ *
+ * A missing profile or missing onboarding data must NEVER be treated as "logged out."
+ */
+export function resolveUserDestination(state: {
+  isAuthenticated: boolean;
+  role?: string | null;
+  theme?: string | null;
+  hasProfile?: boolean;
+  profileSlug?: string | null;
+}): string {
+  if (!state.isAuthenticated) {
+    return '/login';
+  }
+  if (!state.role) {
+    return '/onboarding/role';
+  }
+  if (!state.theme) {
+    return `/onboarding/theme?role=${encodeURIComponent(state.role)}`;
+  }
+  if (!state.hasProfile) {
+    return `/onboarding/details?role=${encodeURIComponent(state.role)}&theme=${encodeURIComponent(state.theme)}`;
+  }
+  const slug = state.profileSlug || 'me';
+  return `/profile/${encodeURIComponent(slug)}`;
+}
+
+export async function getUserRoutingDestination(
+  sessionUser: UserSession | null,
+  options?: { dbUser?: UserRecord | null; profile?: ProfileData | null }
+): Promise<string> {
+  if (!sessionUser || !sessionUser.id) {
+    return '/login';
+  }
+
+  const { getUserById, getProfileByUserId, getProfilesByUserId } = await import('@/lib/db');
+  const user = options?.dbUser !== undefined ? options.dbUser : await getUserById(sessionUser.id);
+
+  const role = user?.role || sessionUser.role || null;
+  const theme = user?.preferredTheme || sessionUser.preferredTheme || null;
+
+  let profile = options?.profile;
+  if (profile === undefined) {
+    profile = await getProfileByUserId(sessionUser.id, role || undefined);
+    if (!profile) {
+      const allProfiles = await getProfilesByUserId(sessionUser.id);
+      profile = allProfiles?.[0] || null;
+    }
+  }
+
+  const hasProfile = Boolean(profile && (user?.onboardingCompleted || hasRealSavedProfileData(profile)));
+
+  return resolveUserDestination({
+    isAuthenticated: true,
+    role,
+    theme,
+    hasProfile,
+    profileSlug: profile?.slug || profile?.id || null
+  });
+}
+

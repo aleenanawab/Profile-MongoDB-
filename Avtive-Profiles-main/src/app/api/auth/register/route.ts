@@ -68,29 +68,13 @@ export async function POST(request: NextRequest) {
       createProfile: false
     });
 
-    const { createProfileForUser } = await import('@/lib/db');
-    let profile = null;
-    try {
-      profile = await createProfileForUser(user.id, {
-        name: user.name,
-        email: user.email,
-        type: 'individual',
-        theme: 'editorial'
-      });
-    } catch (profErr) {
-      console.warn('Warning creating profile on register:', profErr);
-    }
-
-    const targetSlug = profile?.slug || profile?.id || user.id;
-    const redirectTo = `/profile/${encodeURIComponent(targetSlug)}?edit=true`;
+    const redirectTo = '/onboarding/role';
 
     const sessionUser: import('@/types/profile').UserSession = {
       id: user.id,
       name: user.name,
       email: user.email,
-      onboardingCompleted: false,
-      role: 'individual',
-      preferredTheme: 'editorial'
+      onboardingCompleted: false
     };
 
     const response = NextResponse.json(
@@ -100,7 +84,7 @@ export async function POST(request: NextRequest) {
         recoveryCode, // Sent once to display with copy button and warning
         email: user.email,
         user: sessionUser,
-        profileSlug: targetSlug,
+        profileSlug: null,
         redirectTo
       },
       { status: 201 }

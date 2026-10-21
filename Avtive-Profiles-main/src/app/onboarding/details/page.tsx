@@ -56,6 +56,13 @@ function DetailsStepContent() {
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
+        if (data.user && data.onboardingCompleted && data.hasProfile) {
+          const targetSlug = data.profileSlug || data.profiles?.[0]?.slug || data.profile?.slug || data.profile?.id || data.user.id;
+          if (targetSlug) {
+            router.replace(`/profile/${targetSlug}`);
+            return;
+          }
+        }
         if (data.user?.name && !fullName) {
           setFullName(data.user.name);
         }
@@ -64,7 +71,7 @@ function DetailsStepContent() {
         }
       })
       .catch(() => {});
-  }, [fullName]);
+  }, [fullName, router]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,7 +106,7 @@ function DetailsStepContent() {
   };
 
   const handleBack = () => {
-    router.push(`/onboarding/role?theme=${theme}&role=${role}`);
+    router.push(`/onboarding/theme?role=${encodeURIComponent(role)}&theme=${encodeURIComponent(theme)}`);
   };
 
   const handleCreateProfile = async (e?: React.FormEvent) => {
@@ -161,7 +168,7 @@ function DetailsStepContent() {
         } catch {}
         window.location.href = `/profile/${encodeURIComponent(targetId)}`;
       } else {
-        window.location.href = '/dashboard';
+        window.location.href = '/my-profile';
       }
     } catch (err) {
       console.error(err);
@@ -478,6 +485,8 @@ function DetailsStepContent() {
 
   return (
     <DualScreenWorkspace
+      workflowTitle="3. Profile Details"
+      workflowSubtitle="Onboarding Step 3 of 3"
       currentUrlPath={`/onboarding/details?theme=${theme}&role=${role}`}
       desktopContent={desktopView}
       mobileContent={mobileView}

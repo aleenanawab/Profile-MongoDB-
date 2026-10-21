@@ -105,7 +105,7 @@ export default function RegisterClient() {
         localStorage.setItem('avtive_remembered_identifier', email.trim());
       } catch {}
 
-      const targetUrl = data.redirectTo || (data.profileSlug ? `/profile/${encodeURIComponent(data.profileSlug)}?edit=true` : '/profile/me?edit=true');
+      const targetUrl = data.redirectTo || '/onboarding/role';
       setRedirectDestination(targetUrl);
 
       // If recovery code is provided, show the dedicated copy & save warning modal
@@ -115,7 +115,7 @@ export default function RegisterClient() {
         return;
       }
 
-      // Automatically land in Edit Mode with session established
+      // Automatically proceed to role selection onboarding
       window.location.href = targetUrl;
     } catch (err) {
       console.error(err);
@@ -570,11 +570,11 @@ export default function RegisterClient() {
             <button
               type="button"
               onClick={() => {
-                window.location.href = redirectDestination || `/profile/me?edit=true`;
+                window.location.href = redirectDestination || '/onboarding/role';
               }}
               className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
-              <span>I have saved my code — Continue to My Profile</span>
+              <span>I have saved my code — Continue to Setup</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

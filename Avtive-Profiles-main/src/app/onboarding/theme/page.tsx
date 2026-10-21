@@ -74,13 +74,13 @@ function ThemeStepContent() {
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
-        if (data.user && data.onboardingCompleted) {
+        if (data.user && data.onboardingCompleted && data.hasProfile) {
           const targetSlug = data.profileSlug || data.profiles?.[0]?.slug || data.profile?.slug || data.profile?.id || data.user.id;
           if (targetSlug) {
             router.replace(`/profile/${targetSlug}`);
-          } else {
-            router.replace('/dashboard');
           }
+        } else if (data.user?.preferredTheme) {
+          setSelectedTheme(data.user.preferredTheme);
         }
       })
       .catch(() => {});
@@ -91,14 +91,28 @@ function ThemeStepContent() {
     setContextTheme(themeId as PortfolioTheme);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setContextTheme(selectedTheme as PortfolioTheme);
-    window.location.href = `/edit-profile?role=${encodeURIComponent(role)}&theme=${encodeURIComponent(selectedTheme)}&edit=true`;
+    try {
+      await fetch('/api/auth/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, theme: selectedTheme })
+      });
+    } catch {}
+    router.push(`/onboarding/details?role=${encodeURIComponent(role)}&theme=${encodeURIComponent(selectedTheme)}`);
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     setContextTheme('editorial');
-    window.location.href = `/edit-profile?role=${encodeURIComponent(role)}&theme=editorial&edit=true`;
+    try {
+      await fetch('/api/auth/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, theme: 'editorial' })
+      });
+    } catch {}
+    router.push(`/onboarding/details?role=${encodeURIComponent(role)}&theme=editorial`);
   };
 
   const handleBack = () => {

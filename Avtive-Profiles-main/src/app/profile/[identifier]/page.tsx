@@ -88,7 +88,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   const userProfiles = (isOwner && session?.id) ? await getProfilesByUserId(session.id) : [];
 
   const onboarded = isUserOnboarded(session, profile);
-  const shouldOpenInEdit = isOwner && (isInitialEdit || !onboarded);
+  const shouldOpenInEdit = Boolean(isOwner && isInitialEdit);
 
   return (
     <PublicProfileClient

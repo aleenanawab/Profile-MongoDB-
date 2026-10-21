@@ -212,16 +212,19 @@ export default function LoginClient() {
       } catch {}
 
       const returnUrl = getReturnUrl();
-      let targetPath = '/onboarding/role';
+      const serverRedirect = data.redirectTo;
+      let targetPath = serverRedirect || '/onboarding/role';
 
       if (data.onboardingCompleted && (data.profileSlug || data.user?.id)) {
         // EXISTING USER DETECTED -> Direct to their saved profile (Company or Individual) in VIEW MODE (PREVIEW)
-        const userProfileUrl = `/profile/${data.profileSlug || data.user.id}`;
+        const userProfileUrl = serverRedirect || `/profile/${data.profileSlug || data.user.id}`;
         targetPath = resolveReturnUrlForExistingUser(returnUrl, userProfileUrl);
         if (targetPath === '/profile' || targetPath === '/profile/' || targetPath === '/my-profile') {
           targetPath = userProfileUrl;
         }
-      } else {
+      } else if (returnUrl && !returnUrl.startsWith('/login') && !returnUrl.startsWith('/register')) {
+        targetPath = returnUrl;
+      } else if (!serverRedirect) {
         // INCOMPLETE ONBOARDING DETECTED -> Resume the missing step
         const userRole = data.role || data.user?.role;
         const userTheme = data.user?.preferredTheme;
@@ -230,7 +233,7 @@ export default function LoginClient() {
         } else if (!userTheme) {
           targetPath = `/onboarding/theme?role=${encodeURIComponent(userRole)}`;
         } else {
-          targetPath = `/edit-profile?role=${encodeURIComponent(userRole)}&theme=${encodeURIComponent(userTheme)}&edit=true`;
+          targetPath = '/onboarding/details';
         }
       }
 

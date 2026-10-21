@@ -52,9 +52,13 @@ export async function POST(request: NextRequest) {
     }
 
     const userProfile = await getProfileByUserId(user.id, user.role);
-    const { isUserOnboarded } = await import('@/lib/auth/userStatus');
-    const isOnboardingComplete = isUserOnboarded(user, userProfile);
-    const targetSlug = userProfile?.slug || userProfile?.id || user.id;
+    const { hasRealSavedProfileData, resolveUserDestination } = await import('@/lib/auth/userStatus');
+    const hasProfile = Boolean(userProfile && hasRealSavedProfileData(userProfile));
+    const isOnboardingComplete = Boolean(user.onboardingCompleted || hasProfile);
+    const targetSlug = userProfile?.slug || userProfile?.id || null;
+
+    const role = user.role || userProfile?.type || null;
+    const preferredTheme = user.preferredTheme || userProfile?.theme || null;
 
     // Set persistent, secure session cookie
     const sessionUser = {
@@ -62,27 +66,30 @@ export async function POST(request: NextRequest) {
       name: user.name,
       email: user.email,
       onboardingCompleted: isOnboardingComplete,
-      role: user.role || userProfile?.type || 'individual',
-      preferredTheme: user.preferredTheme || userProfile?.theme || 'editorial'
+      role: role || undefined,
+      preferredTheme: preferredTheme || undefined
     };
 
-    // Unified Preview/Edit landing rule:
-    // First-time user whose profile has never been saved: open in Edit Mode
-    // Returning saved user: open in Preview Mode
-    const redirectUrl = isOnboardingComplete
-      ? `/profile/${encodeURIComponent(targetSlug)}`
-      : `/profile/${encodeURIComponent(targetSlug)}?edit=true`;
+    // Calculate landing page using canonical ROUTING RULE
+    const redirectUrl = resolveUserDestination({
+      isAuthenticated: true,
+      role,
+      theme: preferredTheme,
+      hasProfile,
+      profileSlug: targetSlug
+    });
 
     const response = NextResponse.json({
       success: true,
       message: 'Login successful.',
       user: sessionUser,
-      hasProfile: Boolean(userProfile),
-      profileSlug: userProfile?.slug || userProfile?.id || null,
-      profileType: userProfile?.type || user.role || 'individual',
-      type: userProfile?.type || user.role || 'individual',
+      hasProfile,
+      profileSlug: targetSlug,
+      profileType: role || 'individual',
+      type: role || 'individual',
       onboardingCompleted: isOnboardingComplete,
-      role: userProfile?.type || user.role || null,
+      role,
+      preferredTheme,
       redirectTo: redirectUrl
     });
 

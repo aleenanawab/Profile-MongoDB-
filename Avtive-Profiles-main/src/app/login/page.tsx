@@ -15,6 +15,14 @@ interface LoginPageProps {
   searchParams: Promise<{ returnUrl?: string; registered?: string }>;
 }
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await getSession();
+  if (session && session.id) {
+    const { getUserRoutingDestination } = await import('@/lib/auth/userStatus');
+    const destination = await getUserRoutingDestination(session);
+    if (destination && destination !== '/login') {
+      redirect(destination);
+    }
+  }
   return <LoginClient />;
 }

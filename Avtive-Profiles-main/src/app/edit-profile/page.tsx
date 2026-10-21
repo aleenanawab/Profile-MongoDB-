@@ -67,17 +67,9 @@ export default async function EditProfilePage({ searchParams }: EditProfilePageP
             targetProfile.theme
           );
         } else {
-          const selectedRole = normalizeProfileType(role || 'individual');
-          const selectedTheme = (theme && theme !== 'default' ? theme : 'editorial') as ProfileTheme;
-          targetProfile = await createProfileForUser(session.id, {
-            name: session.name,
-            email: session.email,
-            profileName: selectedRole === 'team' ? 'Company Profile' : 'Primary Profile',
-            designation: 'Professional',
-            type: selectedRole,
-            theme: selectedTheme
-          });
-          await completeUserOnboarding(session.id, selectedRole, selectedTheme);
+          const { getUserRoutingDestination } = await import('@/lib/auth/userStatus');
+          const destination = await getUserRoutingDestination(session);
+          redirect(destination);
         }
       } catch (profErr) {
         console.error('Error in profile lookup/creation in edit-profile:', profErr);

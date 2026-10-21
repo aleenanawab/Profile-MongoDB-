@@ -12,8 +12,7 @@ import {
   linkUserGoogleSub,
   createUser,
   getProfileByUserId,
-  getProfilesByUserId,
-  createProfileForUser
+  getProfilesByUserId
 } from '@/lib/db';
 import { setSessionCookie, setReturningUserCookie, sanitizeReturnUrl, resolveReturnUrlForExistingUser } from '@/lib/auth';
 
@@ -131,19 +130,6 @@ export async function GET(request: NextRequest) {
 
       user = createRes.user;
       isNewUser = true;
-
-      // Create initial profile for the new user
-      try {
-        await createProfileForUser(user.id, {
-          name: fullName,
-          email,
-          avatar: picture || '',
-          type: 'individual',
-          theme: 'editorial'
-        });
-      } catch (profErr) {
-        console.warn('[Google OAuth Callback] Warning creating initial profile:', profErr);
-      }
     }
   }
 
@@ -152,37 +138,29 @@ export async function GET(request: NextRequest) {
     getProfileByUserId(user.id, user.role),
     getProfilesByUserId(user.id)
   ]);
-  let userProfile = profile || (profiles && profiles.length > 0 ? profiles[0] : null);
+  const userProfile = isNewUser ? null : (profile || (profiles && profiles.length > 0 ? profiles[0] : null));
 
-  // Ensure initial profile exists for user
-  if (!userProfile) {
-    try {
-      userProfile = await createProfileForUser(user.id, {
-        name: user.name || name || 'Google User',
-        email: user.email || email,
-        avatar: picture || user.avatar || '',
-        type: 'individual',
-        theme: 'editorial'
-      });
-    } catch (profErr) {
-      console.warn('[Google OAuth Callback] Error creating fallback profile:', profErr);
-    }
-  }
-
-  const { isUserOnboarded } = await import('@/lib/auth/userStatus');
-  const onboarded = !isNewUser && isUserOnboarded(user, userProfile);
+  const { isUserOnboarded, resolveUserDestination } = await import('@/lib/auth/userStatus');
+  const onboarded = !isNewUser && Boolean(isUserOnboarded(user, userProfile));
   const targetSlug = userProfile?.slug || userProfile?.id || user.id;
 
   const returnUrl = stateVerification.returnUrl;
   const safeNext = sanitizeReturnUrl(returnUrl, null);
 
-  let destinationPath = '';
-  if (onboarded) {
-    // Returning user: go straight to their existing profile in Preview Mode
-    destinationPath = resolveReturnUrlForExistingUser(safeNext, `/profile/${encodeURIComponent(targetSlug)}`);
-  } else {
-    // New user whose profile has never been saved: open in Edit Mode
-    destinationPath = `/profile/${encodeURIComponent(targetSlug)}?edit=true`;
+  const destinationState = {
+    isAuthenticated: true,
+    hasRole: Boolean(user.role || userProfile?.type),
+    hasTheme: Boolean(user.preferredTheme || userProfile?.theme),
+    hasProfile: Boolean(userProfile && !isNewUser),
+    profileSlug: targetSlug,
+    role: user.role || userProfile?.type,
+    theme: user.preferredTheme || userProfile?.theme
+  };
+  const canonicalDestination = resolveUserDestination(destinationState);
+
+  let destinationPath = canonicalDestination;
+  if (onboarded && safeNext && !safeNext.startsWith('/login') && !safeNext.startsWith('/register')) {
+    destinationPath = resolveReturnUrlForExistingUser(safeNext, canonicalDestination);
   }
 
   const sessionUser = {
@@ -191,8 +169,8 @@ export async function GET(request: NextRequest) {
     email: user.email || email,
     avatar: picture || user.avatar,
     onboardingCompleted: onboarded,
-    role: user.role || userProfile?.type || 'individual',
-    preferredTheme: user.preferredTheme || userProfile?.theme || 'editorial'
+    role: user.role || userProfile?.type || undefined,
+    preferredTheme: user.preferredTheme || userProfile?.theme || undefined
   };
 
   const redirectUrl = new URL(destinationPath, request.url);

@@ -53,30 +53,35 @@ function RoleStepContent() {
   // Shared state between Desktop and Mobile screens
   const [selectedRole, setSelectedRole] = useState<ProfileType>(initialRole);
 
-  // Route protection: If user already has an active profile on server, redirect them
+  // Route protection: If user already has an active completed profile on server, redirect them
   useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
-        if (data.user && data.onboardingCompleted) {
+        if (data.user && data.onboardingCompleted && data.hasProfile) {
           const targetSlug = data.profileSlug || data.profiles?.[0]?.slug || data.profile?.slug || data.profile?.id || data.user.id;
           if (targetSlug) {
             router.replace(`/profile/${targetSlug}`);
-          } else {
-            router.replace('/dashboard');
           }
+        } else if (data.user?.role) {
+          setSelectedRole(normalizeProfileType(data.user.role));
         }
       })
       .catch(() => {});
   }, [router]);
 
   const handleBack = () => {
-    router.push('/login');
+    router.push('/');
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     try {
       localStorage.setItem('avtive_selected_role', selectedRole);
+      await fetch('/api/auth/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: selectedRole })
+      });
     } catch {}
     router.push(`/onboarding/theme?role=${selectedRole}&theme=${theme}`);
   };

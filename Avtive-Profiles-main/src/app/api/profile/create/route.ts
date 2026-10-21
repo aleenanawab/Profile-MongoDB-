@@ -58,12 +58,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const newProfile = await createProfileForUser(session.id, {
+    const targetType = normalizeProfileType(body.type || session.role || 'individual');
+    const targetTheme = (body.theme || session.preferredTheme || 'editorial') as import('@/types/profile').ProfileTheme;
+
+    const profileData = {
       name,
       firstName: body.firstName || name.split(' ')[0] || '',
       secondName: body.secondName || body.lastName || name.split(' ').slice(1).join(' ') || '',
       lastName: body.lastName || body.secondName || name.split(' ').slice(1).join(' ') || '',
-      type: normalizeProfileType(body.type || 'individual'),
+      type: targetType,
       profileName,
       profession: body.profession?.trim() || body.professionalTitle?.trim() || body.designation?.trim() || 'Professional',
       professionalTitle: body.professionalTitle?.trim() || body.designation?.trim() || body.profession?.trim() || 'Professional',
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest) {
       shortBio: body.shortBio?.trim() || body.bio?.trim() || 'Welcome to my digital profile on Avtive.',
       fullBio: body.fullBio?.trim() || body.about?.trim() || 'Connect with me directly via phone, WhatsApp, or email.',
       tagline: body.tagline?.trim() || '',
-      theme: body.theme || 'editorial',
+      theme: targetTheme,
       skills,
       experience: body.experience || body.experiences || [],
       experiences: body.experiences || body.experience || [],
@@ -96,22 +99,39 @@ export async function POST(request: NextRequest) {
       username: body.username,
       customFields: body.customFields || [],
       dynamicSections: body.dynamicSections || []
-    });
+    };
 
-    if (newProfile.type === 'team') {
+    // Find-first check to prevent duplicates: Keep individual and company (team) profiles separate
+    const { updateProfile, completeUserOnboarding } = await import('@/lib/db');
+    let targetProfile = await getProfileByUserId(session.id, targetType);
+    if (targetProfile) {
+      const updateResult = await updateProfile(
+        targetProfile.id,
+        profileData,
+        session.id,
+        session.email
+      );
+      if (updateResult.profile) {
+        targetProfile = updateResult.profile;
+      }
+    } else {
+      targetProfile = await createProfileForUser(session.id, profileData);
+    }
+
+    if (targetProfile.type === 'team') {
       try {
         const existingComp = await getCompanyByOwnerUserId(session.id);
         if (!existingComp) {
           await createCompany(session.id, {
-            name: newProfile.name || body.company || `${session.name}'s Company`,
-            slug: newProfile.slug,
-            theme: newProfile.theme,
-            tagline: newProfile.tagline || newProfile.designation || '',
-            description: newProfile.about || newProfile.bio || '',
-            location: newProfile.location || '',
+            name: targetProfile.name || body.company || `${session.name}'s Company`,
+            slug: targetProfile.slug,
+            theme: targetProfile.theme,
+            tagline: targetProfile.tagline || targetProfile.designation || '',
+            description: targetProfile.about || targetProfile.bio || '',
+            location: targetProfile.location || '',
             website: body.website || '',
-            logoUrl: newProfile.avatar || '',
-            coverUrl: newProfile.coverImage || ''
+            logoUrl: targetProfile.avatar || '',
+            coverUrl: targetProfile.coverImage || ''
           });
         }
       } catch (compErr) {
@@ -119,16 +139,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Complete onboarding for user
+    await completeUserOnboarding(session.id, targetType, targetTheme);
+
+    const { setSessionCookie } = await import('@/lib/auth');
+    const updatedSession: import('@/types/profile').UserSession = {
+      id: session.id,
+      name: session.name,
+      email: session.email,
+      onboardingCompleted: true,
+      role: targetType,
+      preferredTheme: targetTheme
+    };
+
     const response = NextResponse.json(
       {
         success: true,
         message: 'Profile created successfully.',
-        profile: newProfile
+        profile: targetProfile,
+        user: updatedSession
       },
       { status: 201 }
     );
 
-    setProfileResponseCookies(response, newProfile);
+    await setSessionCookie(updatedSession, response);
+    setProfileResponseCookies(response, targetProfile);
     return response;
 
   } catch (error) {

@@ -64,12 +64,20 @@ export async function POST(request: NextRequest) {
     // 3. Handle Password Reset Link vs One-Time Recovery Code
     if (!cleanRecoveryCode) {
       // Flow A: Standard Password Reset Link generation
-      const resetInfo = await createPasswordResetToken(emailOrUsername);
-      let resetUrl: string | undefined;
+      const { isEmailServiceConfigured } = await import('@/lib/email');
+      if (!isEmailServiceConfigured()) {
+        return NextResponse.json(
+          {
+            error: 'Email delivery service is not configured. Please use your One-Time Recovery Code to reset your password.'
+          },
+          { status: 400 }
+        );
+      }
 
+      const resetInfo = await createPasswordResetToken(emailOrUsername);
       if (resetInfo) {
         const origin = request.nextUrl.origin || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        resetUrl = `${origin}/reset-password?token=${resetInfo.token}&email=${encodeURIComponent(resetInfo.user.email)}`;
+        const resetUrl = `${origin}/reset-password?token=${resetInfo.token}&email=${encodeURIComponent(resetInfo.user.email)}`;
         try {
           await sendPasswordResetEmail({
             to: resetInfo.user.email,
@@ -81,12 +89,11 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Consistent response to prevent user enumeration
+      // Consistent response to prevent user enumeration without leaking resetUrl bypass
       return NextResponse.json(
         {
           success: true,
-          message: 'If an account exists with this email address, a password reset link has been sent.',
-          ...(resetUrl ? { resetUrl } : {})
+          message: 'If an account exists with this email address, a password reset link has been sent.'
         },
         { status: 200 }
       );

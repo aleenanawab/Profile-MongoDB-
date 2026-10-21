@@ -93,13 +93,17 @@ export async function generateCardPdf(profile: ProfileData, isDark = false): Pro
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(secondaryText[0], secondaryText[1], secondaryText[2]);
-  const company = profile.company || profile.companyInfo?.name || 'Avtive Network';
-  doc.text(company.substring(0, 30), frontX + 5, frontY + 36);
+  const company = profile.company || profile.companyInfo?.name || '';
+  if (company) {
+    doc.text(company.substring(0, 30), frontX + 5, frontY + 36);
+  }
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  const location = profile.location || 'Global';
-  doc.text(location.substring(0, 30), frontX + 5, frontY + 41);
+  const location = profile.location || '';
+  if (location) {
+    doc.text(location.substring(0, 30), frontX + 5, frontY + 41);
+  }
 
   // Card Bottom Right Badge
   doc.setFontSize(6);

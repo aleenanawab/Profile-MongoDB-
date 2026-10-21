@@ -51,9 +51,7 @@ function CreateProfileContent() {
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   // Shared Identity State
-  const [profileName, setProfileName] = useState(
-    role === 'team' ? 'Team Profile' : 'Personal Profile'
-  );
+  const [profileName, setProfileName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [secondName, setSecondName] = useState('');
   const [professionalTitle, setProfessionalTitle] = useState('');
@@ -61,23 +59,15 @@ function CreateProfileContent() {
   const [bio, setBio] = useState('');
 
   // Media
-  const [avatar, setAvatar] = useState(PRESET_AVATARS[0]);
-  const [coverImage, setCoverImage] = useState(PRESET_COVERS[0]);
+  const [avatar, setAvatar] = useState('');
+  const [coverImage, setCoverImage] = useState('');
 
   // Skills chips
-  const [skills, setSkills] = useState<string[]>(['TypeScript', 'Next.js', 'React', 'Tailwind CSS']);
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
 
   // Projects
-  const [projects, setProjects] = useState<ProjectItem[]>([
-    {
-      id: 'proj-1',
-      title: 'Digital Portfolio Architecture',
-      description: 'Clean, modern digital profile UI architecture with responsive cards.',
-      link: 'https://github.com',
-      image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=800&auto=format&fit=crop'
-    }
-  ]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
   const [newProjectLink, setNewProjectLink] = useState('');
@@ -176,7 +166,7 @@ function CreateProfileContent() {
     if (e) e.preventDefault();
     setErrorMessage(null);
 
-    const fullName = [firstName.trim(), secondName.trim()].filter(Boolean).join(' ') || 'Aleena Nawab';
+    const fullName = [firstName.trim(), secondName.trim()].filter(Boolean).join(' ');
 
     setIsLoading(true);
 
@@ -186,10 +176,10 @@ function CreateProfileContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: fullName,
-          profileName: profileName.trim() || (role === 'team' ? 'Team Profile' : 'Personal Profile'),
-          profession: professionalTitle.trim() || 'Software Engineer',
-          designation: professionalTitle.trim() || 'Software Engineer',
-          company: company.trim() || 'Avtive',
+          profileName: profileName.trim(),
+          profession: professionalTitle.trim(),
+          designation: professionalTitle.trim(),
+          company: company.trim(),
           shortBio: bio.trim(),
           fullBio: bio.trim(),
           avatar,

@@ -35,19 +35,13 @@ function DetailsStepContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  const [profileName, setProfileName] = useState(
-    role === 'team' ? 'Team Profile' : 'Personal Profile'
-  );
+  const [profileName, setProfileName] = useState('');
   const [fullName, setFullName] = useState('');
-  const [professionalTitle, setProfessionalTitle] = useState(
-    role === 'team' ? 'Team / Organization' : 'Full Stack Developer'
-  );
-  const [company, setCompany] = useState(role === 'team' ? 'Avtive Inc.' : 'Avtive');
-  const [bio, setBio] = useState(
-    'Passionate professional focused on delivering intuitive digital experiences with modern technology and clean architecture.'
-  );
-  const [avatar, setAvatar] = useState(PRESET_AVATARS[0]);
-  const [coverImage, setCoverImage] = useState(DEFAULT_COVER);
+  const [professionalTitle, setProfessionalTitle] = useState('');
+  const [company, setCompany] = useState('');
+  const [bio, setBio] = useState('');
+  const [avatar, setAvatar] = useState('');
+  const [coverImage, setCoverImage] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -187,11 +181,15 @@ function DetailsStepContent() {
 
       {/* FULL-WIDTH COVER PHOTO AT TOP OF WINDOW */}
       <div className="relative w-full h-44 sm:h-52 overflow-hidden shrink-0 group bg-slate-900">
-        <img
-          src={coverImage}
-          alt="Cover Photo"
-          className="w-full h-full object-cover"
-        />
+        {coverImage ? (
+          <img
+            src={coverImage}
+            alt="Cover Photo"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-slate-800 to-slate-900" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A101E] via-transparent to-black/20" />
         
         {/* Minimalist Cover Photo Edit Button */}
@@ -215,7 +213,13 @@ function DetailsStepContent() {
           <div className="flex items-end gap-4">
             {/* Avatar with Camera Icon Overlay */}
             <div className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full overflow-hidden border-4 border-white dark:border-[#070D1A] bg-slate-100 dark:bg-slate-800 shadow-xl shrink-0 group">
-              <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+              {avatar ? (
+                <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  <User className="w-8 h-8" />
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}

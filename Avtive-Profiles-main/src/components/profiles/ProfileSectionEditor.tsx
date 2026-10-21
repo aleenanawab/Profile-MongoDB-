@@ -77,19 +77,19 @@ export function ProfileSectionEditor({
 
   // Form Fields State
   const [firstName, setFirstName] = useState(
-    profile.firstName || (profile.name ? profile.name.split(' ')[0] : 'Aleena')
+    profile.firstName || (profile.name ? profile.name.split(' ')[0] : '')
   );
   const [secondName, setSecondName] = useState(
-    profile.secondName || profile.lastName || (profile.name ? profile.name.split(' ').slice(1).join(' ') : 'Nawab')
+    profile.secondName || profile.lastName || (profile.name ? profile.name.split(' ').slice(1).join(' ') : '')
   );
   const [username, setUsername] = useState(
     profile.username || profile.slug || ''
   );
   const [profession, setProfession] = useState(
-    profile.profession || profile.professionalTitle || profile.designation || 'Full Stack Engineer'
+    profile.profession || profile.professionalTitle || profile.designation || ''
   );
   const [profileName, setProfileName] = useState(
-    profile.profileName || (mode === 'add' ? 'New Profile Persona' : profile.name || 'Primary Profile')
+    profile.profileName || (mode === 'add' ? '' : profile.name || '')
   );
   const [profileType, setProfileType] = useState<ProfileType>(
     normalizeProfileType(profile.type || profile.profileType || 'individual')
@@ -100,21 +100,21 @@ export function ProfileSectionEditor({
 
   // Bios & Narrative
   const [shortBio, setShortBio] = useState(
-    profile.shortBio || profile.bio || 'Passionate professional delivering intuitive digital experiences with modern technology.'
+    profile.shortBio || profile.bio || ''
   );
   const [fullBio, setFullBio] = useState(
-    profile.fullBio || profile.about || 'Hello! I specialize in high-performance web applications, responsive user interfaces, and modular design systems.'
+    profile.fullBio || profile.about || ''
   );
   const [tagline, setTagline] = useState(
     profile.tagline || ''
   );
 
   // Organization & Location
-  const [company, setCompany] = useState(profile.company || 'Avtive');
+  const [company, setCompany] = useState(profile.company || '');
   const [department, setDepartment] = useState(profile.department || '');
-  const [location, setLocation] = useState(profile.location || 'Global');
+  const [location, setLocation] = useState(profile.location || '');
   const [pronouns, setPronouns] = useState(profile.pronouns || '');
-  const [statusBadge, setStatusBadge] = useState(profile.statusBadge || 'Available for projects');
+  const [statusBadge, setStatusBadge] = useState(profile.statusBadge || '');
 
   // Contact Channels
   const [email, setEmail] = useState(profile.email || '');
@@ -156,7 +156,7 @@ export function ProfileSectionEditor({
       setSecondName(lName);
       setUsername(profile.username || profile.slug || '');
       setProfession(profile.profession || profile.professionalTitle || profile.designation || '');
-      setProfileName(profile.profileName || profile.name || 'Primary Profile');
+      setProfileName(profile.profileName || profile.name || '');
       setProfileType(normalizeProfileType(profile.type || profile.profileType || 'individual'));
       setTheme(profile.theme === 'default' ? 'editorial' : (profile.theme || 'editorial'));
       setShortBio(profile.shortBio || profile.bio || '');
@@ -183,7 +183,7 @@ export function ProfileSectionEditor({
   }, [profile.id, profile.slug, profile.avatar, profile.coverImage, mode]);
 
   // Derived full name
-  const fullName = `${firstName} ${secondName}`.trim() || firstName.trim() || 'Professional';
+  const fullName = `${firstName} ${secondName}`.trim() || firstName.trim() || '';
 
   // Live update trigger when fields change in edit mode
   useEffect(() => {

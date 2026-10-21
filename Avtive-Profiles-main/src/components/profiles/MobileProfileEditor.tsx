@@ -342,10 +342,10 @@ export function MobileProfileEditor() {
 
             <div className="pb-1.5 min-w-0">
               <h2 className="text-base font-bold text-white tracking-tight truncate">
-                {profile.name || 'Aleena Nawab'}
+                {profile.name || ''}
               </h2>
               <p className="text-xs text-slate-400 font-medium truncate">
-                {profile.professionalTitle || profile.designation || 'Full Stack Engineer'}
+                {profile.professionalTitle || profile.designation || ''}
               </p>
             </div>
           </div>

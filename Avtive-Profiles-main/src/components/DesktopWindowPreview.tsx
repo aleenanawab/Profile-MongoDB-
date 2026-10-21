@@ -356,8 +356,8 @@ export function DesktopWindowPreview({
     }
   };
 
-  const identifier = profile.slug || profile.id || 'aleenanawab';
-  const displayUrl = url || `https://avtive-profiles-d297.vercel.app/profile/${identifier}`;
+  const identifier = profile.slug || profile.id || '';
+  const displayUrl = url || (identifier ? `https://avtive-profiles-d297.vercel.app/profile/${identifier}` : '');
 
   // Hidden sections count
   const allSectionKeys = ['profile', 'personalDetails', 'skills', 'projects', 'education', 'contactInfo', 'socialLinks', 'experience'];
@@ -483,10 +483,10 @@ export function DesktopWindowPreview({
                 </div>
                 <div className="min-w-0">
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {profile.name || 'Aleena Nawab'}
+                    {profile.name || ''}
                   </h4>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                    {profile.professionalTitle || profile.designation || 'Full Stack Engineer'}
+                    {profile.professionalTitle || profile.designation || ''}
                   </p>
                 </div>
               </div>

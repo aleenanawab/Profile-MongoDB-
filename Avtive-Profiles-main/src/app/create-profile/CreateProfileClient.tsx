@@ -82,21 +82,21 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
 
   // Form State
   const [profileType, setProfileType] = useState<ProfileType>('individual');
-  const [profileName, setProfileName] = useState('MERN Developer');
-  const [fullName, setFullName] = useState(user.name || 'Aleena Nawab');
-  const [professionalTitle, setProfessionalTitle] = useState('Full Stack Developer');
-  const [company, setCompany] = useState('Avtive Network');
-  const [location, setLocation] = useState('San Francisco, CA');
-  const [phone, setPhone] = useState('+1 (555) 234-5678');
-  const [whatsapp, setWhatsapp] = useState('+1 (555) 234-5678');
-  const [email, setEmail] = useState(user.email || 'aleena@avtive.app');
-  const [website, setWebsite] = useState('https://avtive.app');
-  const [bio, setBio] = useState('Passionate developer with a love for building modern web applications with clean code and intuitive user experiences.');
-  const [about, setAbout] = useState('Experienced in full-stack architecture, high-performance APIs, and reactive responsive interfaces.');
-  const [skillsList, setSkillsList] = useState<string[]>(['React', 'Next.js', 'TypeScript', 'Node.js', 'Tailwind CSS', 'MongoDB']);
+  const [profileName, setProfileName] = useState('');
+  const [fullName, setFullName] = useState(user.name || '');
+  const [professionalTitle, setProfessionalTitle] = useState('');
+  const [company, setCompany] = useState('');
+  const [location, setLocation] = useState('');
+  const [phone, setPhone] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
+  const [email, setEmail] = useState(user.email || '');
+  const [website, setWebsite] = useState('');
+  const [bio, setBio] = useState('');
+  const [about, setAbout] = useState('');
+  const [skillsList, setSkillsList] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   const [theme, setTheme] = useState<ProfileTheme>('editorial');
-  const [avatar, setAvatar] = useState('https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop');
+  const [avatar, setAvatar] = useState('');
 
   const [activeMobileViewTab, setActiveMobileViewTab] = useState<'form' | 'preview'>('form');
   const [isLoading, setIsLoading] = useState(false);
@@ -140,44 +140,28 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
       id: 'preview-new-profile-id',
       userId: user.id,
       slug: 'new-profile-preview',
-      name: fullName || 'Your Full Name',
-      profileName: profileName || 'Profile Persona',
-      designation: professionalTitle || 'Professional Role',
-      profession: professionalTitle || 'Professional Role',
-      professionalTitle: professionalTitle || 'Professional Role',
-      company: company || 'Avtive Network',
-      location: location || 'Global',
-      avatar: avatar || PRESET_AVATARS[0],
+      name: fullName || '',
+      profileName: profileName || '',
+      designation: professionalTitle || '',
+      profession: professionalTitle || '',
+      professionalTitle: professionalTitle || '',
+      company: company || '',
+      location: location || '',
+      avatar: avatar || '',
       email: email || user.email || '',
       phone: phone || '',
       whatsapp: whatsapp || phone || '',
-      bio: bio || 'Welcome to my digital profile on Avtive.',
-      shortBio: bio || 'Welcome to my digital profile on Avtive.',
-      about: about || bio || 'Passionate professional delivering clean code and intuitive experiences.',
-      fullBio: about || bio || 'Connect with me directly via phone, WhatsApp, or email.',
-      skills: skillsList.length > 0 ? skillsList : ['React', 'Next.js', 'TypeScript', 'Tailwind CSS'],
+      bio: bio || '',
+      shortBio: bio || '',
+      about: about || bio || '',
+      fullBio: about || bio || '',
+      skills: skillsList,
       theme: theme || 'editorial',
       type: profileType,
       socials: socialsArray,
       socialLinks: socialsArray.map((s) => ({ platform: s.platform, url: s.url, label: s.label })),
-      experience: [
-        {
-          id: 'exp-1',
-          title: professionalTitle || 'Lead Engineer',
-          company: company || 'Avtive Network',
-          period: '2022 - Present',
-          current: true,
-          description: 'Building modern reactive applications with cloud architecture and intuitive design systems.'
-        }
-      ],
-      education: [
-        {
-          id: 'edu-1',
-          degree: 'Bachelor of Science in Computer Science',
-          institution: 'University of Technology',
-          year: '2021'
-        }
-      ],
+      experience: [],
+      education: [],
       projects: [],
       services: [],
       certifications: []
@@ -451,7 +435,13 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
           {/* Avatar Photo Picker */}
           <div className="md:col-span-4 p-5 rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center text-center space-y-4 shadow-xs">
             <div className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-cyan-500 dark:border-cyan-400 group shadow-lg">
-              <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+              {avatar ? (
+                <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                  <User className="w-10 h-10" />
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}

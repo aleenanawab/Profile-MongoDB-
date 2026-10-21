@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const profileName = (body.profileName || body.designation || 'Professional Profile').trim();
-    const name = (body.name || session.name || 'Professional').trim();
+    const profileName = (body.profileName || body.designation || '').trim();
+    const name = (body.name || session.name || '').trim();
     const email = (body.email || session.email || '').trim();
 
     // Auto-upload base64 images to Cloudinary
@@ -43,9 +43,6 @@ export async function POST(request: NextRequest) {
       skills = body.skills.map((s: any) => String(s).trim()).filter(Boolean);
     } else if (typeof body.skills === 'string') {
       skills = body.skills.split(',').map((s: string) => s.trim()).filter(Boolean);
-    }
-    if (skills.length === 0) {
-      skills = ['React', 'Next.js', 'TypeScript', 'Tailwind CSS'];
     }
 
     // Build socials / website links
@@ -68,20 +65,20 @@ export async function POST(request: NextRequest) {
       lastName: body.lastName || body.secondName || name.split(' ').slice(1).join(' ') || '',
       type: targetType,
       profileName,
-      profession: body.profession?.trim() || body.professionalTitle?.trim() || body.designation?.trim() || 'Professional',
-      professionalTitle: body.professionalTitle?.trim() || body.designation?.trim() || body.profession?.trim() || 'Professional',
+      profession: body.profession?.trim() || body.professionalTitle?.trim() || body.designation?.trim() || '',
+      professionalTitle: body.professionalTitle?.trim() || body.designation?.trim() || body.profession?.trim() || '',
       email,
-      designation: body.designation?.trim() || body.professionalTitle?.trim() || body.profession?.trim() || 'Professional',
-      company: body.company?.trim() || 'Avtive Network',
-      location: body.location?.trim() || 'Global',
-      avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop',
+      designation: body.designation?.trim() || body.professionalTitle?.trim() || body.profession?.trim() || '',
+      company: body.company?.trim() || '',
+      location: body.location?.trim() || '',
+      avatar: avatar || '',
       coverImage: coverImage,
       phone: body.phone?.trim() || '',
       whatsapp: body.whatsapp?.trim() || body.phone?.trim() || '',
-      bio: body.bio?.trim() || body.shortBio?.trim() || 'Welcome to my digital profile on Avtive.',
-      about: body.about?.trim() || body.fullBio?.trim() || 'Passionate professional delivering intuitive digital experiences with modern technology and clean architecture.',
-      shortBio: body.shortBio?.trim() || body.bio?.trim() || 'Welcome to my digital profile on Avtive.',
-      fullBio: body.fullBio?.trim() || body.about?.trim() || 'Connect with me directly via phone, WhatsApp, or email.',
+      bio: body.bio?.trim() || body.shortBio?.trim() || '',
+      about: body.about?.trim() || body.fullBio?.trim() || '',
+      shortBio: body.shortBio?.trim() || body.bio?.trim() || '',
+      fullBio: body.fullBio?.trim() || body.about?.trim() || '',
       tagline: body.tagline?.trim() || '',
       theme: targetTheme,
       skills,

@@ -70,18 +70,14 @@ export function buildSocialLinksFromProfile(p: ProfileData): DraggableLinkItem[]
     });
   }
 
-  return [
-    { id: 'link-li-0', platform: 'linkedin', title: 'LinkedIn', url: 'https://linkedin.com', visible: true },
-    { id: 'link-gh-1', platform: 'github', title: 'GitHub', url: 'https://github.com', visible: true },
-    { id: 'link-web-2', platform: 'website', title: 'Website / Portfolio', url: p.website || 'https://avtive.app', visible: true },
-  ];
+  return [];
 }
 
 function extractSkills(p: ProfileData): string[] {
   if (Array.isArray(p.skills) && p.skills.length > 0) {
     return p.skills.map((s) => (typeof s === 'string' ? s : s.name));
   }
-  return ['React', 'Next.js', 'TypeScript', 'Tailwind CSS'];
+  return [];
 }
 
 // ─── Context Shape ────────────────────────────────────────────────────────────
@@ -206,7 +202,7 @@ export interface ProfileEditorContextValue {
 
 const FALLBACK_PROFILE_DATA: ProfileData = {
   id: 'default',
-  name: 'User',
+  name: '',
   slug: 'default',
   type: 'individual',
   email: '',
@@ -356,29 +352,29 @@ export function ProfileEditorProvider({
 
   // ── Basic Info ────────────────────────────────────────────────────────────
   const [firstName, setFirstName] = useState(
-    initialProfile.firstName || (initialProfile.name ? initialProfile.name.split(' ')[0] : 'Aleena')
+    initialProfile.firstName || (initialProfile.name ? initialProfile.name.split(' ')[0] : '')
   );
   const [secondName, setSecondName] = useState(
     initialProfile.secondName ||
       initialProfile.lastName ||
-      (initialProfile.name ? initialProfile.name.split(' ').slice(1).join(' ') : 'Nawab')
+      (initialProfile.name ? initialProfile.name.split(' ').slice(1).join(' ') : '')
   );
   const [username, setUsername] = useState(
     initialProfile.username || initialProfile.slug || ''
   );
   const [professionalTitle, setProfessionalTitle] = useState(
-    initialProfile.professionalTitle || initialProfile.designation || initialProfile.profession || 'Full Stack Engineer'
+    initialProfile.professionalTitle || initialProfile.designation || initialProfile.profession || ''
   );
   const [bio, setBio] = useState(
     initialProfile.bio ||
       initialProfile.shortBio ||
-      'Passionate professional delivering intuitive digital experiences with modern technology and clean architecture.'
+      ''
   );
   const [tagline, setTagline] = useState(
     initialProfile.tagline || ''
   );
-  const [company, setCompany] = useState(initialProfile.company || 'Avtive');
-  const [location, setLocation] = useState(initialProfile.location || 'Global');
+  const [company, setCompany] = useState(initialProfile.company || '');
+  const [location, setLocation] = useState(initialProfile.location || '');
 
   // ── Images ────────────────────────────────────────────────────────────────
   const [avatar, setAvatar] = useState(initialProfile.avatar || '');
@@ -389,7 +385,7 @@ export function ProfileEditorProvider({
   const [about, setAbout] = useState(
     initialProfile.about ||
       initialProfile.fullBio ||
-      'Hello! I am a full stack software engineer and product designer specializing in high-performance web applications, responsive user interfaces, and modular design systems. I bridge the gap between design and engineering to build products that delight users and scale seamlessly.'
+      ''
   );
 
   // ── Projects / Experience / Education ─────────────────────────────────────
@@ -397,17 +393,7 @@ export function ProfileEditorProvider({
     if (Array.isArray(initialProfile.projects) && initialProfile.projects.length > 0) {
       return initialProfile.projects;
     }
-    return [
-      {
-        id: 'proj-1',
-        title: 'Avtive Profiles Platform',
-        description: 'Verified digital identity cards and granular privacy profiles built with Next.js and Tailwind CSS.',
-        tags: ['Next.js', 'TypeScript', 'Tailwind CSS'],
-        link: 'https://www.avtive.app',
-        image: undefined,
-        category: 'Web App',
-      },
-    ];
+    return [];
   });
   const [experiences, setExperiences] = useState<ExperienceItem[]>(
     Array.isArray(initialProfile.experiences || initialProfile.experience)

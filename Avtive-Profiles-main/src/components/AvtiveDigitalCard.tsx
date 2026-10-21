@@ -728,7 +728,13 @@ export function AvtiveDigitalCard({
               certifications: 'certificates',
               certificates: 'certifications',
               'custom-fields': 'customFields',
-              customFields: 'custom-fields'
+              customFields: 'custom-fields',
+              teamMembers: 'team',
+              team: 'teamMembers',
+              company: 'companyInfo',
+              companyInfo: 'company',
+              'virtual-card': 'virtualCard',
+              virtualCard: 'virtual-card'
             };
             const alias = extraAliases[sectionKey];
 

@@ -176,10 +176,6 @@ function PublicProfileClientInner({
 
   // Track scroll position in the profile content panel to update active tab highlight
   useEffect(() => {
-    const getScrollPanel = () =>
-      document.getElementById('profile-scroll-panel') ||
-      document.getElementById('mobile-profile-scroll-panel');
-
     const sectionIds = [
       'section-hero',
       'section-profile',
@@ -195,7 +191,6 @@ function PublicProfileClientInner({
       'section-education',
       'section-certifications',
       'section-languages',
-      'section-recommendations',
       'section-contact',
       'section-contactInfo',
       'section-socialLinks',
@@ -205,14 +200,12 @@ function PublicProfileClientInner({
       'virtual-card-section'
     ];
 
-    const handleScroll = () => {
-      const panel = getScrollPanel();
-      if (!panel) return;
+    const createScrollHandler = (panel: HTMLElement) => () => {
       const panelTop = panel.getBoundingClientRect().top;
       let currentSection = 'profile';
 
       for (const id of sectionIds) {
-        const el = document.getElementById(id);
+        const el = panel.querySelector<HTMLElement>(`#${id}`);
         if (el) {
           const rect = el.getBoundingClientRect();
           if (rect.top - panelTop <= 160) {
@@ -224,6 +217,8 @@ function PublicProfileClientInner({
             else if (rawKey === 'socials') currentSection = 'socialLinks';
             else if (rawKey === 'custom-fields') currentSection = 'customFields';
             else if (rawKey === 'virtual-card' || id === 'virtual-card-section') currentSection = 'virtualCard';
+            else if (rawKey === 'team') currentSection = 'teamMembers';
+            else if (rawKey === 'company') currentSection = 'companyInfo';
             else currentSection = rawKey;
           }
         }
@@ -231,13 +226,23 @@ function PublicProfileClientInner({
       setActiveTabSection(currentSection);
     };
 
-    const panel = getScrollPanel();
-    if (panel) {
-      panel.addEventListener('scroll', handleScroll, { passive: true });
+    const desktopPanel = document.getElementById('profile-scroll-panel');
+    const mobilePanel = document.getElementById('mobile-profile-scroll-panel');
+    const cleanups: (() => void)[] = [];
+
+    if (desktopPanel) {
+      const handler = createScrollHandler(desktopPanel);
+      desktopPanel.addEventListener('scroll', handler, { passive: true });
+      cleanups.push(() => desktopPanel.removeEventListener('scroll', handler));
     }
+    if (mobilePanel) {
+      const handler = createScrollHandler(mobilePanel);
+      mobilePanel.addEventListener('scroll', handler, { passive: true });
+      cleanups.push(() => mobilePanel.removeEventListener('scroll', handler));
+    }
+
     return () => {
-      const p = getScrollPanel();
-      if (p) p.removeEventListener('scroll', handleScroll);
+      cleanups.forEach((fn) => fn());
     };
   }, []);
 
@@ -297,76 +302,94 @@ function PublicProfileClientInner({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleSectionSelect = (sectionKey: string, fieldKey?: string | boolean) => {
-    const isFromMobile = fieldKey === true;
+  const handleSectionSelect = (sectionKey: string, isFromMobileOrFieldKey?: string | boolean) => {
     setActiveTabSection(sectionKey);
 
-    const targetId = 
-      sectionKey === 'profile' || sectionKey === 'hero'
-        ? 'section-hero'
-        : sectionKey === 'personalDetails' || sectionKey === 'about'
-        ? 'section-about'
-        : sectionKey === 'contactInfo' || sectionKey === 'contact' || sectionKey === 'basicInfo'
-        ? 'section-contact'
-        : sectionKey === 'skills' || sectionKey === 'services' || sectionKey === 'expertise'
-        ? 'section-skills'
-        : sectionKey === 'projects' || sectionKey === 'portfolio'
-        ? 'section-projects'
-        : sectionKey === 'education'
-        ? 'section-education'
-        : sectionKey === 'experience'
-        ? 'section-experience'
-        : sectionKey === 'certifications'
-        ? 'section-certifications'
-        : sectionKey === 'languages'
-        ? 'section-languages'
-        : sectionKey === 'recommendations'
-        ? 'section-recommendations'
-        : sectionKey === 'socialLinks' || sectionKey === 'socials'
-        ? 'section-socialLinks'
-        : sectionKey === 'customFields' || sectionKey === 'custom-fields' || sectionKey === 'enhanceProfile'
-        ? 'section-custom-fields'
-        : sectionKey === 'teamMembers' || sectionKey === 'team'
-        ? 'section-teamMembers'
-        : sectionKey === 'companyInfo' || sectionKey === 'company'
-        ? 'section-company'
-        : sectionKey === 'certifications' || sectionKey === 'certificates'
-        ? 'section-certifications'
-        : sectionKey === 'languages'
-        ? 'section-languages'
-        : sectionKey === 'recommendations'
-        ? 'section-recommendations'
-        : sectionKey === 'customFields' || sectionKey === 'custom-fields' || sectionKey === 'enhanceProfile'
-        ? 'section-custom-fields'
-        : sectionKey === 'virtualCard' || sectionKey === 'virtual-card'
-        ? 'virtual-card-section'
-        : `section-${sectionKey}`;
+    const isFromMobile = isFromMobileOrFieldKey === true;
+    const isFromDesktop = isFromMobileOrFieldKey === false;
 
-    const scrollPanel = isFromMobile
-      ? document.getElementById('mobile-profile-scroll-panel') || document.getElementById('profile-scroll-panel')
-      : document.getElementById('profile-scroll-panel') || document.getElementById('mobile-profile-scroll-panel');
+    // Resolve target IDs / aliases
+    const targetIdMap: Record<string, string[]> = {
+      profile: ['section-hero', 'section-profile'],
+      hero: ['section-hero', 'section-profile'],
+      about: ['section-about', 'section-personalDetails'],
+      personalDetails: ['section-about', 'section-personalDetails'],
+      skills: ['section-skills', 'section-services'],
+      services: ['section-skills', 'section-services'],
+      projects: ['section-projects', 'section-portfolio'],
+      portfolio: ['section-projects', 'section-portfolio'],
+      experience: ['section-experience'],
+      education: ['section-education'],
+      certifications: ['section-certifications', 'section-certificates'],
+      languages: ['section-languages'],
+      contact: ['section-contact', 'section-contactInfo'],
+      contactInfo: ['section-contact', 'section-contactInfo'],
+      socials: ['section-socialLinks', 'section-socials'],
+      socialLinks: ['section-socialLinks', 'section-socials'],
+      customFields: ['section-custom-fields', 'section-customFields'],
+      'custom-fields': ['section-custom-fields', 'section-customFields'],
+      teamMembers: ['section-teamMembers', 'section-team'],
+      team: ['section-teamMembers', 'section-team'],
+      company: ['section-company', 'section-companyInfo'],
+      companyInfo: ['section-company', 'section-companyInfo'],
+      virtualCard: ['virtual-card-section', 'section-virtual-card', 'section-virtualCard'],
+      'virtual-card': ['virtual-card-section', 'section-virtual-card', 'section-virtualCard']
+    };
 
-    const el = scrollPanel
-      ? scrollPanel.querySelector(`#${targetId}`) || scrollPanel.querySelector(`#section-${sectionKey}`) || document.getElementById(targetId) || document.getElementById(`section-${sectionKey}`)
-      : document.getElementById(targetId) || document.getElementById(`section-${sectionKey}`);
+    const candidateIds = targetIdMap[sectionKey] || [`section-${sectionKey}`, sectionKey];
+    const selectors = candidateIds.map(id => `#${id}`).concat(`[data-section="${sectionKey}"]`).join(', ');
 
-    if (el && scrollPanel) {
+    const isElementVisible = (el: HTMLElement | null) => {
+      if (!el) return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    };
+
+    const scrollToSectionInPanel = (panel: HTMLElement) => {
+      if (!isElementVisible(panel)) return false;
+
       if (sectionKey === 'profile' || sectionKey === 'hero') {
-        scrollPanel.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        const panelRect = scrollPanel.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-        const offsetTop = elRect.top - panelRect.top + scrollPanel.scrollTop - 10;
-        scrollPanel.scrollTo({ top: Math.max(0, offsetTop), behavior: 'smooth' });
+        panel.scrollTo({ top: 0, behavior: 'smooth' });
+        return true;
       }
-    } else if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
 
-    if (el && isEditing) {
-      const inputEl = el.querySelector('input, textarea, select') as HTMLElement | null;
-      if (inputEl) {
-        setTimeout(() => inputEl.focus(), 250);
+      const targetEl = panel.querySelector<HTMLElement>(selectors);
+      if (!targetEl) return false;
+
+      const panelRect = panel.getBoundingClientRect();
+      const elRect = targetEl.getBoundingClientRect();
+      const offsetTop = elRect.top - panelRect.top + panel.scrollTop - 16;
+      panel.scrollTo({ top: Math.max(0, offsetTop), behavior: 'smooth' });
+
+      if (isEditing) {
+        const inputEl = targetEl.querySelector('input, textarea, select') as HTMLElement | null;
+        if (inputEl) {
+          setTimeout(() => inputEl.focus(), 250);
+        }
+      }
+      return true;
+    };
+
+    const desktopPanel = document.getElementById('profile-scroll-panel');
+    const mobilePanel = document.getElementById('mobile-profile-scroll-panel');
+
+    if (isFromMobile && mobilePanel) {
+      scrollToSectionInPanel(mobilePanel);
+    } else if (isFromDesktop && desktopPanel) {
+      scrollToSectionInPanel(desktopPanel);
+    } else {
+      let scrolledAny = false;
+      if (desktopPanel && isElementVisible(desktopPanel)) {
+        scrolledAny = scrollToSectionInPanel(desktopPanel) || scrolledAny;
+      }
+      if (mobilePanel && isElementVisible(mobilePanel)) {
+        scrolledAny = scrollToSectionInPanel(mobilePanel) || scrolledAny;
+      }
+      if (!scrolledAny) {
+        const fallbackEl = document.querySelector<HTMLElement>(selectors);
+        if (fallbackEl) {
+          fallbackEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
     }
 
@@ -707,7 +730,7 @@ function PublicProfileClientInner({
         <ProfileSectionTabBar
           profile={{ ...profile, type: profileType, theme: activeTheme }}
           activeSection={activeTabSection}
-          onSelectSection={handleSectionSelect}
+          onSelectSection={(sec) => handleSectionSelect(sec, false)}
           theme={activeThemeConfig}
           isEditing={isEditing}
           canEdit={isOwner}
@@ -817,7 +840,7 @@ function PublicProfileClientInner({
               }}
               isDark={isDark}
               viewMode="standard"
-              onSelectSection={handleSectionSelect}
+              onSelectSection={(sec) => handleSectionSelect(sec, false)}
               onToggleSections={handleTriggerClick}
               onSectionsMouseEnter={handleTriggerMouseEnter}
               onSectionsMouseLeave={handleTriggerMouseLeave}
@@ -840,7 +863,7 @@ function PublicProfileClientInner({
         <ProfileSectionTabBar
           profile={{ ...profile, type: profileType, theme: activeTheme }}
           activeSection={activeTabSection}
-          onSelectSection={handleSectionSelect}
+          onSelectSection={(sec) => handleSectionSelect(sec, true)}
           theme={activeThemeConfig}
           isEditing={isEditing}
           canEdit={isOwner}
@@ -883,7 +906,7 @@ function PublicProfileClientInner({
             }}
             isDark={isDark}
             viewMode="standard"
-            onSelectSection={handleSectionSelect}
+            onSelectSection={(sec) => handleSectionSelect(sec, true)}
             onToggleSections={handleTriggerClick}
             onSectionsMouseEnter={handleTriggerMouseEnter}
             onSectionsMouseLeave={handleTriggerMouseLeave}

@@ -68,7 +68,6 @@ export const DEFAULT_SHARING_SETTINGS: SharingSettings = {
   projects: true,
   services: true,
   languages: true,
-  recommendations: true,
   companySection: true,
   nfcCard: true,
   customFields: true
@@ -86,7 +85,6 @@ export const DEFAULT_SECTION_VISIBILITY: Record<string, boolean> = {
   education: true,
   certifications: true,
   languages: true,
-  recommendations: true,
   socialLinks: true,
   socials: true,
   'virtual-card': true,
@@ -105,7 +103,6 @@ export const DEFAULT_SECTION_ORDER: string[] = [
   'education',
   'certifications',
   'languages',
-  'recommendations',
   'socialLinks',
   'virtual-card',
   'company'

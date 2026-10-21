@@ -287,7 +287,6 @@ export function AvtiveDigitalCard({
             'education',
             'certifications',
             'languages',
-            'recommendations',
             'socialLinks',
             'virtual-card'
           ];
@@ -353,7 +352,7 @@ export function AvtiveDigitalCard({
               case 'projects': return sharing.projects !== false;
               case 'certifications': return sharing.certifications !== false;
               case 'languages': return sharing.languages !== false;
-              case 'recommendations': return sharing.recommendations !== false;
+              case 'recommendations': return false;
               case 'socialLinks':
               case 'socials': return sharing.socialLinks !== false;
               case 'virtual-card': return sharing.nfcCard !== false;
@@ -538,19 +537,7 @@ export function AvtiveDigitalCard({
                 );
 
               case 'recommendations':
-                if (isCompany || !isSectionVisible('recommendations')) return null;
-                return (
-                  <RecommendationsSection 
-                    key="recommendations" 
-                    profile={activeProfile} 
-                    theme={theme}
-                    canEdit={canEdit}
-                    isEditing={isEditing}
-                    onUpdateField={handleFieldUpdate}
-                    onSavePartial={handleSavePartial}
-                    onSelectSection={onSelectSection}
-                  />
-                );
+                return null;
 
               case 'socialLinks':
               case 'socials':

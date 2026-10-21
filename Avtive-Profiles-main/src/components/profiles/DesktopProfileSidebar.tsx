@@ -60,7 +60,6 @@ export const DESKTOP_SIDEBAR_SECTIONS: SidebarSectionItem[] = [
   { key: 'expertise', label: 'Expertise', icon: Award, category: 'core' },
   { key: 'certifications', label: 'Certifications', icon: CheckCircle2, category: 'core' },
   { key: 'languages', label: 'Languages', icon: Globe, category: 'core' },
-  { key: 'recommendations', label: 'Recommendations', icon: MessageSquare, category: 'core' },
   { key: 'socialLinks', label: 'Social Links', icon: Link2, category: 'core' },
   
   // 14-17: Advanced Management
@@ -133,8 +132,6 @@ export function DesktopProfileSidebar({
         return Array.isArray(profile.certifications) && profile.certifications.length > 0 ? profile.certifications.length : undefined;
       case 'languages':
         return Array.isArray(profile.languages) && profile.languages.length > 0 ? profile.languages.length : undefined;
-      case 'recommendations':
-        return Array.isArray(profile.recommendations) && profile.recommendations.length > 0 ? profile.recommendations.length : undefined;
       default:
         return undefined;
     }
@@ -144,8 +141,9 @@ export function DesktopProfileSidebar({
   const coreSections = React.useMemo(() => {
     return DESKTOP_SIDEBAR_SECTIONS.filter(s => {
       if (s.category !== 'core') return false;
+      if (s.key === 'recommendations') return false;
       if (!isCompany && (s.key === 'teamMembers' || s.key === 'companyInfo')) return false;
-      if (isCompany && (s.key === 'personalDetails' || s.key === 'experience' || s.key === 'education' || s.key === 'certifications' || s.key === 'languages' || s.key === 'recommendations')) return false;
+      if (isCompany && (s.key === 'personalDetails' || s.key === 'experience' || s.key === 'education' || s.key === 'certifications' || s.key === 'languages')) return false;
       return true;
     });
   }, [isCompany]);

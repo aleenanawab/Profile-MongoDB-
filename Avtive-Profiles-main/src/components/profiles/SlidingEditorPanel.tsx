@@ -78,7 +78,6 @@ const SECTION_CONFIG: Record<string, { label: string; icon: React.ElementType; c
   education: { label: 'Education & Credentials', icon: GraduationCap, color: 'text-violet-500' },
   certifications: { label: 'Certifications', icon: CheckCircle2, color: 'text-teal-500' },
   languages: { label: 'Languages Spoken', icon: Globe, color: 'text-blue-400' },
-  recommendations: { label: 'Endorsements & Recommendations', icon: Sparkles, color: 'text-yellow-500' },
   'virtual-card': { label: 'Digital Identity Card', icon: Smartphone, color: 'text-sky-500' },
   company: { label: 'Company / Team Overview', icon: Building2, color: 'text-slate-500' }
 };
@@ -95,7 +94,6 @@ const SECTION_LABELS: Record<string, string> = {
   education: 'Education & Credentials',
   certifications: 'Certifications',
   languages: 'Languages Spoken',
-  recommendations: 'Endorsements & Recommendations',
   'virtual-card': 'Digital Identity Card',
   company: 'Company / Team Overview'
 };
@@ -120,29 +118,7 @@ function buildSocialLinksFromProfile(p: ProfileData): DraggableLinkItem[] {
     });
   }
 
-  return [
-    {
-      id: 'link-li-0',
-      platform: 'linkedin',
-      title: 'LinkedIn',
-      url: 'https://linkedin.com',
-      visible: true
-    },
-    {
-      id: 'link-gh-1',
-      platform: 'github',
-      title: 'GitHub',
-      url: 'https://github.com',
-      visible: true
-    },
-    {
-      id: 'link-web-2',
-      platform: 'website',
-      title: 'Website / Portfolio',
-      url: p.website || 'https://avtive.app',
-      visible: true
-    }
-  ];
+  return [];
 }
 
 function DraggableLinkCard({
@@ -1326,7 +1302,7 @@ export function SlidingEditorPanel({
                     onReorder={setSectionOrder}
                     className="space-y-1.5"
                   >
-                    {sectionOrder.map((sectionKey, idx) => {
+                    {sectionOrder.filter((k) => k !== 'recommendations').map((sectionKey, idx) => {
                       const cfg = SECTION_CONFIG[sectionKey] || {
                         label: SECTION_LABELS[sectionKey] || (sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1)),
                         icon: Layers,

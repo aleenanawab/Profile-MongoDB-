@@ -93,7 +93,7 @@ function PublicProfileClientInner({
     return DESKTOP_SIDEBAR_SECTIONS.filter(s => {
       if (s.category !== 'core') return false;
       if (!isCompany && (s.key === 'teamMembers' || s.key === 'companyInfo')) return false;
-      if (isCompany && (s.key === 'companyInfo' || s.key === 'personalDetails' || s.key === 'experience' || s.key === 'education' || s.key === 'certifications' || s.key === 'languages' || s.key === 'recommendations')) return false;
+      if (isCompany && (s.key === 'companyInfo' || s.key === 'personalDetails' || s.key === 'experience' || s.key === 'education' || s.key === 'certifications' || s.key === 'languages')) return false;
       return true;
     });
   }, [isCompany]);
@@ -112,7 +112,6 @@ function PublicProfileClientInner({
       case 'experience': return 'Exp';
       case 'certifications': return 'Certs';
       case 'languages': return 'Langs';
-      case 'recommendations': return 'Reviews';
       case 'customFields': return 'Custom';
       default: return fullLabel;
     }

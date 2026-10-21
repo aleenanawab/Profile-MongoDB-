@@ -116,13 +116,6 @@ export const ALL_PROFILE_SECTIONS: ProfileSectionMeta[] = [
     icon: Globe
   },
   {
-    id: 'recommendations',
-    key: 'recommendations',
-    label: 'Recommendations',
-    description: 'Client testimonials, reviews & peer endorsements',
-    icon: MessageSquare
-  },
-  {
     id: 'virtual-card',
     key: 'nfcCard',
     label: 'Virtual Card & NFC',

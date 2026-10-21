@@ -75,7 +75,7 @@ export function ProfileSectionTabBar({
         case 'projects': return sharing.projects !== false;
         case 'certifications': return sharing.certifications !== false;
         case 'languages': return sharing.languages !== false;
-        case 'recommendations': return sharing.recommendations !== false;
+        case 'recommendations': return false;
         case 'socialLinks': return sharing.socialLinks !== false;
         case 'virtualCard': return sharing.nfcCard !== false;
         default: return true;
@@ -108,7 +108,6 @@ export function ProfileSectionTabBar({
       { key: 'education', label: 'Education', icon: GraduationCap },
       { key: 'certifications', label: 'Certificates', icon: Award },
       { key: 'languages', label: 'Languages', icon: Globe },
-      { key: 'recommendations', label: 'Reviews', icon: MessageSquare },
       { key: 'contactInfo', label: 'Contact', icon: Phone },
       { key: 'socialLinks', label: 'Socials', icon: Link2 },
     ];

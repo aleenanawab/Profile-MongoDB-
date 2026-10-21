@@ -11,12 +11,22 @@ export default async function ProfileRootPage() {
   }
 
   const { getProfileByUserId, getProfilesByUserId } = await import('@/lib/db');
-  const profile = await getProfileByUserId(session.id);
+  const { isUserOnboarded } = await import('@/lib/auth/userStatus');
+
+  const profile = await getProfileByUserId(session.id, session.role as any);
   const profiles = profile ? [profile] : await getProfilesByUserId(session.id);
-  if (!profile && (!profiles || profiles.length === 0)) {
+  const targetProfile = profile || profiles?.[0] || null;
+
+  if (!targetProfile) {
     redirect('/onboarding/role');
   }
 
-  const targetSlug = profile?.slug || profile?.id || profiles?.[0]?.slug || profiles?.[0]?.id || session.id;
+  const targetSlug = targetProfile.slug || targetProfile.id || session.id;
+  const onboarded = isUserOnboarded(session, targetProfile);
+
+  if (!onboarded) {
+    redirect(`/profile/${encodeURIComponent(targetSlug)}?edit=true`);
+  }
+
   redirect(`/profile/${encodeURIComponent(targetSlug)}`);
 }

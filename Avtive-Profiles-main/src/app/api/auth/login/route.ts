@@ -52,17 +52,9 @@ export async function POST(request: NextRequest) {
     }
 
     const userProfile = await getProfileByUserId(user.id, user.role);
-    const hasRealProfileData = Boolean(
-      userProfile && (
-        (userProfile.designation && userProfile.designation !== 'Professional') ||
-        (userProfile.skills && userProfile.skills.length > 0) ||
-        (userProfile.experience && userProfile.experience.length > 0) ||
-        (userProfile.services && userProfile.services.length > 0) ||
-        (userProfile.customFields && userProfile.customFields.length > 0) ||
-        (userProfile.shortBio && !userProfile.shortBio.includes('Welcome to my digital profile on Avtive.'))
-      )
-    );
-    const isOnboardingComplete = Boolean(user.onboardingCompleted || hasRealProfileData);
+    const { isUserOnboarded } = await import('@/lib/auth/userStatus');
+    const isOnboardingComplete = isUserOnboarded(user, userProfile);
+    const targetSlug = userProfile?.slug || userProfile?.id || user.id;
 
     // Set persistent, secure session cookie
     const sessionUser = {
@@ -74,9 +66,12 @@ export async function POST(request: NextRequest) {
       preferredTheme: user.preferredTheme || userProfile?.theme || 'editorial'
     };
 
+    // Unified Preview/Edit landing rule:
+    // First-time user whose profile has never been saved: open in Edit Mode
+    // Returning saved user: open in Preview Mode
     const redirectUrl = isOnboardingComplete
-      ? `/profile/${userProfile?.slug || userProfile?.id || user.id}`
-      : (!user.role ? '/onboarding/role' : (!user.preferredTheme ? `/onboarding/theme?role=${encodeURIComponent(user.role)}` : `/edit-profile?role=${encodeURIComponent(user.role)}&theme=${encodeURIComponent(user.preferredTheme)}&edit=true`));
+      ? `/profile/${encodeURIComponent(targetSlug)}`
+      : `/profile/${encodeURIComponent(targetSlug)}?edit=true`;
 
     const response = NextResponse.json({
       success: true,

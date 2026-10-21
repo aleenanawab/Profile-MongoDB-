@@ -274,8 +274,8 @@ export function DesktopProfileSidebar({
         {/* Group 1: Core Profile Sections with Drag & Drop Reordering */}
         <div>
           <div className="flex items-center justify-between px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-            <span>Section Navigation</span>
-            <span className="text-[9px] text-[#6C4CF1]/80 lowercase">drag to reorder</span>
+            <span>{isPublicView ? 'Profile Sections' : 'Section Navigation'}</span>
+            {!isPublicView && <span className="text-[9px] text-[#6C4CF1]/80 lowercase">drag to reorder</span>}
           </div>
 
           <Reorder.Group 
@@ -288,6 +288,7 @@ export function DesktopProfileSidebar({
               const Icon = sec.icon;
               const isActive = activeSection === sec.key;
               const isVisible = sectionVisibility[sec.key] !== false && sectionVisibility[sec.key === 'personalDetails' ? 'about' : sec.key === 'contactInfo' ? 'contact' : sec.key] !== false;
+              if (isPublicView && !isVisible) return null;
               const badge = getSectionBadge(sec.key);
 
               return (

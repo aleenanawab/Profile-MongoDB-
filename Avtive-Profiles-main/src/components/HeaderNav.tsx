@@ -80,33 +80,50 @@ export function HeaderNav({
   return (
     <header className={`sticky top-0 z-40 w-full backdrop-blur-md ${theme.headerBg} border-b ${theme.divider} transition-colors shadow-2xs`}>
       <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-2.5 flex items-center justify-between gap-1.5 sm:gap-2.5 min-w-0">
-        {/* Left: Avtive Brand */}
-        <Link 
-          href="/"
-          className="flex items-center gap-2 group cursor-pointer shrink-0"
-          title="Avtive Digital Identity"
-        >
-          <div className="h-8 flex items-center">
-            <img 
-              src="/images/avtive-symbol.png" 
-              alt="Avtive Logo" 
-              className="h-7 w-auto object-contain"
-            />
-          </div>
-          <div className="text-left hidden sm:block">
-            <div className="flex items-center gap-1.5">
-              <span className={`font-bold text-sm ${theme.accentText} tracking-tight`}>
-                Avtive
-              </span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-bold font-mono leading-none`}>
-                Official
-              </span>
+        {/* Left: Menu Toggle & Avtive Brand */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {onToggleSections && (
+            <button
+              type="button"
+              onClick={onToggleSections}
+              onMouseEnter={onSectionsMouseEnter}
+              onMouseLeave={onSectionsMouseLeave}
+              className={`h-8 px-2 sm:px-2.5 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 text-xs font-semibold`}
+              title="Profile Sections Menu"
+              aria-label="Toggle Sections Menu"
+            >
+              <LayoutGrid className={`w-3.5 h-3.5 ${theme.accentText}`} />
+              <span className="hidden sm:inline">Menu</span>
+            </button>
+          )}
+
+          <Link 
+            href="/"
+            className="flex items-center gap-2 group cursor-pointer shrink-0"
+            title="Avtive Digital Identity"
+          >
+            <div className="h-8 flex items-center">
+              <img 
+                src="/images/avtive-symbol.png" 
+                alt="Avtive Logo" 
+                className="h-7 w-auto object-contain"
+              />
             </div>
-            <p className={`text-[10px] ${theme.textMuted} font-medium leading-tight hidden md:block`}>
-              Digital Identity Platform
-            </p>
-          </div>
-        </Link>
+            <div className="text-left hidden sm:block">
+              <div className="flex items-center gap-1.5">
+                <span className={`font-bold text-sm ${theme.accentText} tracking-tight`}>
+                  Avtive
+                </span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-bold font-mono leading-none`}>
+                  Official
+                </span>
+              </div>
+              <p className={`text-[10px] ${theme.textMuted} font-medium leading-tight hidden md:block`}>
+                Digital Identity Platform
+              </p>
+            </div>
+          </Link>
+        </div>
 
         {/* Center: Navigation Options (Only shown when not editing and profile has both Individual and Team profiles) */}
         {hasTeamOrCompany && onSelectProfileType && !isEditing && (

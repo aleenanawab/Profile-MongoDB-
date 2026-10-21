@@ -17,3 +17,9 @@ export {
 } from './session';
 
 export { sanitizeReturnUrl, resolveReturnUrlForExistingUser } from '../utils';
+
+export {
+  isUserOnboarded,
+  hasRealSavedProfileData,
+  getProfileLandingDestination
+} from './userStatus';

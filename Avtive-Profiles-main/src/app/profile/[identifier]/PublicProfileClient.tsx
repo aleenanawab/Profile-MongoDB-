@@ -245,7 +245,6 @@ function PublicProfileClientInner({
 
   // Independent Mobile Sections Slider Handlers
   const handleToggleMobile = () => {
-    if (!isEditing) return;
     setMobileOpen(prev => !prev);
   };
 
@@ -260,7 +259,6 @@ function PublicProfileClientInner({
 
   // Independent Desktop Sections Slider Handlers
   const handleToggleDesktop = () => {
-    if (!isEditing) return;
     setDesktopOpen(prev => !prev);
   };
 
@@ -270,6 +268,7 @@ function PublicProfileClientInner({
 
   const handleDesktopSectionSelect = (sectionKey: string) => {
     handleSectionSelect(sectionKey, false);
+    setDesktopOpen(false);
   };
 
   // Resizing the window: only close the inactive drawer when crossing the 1024px boundary
@@ -715,9 +714,9 @@ function PublicProfileClientInner({
         />
       </div>
 
-      {/* Slide-In Section Drawer on Desktop (>= lg) - STRICTLY EDIT MODE ONLY */}
+      {/* Slide-In Section Drawer on Desktop (>= lg) */}
       <AnimatePresence>
-        {isEditing && desktopOpen && (
+        {desktopOpen && (
           <div className="hidden lg:block">
             <motion.div
               key="desktop-sidebar-backdrop"
@@ -741,16 +740,16 @@ function PublicProfileClientInner({
               <DesktopProfileSidebar
                 onClose={handleCloseDesktop}
                 onSelectSection={handleDesktopSectionSelect}
-                isPublicView={false}
+                isPublicView={!isEditing}
               />
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* Slide-In Section Drawer on Mobile (< lg) - STRICTLY EDIT MODE ONLY */}
+      {/* Slide-In Section Drawer on Mobile (< lg) */}
       <AnimatePresence>
-        {isEditing && mobileOpen && (
+        {mobileOpen && (
           <div className="lg:hidden">
             <motion.div
               key="mobile-viewport-sidebar-backdrop"
@@ -772,7 +771,7 @@ function PublicProfileClientInner({
               <DesktopProfileSidebar
                 onClose={handleCloseMobile}
                 onSelectSection={handleMobileSectionSelect}
-                isPublicView={false}
+                isPublicView={!isEditing}
               />
             </motion.div>
           </div>

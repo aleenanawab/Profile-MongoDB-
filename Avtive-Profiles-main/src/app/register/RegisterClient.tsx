@@ -36,6 +36,7 @@ export default function RegisterClient() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registeredRecoveryCode, setRegisteredRecoveryCode] = useState<string | null>(null);
+  const [redirectDestination, setRedirectDestination] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
   const handleGoogleSignIn = async () => {
@@ -104,6 +105,9 @@ export default function RegisterClient() {
         localStorage.setItem('avtive_remembered_identifier', email.trim());
       } catch {}
 
+      const targetUrl = data.redirectTo || (data.profileSlug ? `/profile/${encodeURIComponent(data.profileSlug)}?edit=true` : '/profile/me?edit=true');
+      setRedirectDestination(targetUrl);
+
       // If recovery code is provided, show the dedicated copy & save warning modal
       if (data.recoveryCode) {
         setRegisteredRecoveryCode(data.recoveryCode);
@@ -111,8 +115,8 @@ export default function RegisterClient() {
         return;
       }
 
-      // Fallback: Return to Login Page with email prefilled
-      window.location.href = `/login?email=${encodeURIComponent(email.trim())}&registered=true`;
+      // Automatically land in Edit Mode with session established
+      window.location.href = targetUrl;
     } catch (err) {
       console.error(err);
       setErrorMessage('Network error during registration. Please try again.');
@@ -566,11 +570,11 @@ export default function RegisterClient() {
             <button
               type="button"
               onClick={() => {
-                window.location.href = `/login?email=${encodeURIComponent(email.trim())}&registered=true`;
+                window.location.href = redirectDestination || `/profile/me?edit=true`;
               }}
               className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
-              <span>I have saved my code — Continue to Login</span>
+              <span>I have saved my code — Continue to My Profile</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

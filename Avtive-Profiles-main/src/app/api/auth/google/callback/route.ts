@@ -152,37 +152,47 @@ export async function GET(request: NextRequest) {
     getProfileByUserId(user.id, user.role),
     getProfilesByUserId(user.id)
   ]);
-  const userProfile = profile || (profiles && profiles.length > 0 ? profiles[0] : null);
+  let userProfile = profile || (profiles && profiles.length > 0 ? profiles[0] : null);
 
-  const hasRealProfileData = Boolean(
-    userProfile && (
-      (userProfile.designation && userProfile.designation !== 'Professional') ||
-      (userProfile.skills && userProfile.skills.length > 0) ||
-      (userProfile.experiences && userProfile.experiences.length > 0) ||
-      (userProfile.services && userProfile.services.length > 0)
-    )
-  );
+  // Ensure initial profile exists for user
+  if (!userProfile) {
+    try {
+      userProfile = await createProfileForUser(user.id, {
+        name: user.name || name || 'Google User',
+        email: user.email || email,
+        avatar: picture || user.avatar || '',
+        type: 'individual',
+        theme: 'editorial'
+      });
+    } catch (profErr) {
+      console.warn('[Google OAuth Callback] Error creating fallback profile:', profErr);
+    }
+  }
 
-  const isOnboardingComplete = Boolean(user.onboardingCompleted || hasRealProfileData);
+  const { isUserOnboarded } = await import('@/lib/auth/userStatus');
+  const onboarded = !isNewUser && isUserOnboarded(user, userProfile);
+  const targetSlug = userProfile?.slug || userProfile?.id || user.id;
 
   const returnUrl = stateVerification.returnUrl;
   const safeNext = sanitizeReturnUrl(returnUrl, null);
-  let destinationPath = '/onboarding/role';
 
-  if (!isNewUser && isOnboardingComplete && userProfile) {
-    // Returning user: go straight to their existing profile
-    const targetSlug = userProfile.slug || userProfile.id || user.id;
-    destinationPath = resolveReturnUrlForExistingUser(safeNext, `/profile/${targetSlug}`);
+  let destinationPath = '';
+  if (onboarded) {
+    // Returning user: go straight to their existing profile in Preview Mode
+    destinationPath = resolveReturnUrlForExistingUser(safeNext, `/profile/${encodeURIComponent(targetSlug)}`);
   } else {
-    // New user or incomplete onboarding: route to onboarding
-    destinationPath = '/onboarding/role';
+    // New user whose profile has never been saved: open in Edit Mode
+    destinationPath = `/profile/${encodeURIComponent(targetSlug)}?edit=true`;
   }
 
   const sessionUser = {
     id: user.id,
     name: user.name || name || 'Google User',
     email: user.email || email,
-    avatar: picture || user.avatar
+    avatar: picture || user.avatar,
+    onboardingCompleted: onboarded,
+    role: user.role || userProfile?.type || 'individual',
+    preferredTheme: user.preferredTheme || userProfile?.theme || 'editorial'
   };
 
   const redirectUrl = new URL(destinationPath, request.url);

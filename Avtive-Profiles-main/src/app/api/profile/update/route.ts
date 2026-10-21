@@ -158,6 +158,20 @@ async function handleProfileUpdate(request: NextRequest) {
     // 3. Set cookie for serverless cross-lambda persistence (chunked)
     setProfileResponseCookies(response, result.profile);
 
+    // 4. Update session cookie so onboardingCompleted is immediately true
+    try {
+      const { setSessionCookie } = await import('@/lib/auth');
+      await setSessionCookie(
+        {
+          ...session,
+          onboardingCompleted: true,
+          role: result.profile.type || session.role,
+          preferredTheme: result.profile.theme || session.preferredTheme
+        },
+        response
+      );
+    } catch {}
+
     return response;
 
   } catch (error) {

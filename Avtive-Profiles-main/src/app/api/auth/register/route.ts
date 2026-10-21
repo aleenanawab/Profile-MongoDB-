@@ -68,10 +68,29 @@ export async function POST(request: NextRequest) {
       createProfile: false
     });
 
-    const sessionUser = {
+    const { createProfileForUser } = await import('@/lib/db');
+    let profile = null;
+    try {
+      profile = await createProfileForUser(user.id, {
+        name: user.name,
+        email: user.email,
+        type: 'individual',
+        theme: 'editorial'
+      });
+    } catch (profErr) {
+      console.warn('Warning creating profile on register:', profErr);
+    }
+
+    const targetSlug = profile?.slug || profile?.id || user.id;
+    const redirectTo = `/profile/${encodeURIComponent(targetSlug)}?edit=true`;
+
+    const sessionUser: import('@/types/profile').UserSession = {
       id: user.id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      onboardingCompleted: false,
+      role: 'individual',
+      preferredTheme: 'editorial'
     };
 
     const response = NextResponse.json(
@@ -80,12 +99,15 @@ export async function POST(request: NextRequest) {
         message: 'Account created successfully.',
         recoveryCode, // Sent once to display with copy button and warning
         email: user.email,
-        user: sessionUser
+        user: sessionUser,
+        profileSlug: targetSlug,
+        redirectTo
       },
       { status: 201 }
     );
 
     response.headers.set('Cache-Control', 'no-store, max-age=0');
+    await setSessionCookie(sessionUser, response);
     setReturningUserCookie(response);
 
     return response;

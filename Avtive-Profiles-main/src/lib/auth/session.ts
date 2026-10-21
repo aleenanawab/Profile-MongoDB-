@@ -48,6 +48,9 @@ export function createSessionToken(user: UserSession): string {
     name: user.name,
     email: user.email,
     avatar: user.avatar,
+    role: user.role,
+    preferredTheme: user.preferredTheme,
+    onboardingCompleted: user.onboardingCompleted,
     exp: Math.floor(Date.now() / 1000) + SESSION_DURATION_SECONDS
   };
 
@@ -89,7 +92,10 @@ export function verifySessionToken(token: string): UserSession | null {
       id: payload.id,
       name: payload.name,
       email: payload.email,
-      avatar: payload.avatar
+      avatar: payload.avatar,
+      role: payload.role,
+      preferredTheme: payload.preferredTheme,
+      onboardingCompleted: payload.onboardingCompleted
     };
   } catch {
     return null;

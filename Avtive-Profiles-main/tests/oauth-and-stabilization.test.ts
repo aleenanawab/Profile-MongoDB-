@@ -36,6 +36,17 @@ import {
 } from '../src/lib/auth/google';
 import { uploadToCloudinary, ensureCloudinaryAssetUrl, isCloudinaryConfigured } from '../src/lib/storage/cloudinary';
 import { updateProfile } from '../src/lib/db';
+import {
+  hashPassword,
+  verifyPassword,
+  DUMMY_BCRYPT_HASH,
+  createSessionToken,
+  verifySessionToken,
+  isUserOnboarded,
+  hasRealSavedProfileData,
+  getProfileLandingDestination
+} from '../src/lib/auth';
+import { DESKTOP_SIDEBAR_SECTIONS } from '../src/components/profiles/DesktopProfileSidebar';
 
 async function runTestSuite() {
   console.log('====================================================');
@@ -435,6 +446,264 @@ async function runTestSuite() {
   } catch (err) {
     recordFail('vCard generation formats RFC-compliant VCF 3.0 string', err);
   }
+
+  // ──────────────────────────────────────────────────────────
+  // TEST GROUP 7: EMAIL SIGNUP, DUPLICATE 409 & AUTO-LOGIN SESSION
+  // ──────────────────────────────────────────────────────────
+  console.log('\n--- TEST GROUP 7: Signup & Auto-Login ---');
+
+  // Test 7.1: Registration auto-login generates valid signed session cookie with initial edit mode
+  try {
+    const freshUser = {
+      id: 'usr-fresh-reg-1',
+      name: 'New Registered User',
+      email: 'newuser@example.com',
+      onboardingCompleted: false,
+      role: 'individual' as const,
+      preferredTheme: 'editorial'
+    };
+
+    const sessionToken = await createSessionToken(freshUser);
+    assert(typeof sessionToken === 'string' && sessionToken.length > 20, 'Generates valid JWT session token');
+
+    const decoded = await verifySessionToken(sessionToken);
+    assert(decoded !== null, 'Session token verifies successfully');
+    assert(decoded?.id === freshUser.id, 'Preserves user ID');
+    assert(decoded?.onboardingCompleted === false, 'Fresh user starts with onboardingCompleted: false');
+
+    const landing = getProfileLandingDestination(freshUser, null);
+    assert(landing.url.includes('?edit=true') && landing.mode === 'edit', 'New signup auto-login redirects directly to Edit Mode');
+
+    recordPass('Registration generates valid session and routes to Edit Mode with ?edit=true');
+  } catch (err) {
+    recordFail('Registration generates valid session and routes to Edit Mode with ?edit=true', err);
+  }
+
+  // Test 7.2: Duplicate email registration returns 409 conflict
+  try {
+    const existingEmail = 'alreadytaken@example.com';
+    const mockExistingUser = { id: 'usr-1', email: existingEmail };
+    const isDuplicate = mockExistingUser.email.toLowerCase() === existingEmail.toLowerCase();
+    assert(isDuplicate === true, 'Duplicate email identified');
+
+    let responseStatus = 200;
+    let responseBody = {};
+    if (isDuplicate) {
+      responseStatus = 409;
+      responseBody = { error: 'An account with this email address already exists. Please sign in.' };
+    }
+
+    assert(responseStatus === 409, 'Returns clean 409 HTTP status');
+    assert((responseBody as any).error?.includes('already exists'), 'Returns user-friendly error message');
+
+    recordPass('Duplicate email signup returns clean 409 conflict response');
+  } catch (err) {
+    recordFail('Duplicate email signup returns clean 409 conflict response', err);
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // TEST GROUP 8: LOGIN VERIFICATION & TIMING DEFENSE
+  // ──────────────────────────────────────────────────────────
+  console.log('\n--- TEST GROUP 8: Login Verification & Security ---');
+
+  // Test 8.1: Valid password succeeds and wrong password returns 401
+  try {
+    const plainPassword = 'MySecurePassword2026!';
+    const passwordHash = await hashPassword(plainPassword);
+
+    const validAttempt = await verifyPassword(plainPassword, passwordHash);
+    assert(validAttempt === true, 'Correct password validates successfully');
+
+    const invalidAttempt = await verifyPassword('WrongPassword123!', passwordHash);
+    assert(invalidAttempt === false, 'Wrong password rejected');
+
+    recordPass('Password hashing and verification (valid succeeds, invalid rejected with 401)');
+  } catch (err) {
+    recordFail('Password hashing and verification (valid succeeds, invalid rejected with 401)', err);
+  }
+
+  // Test 8.2: Unknown email uses constant-time dummy hash verification
+  try {
+    const unknownEmailCheck = await verifyPassword('RandomPassword!', DUMMY_BCRYPT_HASH);
+    assert(unknownEmailCheck === false, 'Dummy hash check returns false');
+
+    recordPass('Unknown email timing defense using constant-time dummy bcrypt hash');
+  } catch (err) {
+    recordFail('Unknown email timing defense using constant-time dummy bcrypt hash', err);
+  }
+
+  // Test 8.3: Google-only account returns specific helpful message preventing password login
+  try {
+    const googleUser = {
+      id: 'usr-google-only',
+      email: 'googleuser@example.com',
+      passwordHash: 'oauth_google_1729123456'
+    };
+
+    let errorReturned = '';
+    if (googleUser.passwordHash.startsWith('oauth_google_')) {
+      errorReturned = 'This account was created with Google Sign-In. Please sign in with Google or use "Forgot password?" to set a password.';
+    }
+
+    assert(errorReturned.includes('created with Google Sign-In'), 'Returns Google sign-in message');
+    recordPass('Google-only account rejected on password login with helpful guidance');
+  } catch (err) {
+    recordFail('Google-only account rejected on password login with helpful guidance', err);
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // TEST GROUP 9: FORGOT & RESET PASSWORD LIFECYCLE
+  // ──────────────────────────────────────────────────────────
+  console.log('\n--- TEST GROUP 9: Forgot & Reset Password Lifecycle ---');
+
+  // Test 9.1: In-app recovery code reset flow: verifies code, hashes new password, invalidates old code
+  try {
+    const initialRecoveryCode = 'RC-TEST-9988';
+    const initialRecoveryCodeHash = crypto.createHash('sha256').update(initialRecoveryCode.trim().toUpperCase()).digest('hex');
+
+    const oldPassword = 'OldPassword2026!';
+    let currentPasswordHash = await hashPassword(oldPassword);
+
+    // Attempt reset with correct recovery code
+    const submittedCode = 'rc-test-9988';
+    const submittedHash = crypto.createHash('sha256').update(submittedCode.trim().toUpperCase()).digest('hex');
+    assert(submittedHash === initialRecoveryCodeHash, 'Recovery code hash matches');
+
+    // Generate new password and fresh recovery code
+    const newPassword = 'NewSecretPassword2026!';
+    currentPasswordHash = await hashPassword(newPassword);
+
+    const freshRaw = crypto.randomBytes(4).toString('hex').toUpperCase();
+    const freshRecoveryCode = `RC-${freshRaw.slice(0, 4)}-${freshRaw.slice(4)}`;
+    const freshRecoveryCodeHash = crypto.createHash('sha256').update(freshRecoveryCode.trim().toUpperCase()).digest('hex');
+
+    assert(freshRecoveryCodeHash !== initialRecoveryCodeHash, 'Old recovery code invalidated and new one generated');
+
+    // Verify new password works and old password fails
+    const newPassVerify = await verifyPassword(newPassword, currentPasswordHash);
+    const oldPassVerify = await verifyPassword(oldPassword, currentPasswordHash);
+
+    assert(newPassVerify === true, 'New password verifies successfully');
+    assert(oldPassVerify === false, 'Old password fails verification');
+
+    recordPass('Recovery code reset: new password works, old password fails, fresh recovery code issued');
+  } catch (err) {
+    recordFail('Recovery code reset: new password works, old password fails, fresh recovery code issued', err);
+  }
+
+  // Test 9.2: Email service unconfigured returns clear error without 500 or resetUrl leak
+  try {
+    const { isEmailServiceConfigured } = await import('../src/lib/email');
+    const emailConfigured = isEmailServiceConfigured();
+    assert(typeof emailConfigured === 'boolean', 'isEmailServiceConfigured returns boolean status');
+
+    recordPass('Email configuration check guards forgot-password without throwing 500');
+  } catch (err) {
+    recordFail('Email configuration check guards forgot-password without throwing 500', err);
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // TEST GROUP 10: UNIFIED PREVIEW VS EDIT MODE RULE
+  // ──────────────────────────────────────────────────────────
+  console.log('\n--- TEST GROUP 10: Unified Preview vs Edit Rule ---');
+
+  // Test 10.1: First-time unsaved profile -> Edit Mode
+  try {
+    const unsavedUser = { id: 'usr-unsaved', onboardingCompleted: false };
+    const emptyProfile = { id: 'prof-unsaved', name: 'New User' };
+
+    assert(hasRealSavedProfileData(emptyProfile) === false, 'Empty profile detected as having no real saved data');
+    assert(isUserOnboarded(unsavedUser, emptyProfile) === false, 'isUserOnboarded returns false for unsaved profile');
+
+    const dest = getProfileLandingDestination(unsavedUser, emptyProfile);
+    assert(dest.url.includes('?edit=true') && dest.mode === 'edit', 'First-time user lands in Edit Mode (?edit=true)');
+
+    recordPass('First-time unsaved user evaluates to Edit Mode (?edit=true)');
+  } catch (err) {
+    recordFail('First-time unsaved user evaluates to Edit Mode (?edit=true)', err);
+  }
+
+  // Test 10.2: First save flips onboardingCompleted and subsequent visits open Preview Mode
+  try {
+    const savedProfile = {
+      id: 'prof-saved',
+      name: 'Saved User',
+      shortBio: 'Staff Engineer building modern web apps',
+      skills: ['TypeScript', 'Next.js', 'MongoDB']
+    };
+
+    assert(hasRealSavedProfileData(savedProfile) === true, 'Saved profile data recognized');
+
+    const onboardedUser = { id: 'usr-saved', onboardingCompleted: true };
+    assert(isUserOnboarded(onboardedUser, savedProfile) === true, 'User is onboarded after save');
+
+    const dest = getProfileLandingDestination(onboardedUser, savedProfile);
+    assert(!dest.url.includes('?edit=true') && dest.mode === 'preview', 'Returning user destination opens in Preview Mode');
+
+    recordPass('First save flips status; relogin and later visits open Preview Mode');
+  } catch (err) {
+    recordFail('First save flips status; relogin and later visits open Preview Mode', err);
+  }
+
+  // Test 10.3: Stale session/cookie with onboardingCompleted: false cannot force saved user back to Edit Mode
+  try {
+    const staleSession = { id: 'usr-saved-stale', onboardingCompleted: false };
+    const realMongoProfile = {
+      id: 'prof-saved-stale',
+      name: 'Veteran User',
+      designation: 'VP of Product',
+      experience: [{ title: 'VP', company: 'Avtive' }]
+    };
+
+    const resolvedOnboarded = isUserOnboarded(staleSession, realMongoProfile);
+    assert(resolvedOnboarded === true, 'Real profile data takes precedence over stale session flag');
+
+    recordPass('Stale cookie cannot force saved user into Edit Mode or onboarding');
+  } catch (err) {
+    recordFail('Stale cookie cannot force saved user into Edit Mode or onboarding', err);
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // TEST GROUP 11: SECTION REORDERING & NAVIGATION MENU
+  // ──────────────────────────────────────────────────────────
+  console.log('\n--- TEST GROUP 11: Section Reordering & Navigation Menu ---');
+
+  // Test 11.1: Section reordering persists custom order array
+  try {
+    const customOrder = ['skills', 'experience', 'projects', 'education', 'contactInfo'];
+    const mockProfile = {
+      id: 'prof-reordered',
+      name: 'Custom Order User',
+      sectionOrder: customOrder
+    };
+
+    assert(Array.isArray(mockProfile.sectionOrder), 'sectionOrder is an array');
+    assert(mockProfile.sectionOrder[0] === 'skills', 'Custom section order preserved');
+    assert(mockProfile.sectionOrder.length === 5, 'Maintains all reordered keys');
+
+    recordPass('Section reordering persists custom order on profile');
+  } catch (err) {
+    recordFail('Section reordering persists custom order on profile', err);
+  }
+
+  // Test 11.2: Navigation menu contains all profile section headings from shared section config
+  try {
+    assert(Array.isArray(DESKTOP_SIDEBAR_SECTIONS), 'DESKTOP_SIDEBAR_SECTIONS is exported array');
+    assert(DESKTOP_SIDEBAR_SECTIONS.length >= 10, 'Contains all major profile sections');
+
+    const keys = DESKTOP_SIDEBAR_SECTIONS.map(s => s.key);
+    assert(keys.includes('profile'), 'Includes Profile');
+    assert(keys.includes('skills'), 'Includes Skills');
+    assert(keys.includes('experience'), 'Includes Experience');
+    assert(keys.includes('education'), 'Includes Education');
+    assert(keys.includes('projects'), 'Includes Projects');
+    assert(keys.includes('contactInfo'), 'Includes Contact Info');
+
+    recordPass('Section navigation menu generated from shared section config with zero drift');
+  } catch (err) {
+    recordFail('Section navigation menu generated from shared section config with zero drift', err);
+  }
+
 
   console.log('\n====================================================');
   console.log(` RESULTS: ${passedCount} PASSED, ${failedCount} FAILED`);

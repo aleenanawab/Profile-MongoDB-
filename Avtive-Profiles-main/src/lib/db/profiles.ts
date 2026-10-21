@@ -27,8 +27,8 @@ export function mapDocToProfileData(doc: any): ProfileData {
     designation: doc.designation || 'Professional',
     company: doc.company || '',
     location: doc.location || '',
-    avatar: doc.avatar || '',
-    coverImage: doc.coverImage || undefined,
+    avatar: doc.avatar || doc.logoUrl || '',
+    coverImage: doc.coverImage || doc.coverUrl || undefined,
     shortBio: doc.shortBio || doc.bio || '',
     fullBio: doc.fullBio || doc.about || '',
     bio: doc.bio || doc.shortBio || '',
@@ -328,6 +328,14 @@ export async function updateProfile(
   delete (safeUpdates as any)._id;
   delete (safeUpdates as any).id;
   delete (safeUpdates as any).userId; // Prevent transferring ownership via update
+
+  // Never overwrite an existing saved image with an empty or missing value
+  if (!safeUpdates.avatar && (existing.avatar || (existing as any).logoUrl)) {
+    safeUpdates.avatar = existing.avatar || (existing as any).logoUrl;
+  }
+  if (!safeUpdates.coverImage && (existing.coverImage || (existing as any).coverUrl)) {
+    safeUpdates.coverImage = existing.coverImage || (existing as any).coverUrl;
+  }
 
   const res = await profilesCol.findOneAndUpdate(
     { _id: existing.id as any },

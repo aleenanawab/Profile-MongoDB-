@@ -128,8 +128,8 @@ export function ProfileSectionEditor({
   const [ctaActive, setCtaActive] = useState(profile.customCta?.active ?? false);
 
   // Photos
-  const [avatar, setAvatar] = useState(profile.avatar || '');
-  const [coverImage, setCoverImage] = useState(profile.coverImage || '');
+  const [avatar, setAvatar] = useState(profile.avatar || (profile as any).logoUrl || '');
+  const [coverImage, setCoverImage] = useState(profile.coverImage || (profile as any).coverUrl || '');
 
   // UI / Action status
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -173,11 +173,11 @@ export function ProfileSectionEditor({
       setWebsite(profile.website || '');
       setCtaLabel(profile.customCta?.label || 'Get In Touch');
       setCtaUrl(profile.customCta?.url || '');
-      if (profile.avatar) {
-        setAvatar(profile.avatar);
+      if (profile.avatar || (profile as any).logoUrl) {
+        setAvatar(profile.avatar || (profile as any).logoUrl);
       }
-      if (profile.coverImage) {
-        setCoverImage(profile.coverImage);
+      if (profile.coverImage || (profile as any).coverUrl) {
+        setCoverImage(profile.coverImage || (profile as any).coverUrl);
       }
     }
   }, [profile.id, profile.slug, profile.avatar, profile.coverImage, mode]);
@@ -309,8 +309,8 @@ export function ProfileSectionEditor({
       setCtaLabel(profile.customCta?.label || 'Get In Touch');
       setCtaUrl(profile.customCta?.url || '');
       setCtaActive(profile.customCta?.active ?? false);
-      setAvatar(profile.avatar || '');
-      setCoverImage(profile.coverImage || '');
+      setAvatar(profile.avatar || (profile as any).logoUrl || '');
+      setCoverImage(profile.coverImage || (profile as any).coverUrl || '');
     }
   };
 

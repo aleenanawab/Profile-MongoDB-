@@ -541,6 +541,14 @@ function PublicProfileClientInner({
         }
       }
 
+      // Never overwrite existing saved images with an empty value
+      if (!payload.avatar && profile.avatar) {
+        payload.avatar = profile.avatar;
+      }
+      if (!payload.coverImage && profile.coverImage) {
+        payload.coverImage = profile.coverImage;
+      }
+
       const res = await fetch('/api/profile/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -582,6 +590,14 @@ function PublicProfileClientInner({
         try {
           sanitizedPartial.coverImage = await uploadImageToStorage(sanitizedPartial.coverImage, 'profiles');
         } catch {}
+      }
+
+      // Never overwrite existing saved images with an empty value
+      if (!sanitizedPartial.avatar && profile.avatar) {
+        sanitizedPartial.avatar = profile.avatar;
+      }
+      if (!sanitizedPartial.coverImage && profile.coverImage) {
+        sanitizedPartial.coverImage = profile.coverImage;
       }
 
       const res = await fetch('/api/profile/update', {

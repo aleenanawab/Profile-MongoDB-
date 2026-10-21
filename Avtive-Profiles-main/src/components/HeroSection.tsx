@@ -69,8 +69,8 @@ export function HeroSection({
   const coverInputRef = React.useRef<HTMLInputElement>(null);
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
 
-  const coverUrl = profile.coverImage || SUPABASE_DEFAULT_COVER;
-  const avatarUrl = profile.avatar || SUPABASE_DEFAULT_AVATAR;
+  const coverUrl = profile.coverImage || (profile as any).coverUrl || SUPABASE_DEFAULT_COVER;
+  const avatarUrl = profile.avatar || (profile as any).logoUrl || SUPABASE_DEFAULT_AVATAR;
   const sharing = profile.sharingSettings || {};
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

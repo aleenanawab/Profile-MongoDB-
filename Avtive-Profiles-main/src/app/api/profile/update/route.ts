@@ -36,7 +36,20 @@ async function handleProfileUpdate(request: NextRequest) {
     }
     const updatedData = { ...rawUpdatedData };
 
-    const identifier = profileId || body.profileSlug || body.slug;
+    let identifier = profileId || body.profileSlug || body.slug;
+    if (!identifier) {
+      let userProfile = await getProfileByUserId(session.id);
+      if (!userProfile) {
+        userProfile = await createProfileForUser(session.id, {
+          name: updatedData.name || session.name || 'User Profile',
+          email: session.email,
+          type: updatedData.type || 'individual',
+          theme: updatedData.theme || 'editorial'
+        });
+      }
+      identifier = userProfile?.id;
+    }
+
     if (!identifier && !updatedData) {
       return NextResponse.json(
         { error: 'Invalid request: profile identifier and updatedData are required.' },

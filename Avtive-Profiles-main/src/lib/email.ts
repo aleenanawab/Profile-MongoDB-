@@ -23,7 +23,7 @@ function getSmtpTransporter() {
   const pass = process.env.SMTP_PASS || process.env.SMTP_PASSWORD;
   const secure = process.env.SMTP_SECURE === 'true' || port === 465;
 
-  if (!user || !pass) {
+  if (!user || !pass || pass.includes('your-16-char') || pass.startsWith('your-')) {
     return null;
   }
 
@@ -191,24 +191,51 @@ export async function sendPasswordResetEmail({
   }
 
   // 2. Try Resend API if configured
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (resendApiKey) {
+  const resendApiKey = (process.env.RESEND_API_KEY || '').trim();
+  if (resendApiKey && !resendApiKey.includes('your_resend')) {
     try {
-      const res = await fetch('https://api.resend.com/emails', {
+      let rawFrom = (process.env.RESEND_FROM || '').trim();
+      if ((rawFrom.startsWith('"') && rawFrom.endsWith('"')) || (rawFrom.startsWith("'") && rawFrom.endsWith("'"))) {
+        rawFrom = rawFrom.slice(1, -1).trim();
+      }
+      const fromAddress = rawFrom.includes('@') ? rawFrom : 'Avtive Security <onboarding@resend.dev>';
+
+      const payload = {
+        from: fromAddress,
+        to: [normalizedEmail],
+        subject: 'Reset your password',
+        html: generatePasswordResetHtml(resetUrl, name)
+      };
+
+      let res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${resendApiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          from: process.env.RESEND_FROM || 'Avtive Security <onboarding@resend.dev>',
-          to: [normalizedEmail],
-          subject: 'Reset your password',
-          html: generatePasswordResetHtml(resetUrl, name)
-        })
+        body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      let data = await res.json().catch(() => ({}));
+
+      // If custom domain is not verified on Resend (HTTP 403 / validation_error),
+      // seamlessly fall back to Resend's verified onboarding sandbox so delivery succeeds
+      if (!res.ok && res.status === 403 && fromAddress !== 'Avtive Security <onboarding@resend.dev>') {
+        console.warn(`[Resend] Domain in '${fromAddress}' not verified, retrying with onboarding@resend.dev sandbox...`);
+        res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            ...payload,
+            from: 'Avtive Security <onboarding@resend.dev>'
+          })
+        });
+        data = await res.json().catch(() => ({}));
+      }
+
       if (res.ok && data?.id) {
         return {
           success: true,
@@ -216,14 +243,14 @@ export async function sendPasswordResetEmail({
           provider: 'resend'
         };
       }
-      console.error('Resend API response error:', data?.message || data?.error || 'Unknown error');
+      lastError = data?.message || data?.error || 'Unknown Resend error';
+      console.error('Resend API response error:', lastError);
     } catch (resendErr: unknown) {
       const errMessage = resendErr instanceof Error ? resendErr.message : String(resendErr);
       lastError = errMessage;
       console.error('Resend API error:', errMessage);
     }
   }
-
 
   // If no email provider successfully delivered the message
   return {
@@ -233,12 +260,15 @@ export async function sendPasswordResetEmail({
 }
 
 export function isEmailServiceConfigured(): boolean {
+  const pass = (process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '').trim();
+  const isPassReal = Boolean(pass && !pass.includes('your-16-char') && !pass.startsWith('your-'));
   const hasSmtp = Boolean(
     process.env.SMTP_USER &&
-    (process.env.SMTP_PASS || process.env.SMTP_PASSWORD) &&
+    isPassReal &&
     (process.env.SMTP_HOST || (process.env.SMTP_USER && process.env.SMTP_USER.endsWith('@gmail.com')))
   );
-  const hasResend = Boolean(process.env.RESEND_API_KEY);
+  const resendKey = (process.env.RESEND_API_KEY || '').trim();
+  const hasResend = Boolean(resendKey && !resendKey.includes('your_resend'));
   return hasSmtp || hasResend;
 }
 

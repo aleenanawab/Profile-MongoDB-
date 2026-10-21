@@ -23,12 +23,19 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig {
   let clientId = (process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || '').trim();
   let clientSecret = (process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || '').trim();
 
-  // Strip accidental wrapping quotes (single or double) from environment variables
+  // Strip accidental wrapping quotes (single or double) or stray leading prefix typos
   if ((clientId.startsWith('"') && clientId.endsWith('"')) || (clientId.startsWith("'") && clientId.endsWith("'"))) {
     clientId = clientId.slice(1, -1).trim();
   }
+  if (clientSecret.startsWith('=-')) {
+    clientSecret = clientSecret.slice(2).trim();
+  } else if (clientSecret.startsWith('=')) {
+    clientSecret = clientSecret.slice(1).trim();
+  }
   if ((clientSecret.startsWith('"') && clientSecret.endsWith('"')) || (clientSecret.startsWith("'") && clientSecret.endsWith("'"))) {
     clientSecret = clientSecret.slice(1, -1).trim();
+  } else if (clientSecret.startsWith('-"') && clientSecret.endsWith('"')) {
+    clientSecret = clientSecret.slice(2, -1).trim();
   }
 
   return {

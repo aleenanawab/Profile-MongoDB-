@@ -74,6 +74,18 @@ async function runSuite() {
   // --- Test 4: Existing email login (no 401) ---
   let userCookie = '';
   try {
+    // Ensure account exists in the database
+    await request('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'ABCD User',
+        email: 'abcd@gmail.com',
+        password: 'Password123!',
+        confirmPassword: 'Password123!'
+      })
+    });
+
     const loginRes = await request('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

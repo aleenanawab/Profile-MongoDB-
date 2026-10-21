@@ -30,7 +30,6 @@ import {
   AtSign,
   Tag,
   Link as LinkIcon,
-  Calendar,
   Users
 } from 'lucide-react';
 import { ProfileData, ProfileTheme, ProfileType, CustomFieldItem, normalizeProfileType } from '@/types/profile';
@@ -122,7 +121,6 @@ export function ProfileSectionEditor({
   const [phone, setPhone] = useState(profile.phone || '');
   const [whatsapp, setWhatsapp] = useState(profile.whatsapp || '');
   const [website, setWebsite] = useState(profile.website || '');
-  const [bookingUrl, setBookingUrl] = useState(profile.bookingUrl || '');
 
   // Custom CTA
   const [ctaLabel, setCtaLabel] = useState(profile.customCta?.label || 'Get In Touch');
@@ -173,7 +171,6 @@ export function ProfileSectionEditor({
       setPhone(profile.phone || '');
       setWhatsapp(profile.whatsapp || '');
       setWebsite(profile.website || '');
-      setBookingUrl(profile.bookingUrl || '');
       setCtaLabel(profile.customCta?.label || 'Get In Touch');
       setCtaUrl(profile.customCta?.url || '');
       if (profile.avatar) {
@@ -217,7 +214,6 @@ export function ProfileSectionEditor({
         phone: phone.trim(),
         whatsapp: whatsapp.trim(),
         website: website.trim(),
-        bookingUrl: bookingUrl.trim(),
         avatar,
         coverImage,
         customCta: {
@@ -247,7 +243,6 @@ export function ProfileSectionEditor({
     phone,
     whatsapp,
     website,
-    bookingUrl,
     avatar,
     coverImage,
     ctaLabel,
@@ -283,7 +278,6 @@ export function ProfileSectionEditor({
       setPhone('');
       setWhatsapp('');
       setWebsite('');
-      setBookingUrl('');
       setCtaLabel('Contact Me');
       setCtaUrl('');
       setCtaActive(false);
@@ -312,7 +306,6 @@ export function ProfileSectionEditor({
       setPhone(profile.phone || '');
       setWhatsapp(profile.whatsapp || '');
       setWebsite(profile.website || '');
-      setBookingUrl(profile.bookingUrl || '');
       setCtaLabel(profile.customCta?.label || 'Get In Touch');
       setCtaUrl(profile.customCta?.url || '');
       setCtaActive(profile.customCta?.active ?? false);
@@ -447,7 +440,6 @@ export function ProfileSectionEditor({
       phone: phone.trim(),
       whatsapp: whatsapp.trim(),
       website: website.trim(),
-      bookingUrl: bookingUrl.trim(),
       avatar,
       coverImage,
       customCta: {
@@ -1075,23 +1067,6 @@ export function ProfileSectionEditor({
                           className="figma-input w-full pl-8 pr-3 py-2 text-xs focus:outline-hidden focus:ring-1 focus:ring-slate-400 dark:focus:ring-white/40"
                         />
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Calendly / Booking URL */}
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-600 dark:text-white/70 mb-1">
-                      Calendar Booking URL (Calendly, Cal.com)
-                    </label>
-                    <div className="relative flex items-center">
-                      <Calendar className="absolute left-3 w-3.5 h-3.5 text-purple-500 pointer-events-none" />
-                      <input
-                        type="url"
-                        value={bookingUrl}
-                        onChange={(e) => setBookingUrl(e.target.value)}
-                        placeholder="https://cal.com/username/30min"
-                        className="figma-input w-full pl-8 pr-3 py-2 text-xs focus:outline-hidden focus:ring-1 focus:ring-slate-400 dark:focus:ring-white/40"
-                      />
                     </div>
                   </div>
 

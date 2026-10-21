@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mail, Phone, MessageSquare, MapPin, Globe, Pencil, Building2, Calendar } from 'lucide-react';
+import { Mail, Phone, MessageSquare, MapPin, Globe, Pencil, Building2 } from 'lucide-react';
 import { ProfileData } from '../types/profile';
 import { ThemeConfig, getThemeConfig } from './themeStyles';
 import { FormLabel, FormInput, SectionSaveBar } from './ui/formControls';
@@ -37,7 +37,6 @@ export function ProfileContactSection({
     country: profile.country || '',
     officeAddress: profile.officeAddress || '',
     website: profile.website || '',
-    bookingUrl: profile.bookingUrl || '',
   });
   const [snapshot, setSnapshot] = React.useState(contactDraft);
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -52,7 +51,6 @@ export function ProfileContactSection({
       country: profile.country || '',
       officeAddress: profile.officeAddress || '',
       website: profile.website || '',
-      bookingUrl: profile.bookingUrl || '',
     };
     setContactDraft(nextDraft);
     setSnapshot(nextDraft);
@@ -65,7 +63,6 @@ export function ProfileContactSection({
     profile.country,
     profile.officeAddress,
     profile.website,
-    profile.bookingUrl,
   ]);
 
   const isDirty = (
@@ -75,8 +72,7 @@ export function ProfileContactSection({
     contactDraft.location !== snapshot.location ||
     contactDraft.country !== snapshot.country ||
     contactDraft.officeAddress !== snapshot.officeAddress ||
-    contactDraft.website !== snapshot.website ||
-    contactDraft.bookingUrl !== snapshot.bookingUrl
+    contactDraft.website !== snapshot.website
   );
 
   const handleSaveContact = async () => {
@@ -91,7 +87,6 @@ export function ProfileContactSection({
         country: contactDraft.country,
         officeAddress: contactDraft.officeAddress,
         website: contactDraft.website,
-        bookingUrl: contactDraft.bookingUrl,
       };
       if (onSavePartial) {
         await onSavePartial(payload);
@@ -123,8 +118,7 @@ export function ProfileContactSection({
     profile.location ||
     profile.country ||
     profile.officeAddress ||
-    profile.website ||
-    profile.bookingUrl
+    profile.website
   );
 
   if (!isEditing && !hasContactInfo && !canEdit) {
@@ -233,16 +227,6 @@ export function ProfileContactSection({
                 value={contactDraft.website}
                 onChange={(val) => setContactDraft((prev) => ({ ...prev, website: val }))}
                 placeholder="https://www.avtive.app"
-              />
-            </div>
-
-            <div>
-              <FormLabel>Booking URL</FormLabel>
-              <FormInput
-                type="url"
-                value={contactDraft.bookingUrl}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, bookingUrl: val }))}
-                placeholder="https://calendly.com/your-calendar"
               />
             </div>
           </div>
@@ -368,27 +352,6 @@ export function ProfileContactSection({
                 </span>
                 <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
                   {profile.website.replace(/^https?:\/\//, '')}
-                </span>
-              </div>
-            </a>
-          )}
-
-          {profile.bookingUrl && (
-            <a
-              href={profile.bookingUrl.startsWith('http') ? profile.bookingUrl : `https://${profile.bookingUrl}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
-            >
-              <div className="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center shrink-0">
-                <Calendar className="w-3.5 h-3.5 text-violet-500" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
-                  Book Appointment
-                </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
-                  {profile.bookingUrl.replace(/^https?:\/\//, '')}
                 </span>
               </div>
             </a>

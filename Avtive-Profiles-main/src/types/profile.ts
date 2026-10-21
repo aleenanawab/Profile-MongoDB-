@@ -383,7 +383,6 @@ export interface ProfileData {
   whatsapp?: string;
   email?: string;
   website?: string;
-  bookingUrl?: string;
   officeAddress?: string;
   googleMapsUrl?: string;
   contactOrder?: string[];

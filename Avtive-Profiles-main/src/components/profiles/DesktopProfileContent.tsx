@@ -1201,7 +1201,7 @@ export function DesktopProfileContent({
           'contactInfo',
           'Contact Information',
           Phone,
-          'Email, telephone, WhatsApp, website, and calendar booking link',
+          'Email, telephone, WhatsApp, and website',
           profile.email || profile.phone ? 'Configured' : 'Empty · Click to add',
           true,
           (

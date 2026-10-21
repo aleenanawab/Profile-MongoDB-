@@ -391,7 +391,6 @@ export function EditProfileModal({
                       >
                         <option value="linkedin">LinkedIn Profile</option>
                         <option value="telegram">Telegram</option>
-                        <option value="booking">Calendar / Booking</option>
                         <option value="phone">Alternate Mobile</option>
                         <option value="email">Work Email</option>
                         <option value="whatsapp">Secondary WhatsApp</option>

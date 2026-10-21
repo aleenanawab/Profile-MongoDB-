@@ -108,7 +108,7 @@ export function resolveUserDestination(state: {
     return `/onboarding/theme?role=${encodeURIComponent(state.role)}`;
   }
   if (!state.hasProfile) {
-    return `/onboarding/details?role=${encodeURIComponent(state.role)}&theme=${encodeURIComponent(state.theme)}`;
+    return `/edit-profile?role=${encodeURIComponent(state.role)}&theme=${encodeURIComponent(state.theme)}`;
   }
   const slug = state.profileSlug || 'me';
   return `/profile/${encodeURIComponent(slug)}`;
@@ -137,7 +137,7 @@ export async function getUserRoutingDestination(
     }
   }
 
-  const hasProfile = Boolean(profile && (user?.onboardingCompleted || hasRealSavedProfileData(profile)));
+  const hasProfile = isUserOnboarded(user || sessionUser, profile);
 
   return resolveUserDestination({
     isAuthenticated: true,

@@ -23,7 +23,7 @@ export default async function OnboardingLayout({
 
   // If user already completed onboarding and has a saved profile, redirect to their profile VIEW page
   const { getProfileByUserId, getProfilesByUserId, getUserById } = await import('@/lib/db');
-  const { hasRealSavedProfileData } = await import('@/lib/auth/userStatus');
+  const { isUserOnboarded } = await import('@/lib/auth/userStatus');
   const [user, profile] = await Promise.all([
     getUserById(session.id),
     getProfileByUserId(session.id, session.role)
@@ -31,8 +31,7 @@ export default async function OnboardingLayout({
   const profiles = profile ? [profile] : await getProfilesByUserId(session.id);
   const activeProfile = profile || (profiles && profiles.length > 0 ? profiles[0] : null);
 
-  const hasProfile = Boolean(activeProfile && hasRealSavedProfileData(activeProfile));
-  const isCompleted = Boolean(user?.onboardingCompleted && hasProfile);
+  const isCompleted = isUserOnboarded(user || session, activeProfile);
 
   if (isCompleted && activeProfile) {
     const slug = activeProfile.slug || activeProfile.id;

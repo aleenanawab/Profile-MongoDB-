@@ -233,7 +233,7 @@ export default function LoginClient() {
         } else if (!userTheme) {
           targetPath = `/onboarding/theme?role=${encodeURIComponent(userRole)}`;
         } else {
-          targetPath = '/onboarding/details';
+          targetPath = `/edit-profile?role=${encodeURIComponent(userRole)}&theme=${encodeURIComponent(userTheme)}`;
         }
       }
 

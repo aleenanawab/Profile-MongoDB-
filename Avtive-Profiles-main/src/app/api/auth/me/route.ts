@@ -16,9 +16,9 @@ export async function GET() {
     ]);
 
     const userProfile = profile || (profiles && profiles.length > 0 ? profiles[0] : null);
-    const { hasRealSavedProfileData } = await import('@/lib/auth/userStatus');
-    const hasProfile = Boolean(userProfile && hasRealSavedProfileData(userProfile));
-    const isOnboardingComplete = Boolean(dbUser?.onboardingCompleted && hasProfile);
+    const { isUserOnboarded } = await import('@/lib/auth/userStatus');
+    const isOnboardingComplete = isUserOnboarded(dbUser || session, userProfile);
+    const hasProfile = isOnboardingComplete;
 
     const role = userProfile?.type || dbUser?.role || session.role || null;
     const preferredTheme = userProfile?.theme || dbUser?.preferredTheme || session.preferredTheme || null;

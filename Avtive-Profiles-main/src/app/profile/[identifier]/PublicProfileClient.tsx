@@ -567,8 +567,20 @@ function PublicProfileClientInner({
         throw new Error(data?.error || `Failed to save changes (${res.status}).`);
       }
 
-      setProfile(data?.profile || payload);
+      const savedProfile = data?.profile || payload;
+      setProfile(savedProfile);
+      setCurrentDraft(savedProfile);
       setIsEditing(false);
+      try {
+        localStorage.setItem(`avtive_profile_${savedProfile.slug || savedProfile.id}`, JSON.stringify(savedProfile));
+        localStorage.setItem(`avtive_profile_${savedProfile.id}`, JSON.stringify(savedProfile));
+        localStorage.setItem('avtive_last_saved_profile', JSON.stringify(savedProfile));
+        window.dispatchEvent(new CustomEvent('avtive_profile_updated', { detail: savedProfile }));
+        const targetSlug = savedProfile.slug || savedProfile.id || profile.slug || profile.id;
+        if (targetSlug && typeof window !== 'undefined') {
+          window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
+        }
+      } catch {}
       showToast('Profile saved successfully!');
     } catch (err: any) {
       console.error('Update profile error:', err);

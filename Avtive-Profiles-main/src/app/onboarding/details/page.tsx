@@ -47,6 +47,10 @@ function DetailsStepContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    window.location.href = `/edit-profile?role=${encodeURIComponent(role)}&theme=${encodeURIComponent(theme)}`;
+  }, [role, theme]);
+
+  useEffect(() => {
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {

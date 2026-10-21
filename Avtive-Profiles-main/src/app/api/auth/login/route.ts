@@ -51,10 +51,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userProfile = await getProfileByUserId(user.id, user.role);
-    const { hasRealSavedProfileData, resolveUserDestination } = await import('@/lib/auth/userStatus');
-    const hasProfile = Boolean(userProfile && hasRealSavedProfileData(userProfile));
-    const isOnboardingComplete = Boolean(user.onboardingCompleted || hasProfile);
+    let userProfile = await getProfileByUserId(user.id, user.role);
+    if (!userProfile) {
+      const { getProfilesByUserId } = await import('@/lib/db');
+      const allProfiles = await getProfilesByUserId(user.id);
+      userProfile = allProfiles?.[0] || null;
+    }
+    const { isUserOnboarded, resolveUserDestination } = await import('@/lib/auth/userStatus');
+    const isOnboardingComplete = isUserOnboarded(user, userProfile);
+    const hasProfile = isOnboardingComplete;
     const targetSlug = userProfile?.slug || userProfile?.id || null;
 
     const role = user.role || userProfile?.type || null;

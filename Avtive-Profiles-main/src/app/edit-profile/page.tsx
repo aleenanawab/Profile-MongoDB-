@@ -34,6 +34,19 @@ export default async function EditProfilePage({ searchParams }: EditProfilePageP
 
     const { id, role, theme, edit } = await searchParams;
 
+    const { getUserById } = await import('@/lib/db');
+    const dbUser = await getUserById(session.id);
+    const userRole = role || dbUser?.role || session.role;
+    const userTheme = theme || dbUser?.preferredTheme || session.preferredTheme;
+
+    // Direct access guards: if role or theme missing, redirect to proper step
+    if (!userRole) {
+      redirect('/onboarding/role');
+    }
+    if (!userTheme) {
+      redirect(`/onboarding/theme?role=${encodeURIComponent(userRole)}`);
+    }
+
     let targetProfile = null;
     if (id) {
       try {
@@ -41,12 +54,13 @@ export default async function EditProfilePage({ searchParams }: EditProfilePageP
       } catch {}
     }
 
-    // Fallback to user's first profile if no id specified or not found
+    // Fallback to user's profiles matching userRole or first profile
     if (!targetProfile || targetProfile.userId !== session.id) {
       try {
         const userProfiles = await getProfilesByUserId(session.id);
-        if (userProfiles.length > 0) {
-          targetProfile = userProfiles[0];
+        const matchingProfile = userProfiles.find(p => p.type === normalizeProfileType(userRole)) || userProfiles[0];
+        if (matchingProfile) {
+          targetProfile = matchingProfile;
           if (role || theme) {
             const updateRes = await updateProfile(
               targetProfile.id,
@@ -61,15 +75,14 @@ export default async function EditProfilePage({ searchParams }: EditProfilePageP
               targetProfile = updateRes.profile;
             }
           }
-          await completeUserOnboarding(
-            session.id,
-            targetProfile.type,
-            targetProfile.theme
-          );
         } else {
-          const { getUserRoutingDestination } = await import('@/lib/auth/userStatus');
-          const destination = await getUserRoutingDestination(session);
-          redirect(destination);
+          // Brand new user: create initial empty profile for existing builder without marking complete prematurely
+          targetProfile = await createProfileForUser(session.id, {
+            name: session.name || '',
+            email: session.email || '',
+            type: normalizeProfileType(userRole),
+            theme: (userTheme as ProfileTheme) || 'editorial'
+          });
         }
       } catch (profErr) {
         console.error('Error in profile lookup/creation in edit-profile:', profErr);

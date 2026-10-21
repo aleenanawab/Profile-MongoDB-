@@ -78,13 +78,19 @@ function ThemeStepContent() {
           const targetSlug = data.profileSlug || data.profiles?.[0]?.slug || data.profile?.slug || data.profile?.id || data.user.id;
           if (targetSlug) {
             router.replace(`/profile/${targetSlug}`);
+            return;
           }
-        } else if (data.user?.preferredTheme) {
+        }
+        if (!role && !data.user?.role) {
+          router.replace('/onboarding/role');
+          return;
+        }
+        if (data.user?.preferredTheme) {
           setSelectedTheme(data.user.preferredTheme);
         }
       })
       .catch(() => {});
-  }, [router]);
+  }, [router, role]);
 
   const handleSelectTheme = (themeId: ProfileTheme) => {
     setSelectedTheme(themeId);
@@ -100,7 +106,7 @@ function ThemeStepContent() {
         body: JSON.stringify({ role, theme: selectedTheme })
       });
     } catch {}
-    router.push(`/onboarding/details?role=${encodeURIComponent(role)}&theme=${encodeURIComponent(selectedTheme)}`);
+    router.push(`/edit-profile?role=${encodeURIComponent(role)}&theme=${encodeURIComponent(selectedTheme)}`);
   };
 
   const handleSkip = async () => {
@@ -112,7 +118,7 @@ function ThemeStepContent() {
         body: JSON.stringify({ role, theme: 'editorial' })
       });
     } catch {}
-    router.push(`/onboarding/details?role=${encodeURIComponent(role)}&theme=editorial`);
+    router.push(`/edit-profile?role=${encodeURIComponent(role)}&theme=editorial`);
   };
 
   const handleBack = () => {

@@ -20,7 +20,9 @@ export default async function DashboardPage() {
 
   const profiles = await getProfilesByUserId(session.id);
   if (!profiles || profiles.length === 0) {
-    redirect('/onboarding/role');
+    const { getUserRoutingDestination } = await import('@/lib/auth/userStatus');
+    const destination = await getUserRoutingDestination(session);
+    redirect(destination);
   }
 
   return (

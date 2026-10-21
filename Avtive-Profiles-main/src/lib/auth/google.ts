@@ -23,20 +23,42 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig {
   let clientId = (process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || '').trim();
   let clientSecret = (process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || '').trim();
 
-  // Strip accidental wrapping quotes (single or double) or stray leading prefix typos
-  if ((clientId.startsWith('"') && clientId.endsWith('"')) || (clientId.startsWith("'") && clientId.endsWith("'"))) {
-    clientId = clientId.slice(1, -1).trim();
+  // If running in Node.js server environment, inspect .env.local if available to ensure live
+  // edits take effect immediately without requiring a full dev-server restart
+  if (typeof window === 'undefined') {
+    try {
+      const fs = eval('require')('fs');
+      const path = eval('require')('path');
+      const envPath = path.resolve(process.cwd(), '.env.local');
+      if (fs.existsSync(envPath)) {
+        const fileContent = fs.readFileSync(envPath, 'utf8');
+        for (const line of fileContent.split('\n')) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('GOOGLE_CLIENT_ID=')) {
+            const val = trimmed.replace('GOOGLE_CLIENT_ID=', '').trim();
+            if (val) clientId = val;
+          }
+          if (trimmed.startsWith('GOOGLE_CLIENT_SECRET=')) {
+            const val = trimmed.replace('GOOGLE_CLIENT_SECRET=', '').trim();
+            if (val) clientSecret = val;
+          }
+        }
+      }
+    } catch {}
   }
+
+  // Strip accidental wrapping quotes (single or double) or stray leading prefix typos
+  clientId = clientId.replace(/^["']|["']$/g, '').trim();
+
   if (clientSecret.startsWith('=-')) {
     clientSecret = clientSecret.slice(2).trim();
   } else if (clientSecret.startsWith('=')) {
     clientSecret = clientSecret.slice(1).trim();
   }
-  if ((clientSecret.startsWith('"') && clientSecret.endsWith('"')) || (clientSecret.startsWith("'") && clientSecret.endsWith("'"))) {
-    clientSecret = clientSecret.slice(1, -1).trim();
-  } else if (clientSecret.startsWith('-"') && clientSecret.endsWith('"')) {
+  if (clientSecret.startsWith('-"') && clientSecret.endsWith('"')) {
     clientSecret = clientSecret.slice(2, -1).trim();
   }
+  clientSecret = clientSecret.replace(/^["']|["']$/g, '').trim();
 
   return {
     clientId,

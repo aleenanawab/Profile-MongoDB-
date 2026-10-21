@@ -90,7 +90,7 @@ export function HeaderNav({
               onMouseLeave={onSectionsMouseLeave}
               className={`h-8 px-2 sm:px-2.5 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 text-xs font-semibold`}
               title="Profile Sections Menu"
-              aria-label="Toggle Sections Menu"
+              aria-label="Sections Menu"
             >
               <LayoutGrid className={`w-3.5 h-3.5 ${theme.accentText}`} />
               <span className="hidden sm:inline">Menu</span>

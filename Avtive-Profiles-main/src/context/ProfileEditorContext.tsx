@@ -36,6 +36,7 @@ import {
   SocialLink,
 } from '@/types/profile';
 import { ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
+import { uploadImageToStorage } from '@/lib/imageCompression';
 
 // ─── DraggableLinkItem ────────────────────────────────────────────────────────
 
@@ -612,80 +613,56 @@ export function ProfileEditorProvider({
 
   // ── Upload Handlers ───────────────────────────────────────────────────────
   const handleCoverUpload = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        setCoverImage(reader.result as string);
-        updateField('coverImage', reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    const previous = coverImage;
+    const localUrl = URL.createObjectURL(file);
+    setCoverImage(localUrl);
+    updateField('coverImage', localUrl);
     setIsUploadingCover(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setCoverImage(data.url);
-        updateField('coverImage', data.url);
-        try {
-          const updatedObj = { ...profile, coverImage: data.url };
-          if (updatedObj.slug) localStorage.setItem(`avtive_profile_${updatedObj.slug}`, JSON.stringify(updatedObj));
-          if (updatedObj.id) localStorage.setItem(`avtive_profile_${updatedObj.id}`, JSON.stringify(updatedObj));
-          localStorage.setItem('avtive_last_saved_profile', JSON.stringify(updatedObj));
-          window.dispatchEvent(new CustomEvent('avtive_profile_updated', { detail: updatedObj }));
-        } catch {}
-        showToast('✓ Cover banner updated!');
-      } else {
-        showToast('✓ Cover updated (preview mode)');
-      }
-    } catch (e) {
-      console.error(e);
-      showToast('✓ Cover updated (local mode)');
+      const url = await uploadImageToStorage(file, 'profiles', {
+        profileId: profile.id || profile.slug,
+        field: 'coverImage',
+      });
+      setCoverImage(url);
+      updateField('coverImage', url);
+      showToast('✓ Cover banner updated and saved!');
+    } catch (error) {
+      setCoverImage(previous);
+      updateField('coverImage', previous);
+      const message = error instanceof Error ? error.message : 'Cover upload failed.';
+      setStatusMessage({ type: 'error', text: message });
+      showToast(message);
     } finally {
+      URL.revokeObjectURL(localUrl);
       setIsUploadingCover(false);
     }
-  }, [updateField, showToast, profile]);
+  }, [coverImage, profile, showToast, updateField]);
 
   const handleAvatarUpload = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        setAvatar(reader.result as string);
-        updateField('avatar', reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    const previous = avatar;
+    const localUrl = URL.createObjectURL(file);
+    setAvatar(localUrl);
+    updateField('avatar', localUrl);
     setIsUploadingAvatar(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setAvatar(data.url);
-        updateField('avatar', data.url);
-        try {
-          const updatedObj = { ...profile, avatar: data.url };
-          if (updatedObj.slug) localStorage.setItem(`avtive_profile_${updatedObj.slug}`, JSON.stringify(updatedObj));
-          if (updatedObj.id) localStorage.setItem(`avtive_profile_${updatedObj.id}`, JSON.stringify(updatedObj));
-          localStorage.setItem('avtive_last_saved_profile', JSON.stringify(updatedObj));
-          window.dispatchEvent(new CustomEvent('avtive_profile_updated', { detail: updatedObj }));
-        } catch {}
-        showToast('✓ Profile photo updated!');
-      } else {
-        showToast('✓ Photo updated (preview mode)');
-      }
-    } catch (e) {
-      console.error(e);
-      showToast('✓ Photo updated (local mode)');
+      const url = await uploadImageToStorage(file, 'avatars', {
+        profileId: profile.id || profile.slug,
+        field: 'avatar',
+      });
+      setAvatar(url);
+      updateField('avatar', url);
+      showToast('✓ Profile photo updated and saved!');
+    } catch (error) {
+      setAvatar(previous);
+      updateField('avatar', previous);
+      const message = error instanceof Error ? error.message : 'Profile photo upload failed.';
+      setStatusMessage({ type: 'error', text: message });
+      showToast(message);
     } finally {
+      URL.revokeObjectURL(localUrl);
       setIsUploadingAvatar(false);
     }
-  }, [updateField, showToast, profile]);
+  }, [avatar, profile, showToast, updateField]);
 
   // ── Social Link Handlers ──────────────────────────────────────────────────
   const handleUpdateLink = useCallback((id: string, patch: Partial<DraggableLinkItem>) => {
@@ -923,6 +900,12 @@ export function ProfileEditorProvider({
 
   // ── Centralized Save Profile ──────────────────────────────────────────────
   const saveProfile = useCallback(async (overrideData?: Partial<ProfileData>): Promise<boolean> => {
+    if (isUploadingAvatar || isUploadingCover) {
+      const message = 'Please wait for the image upload to finish before saving.';
+      setStatusMessage({ type: 'error', text: message });
+      showToast(message);
+      return false;
+    }
     setIsSaving(true);
     setStatusMessage(null);
     try {
@@ -1022,7 +1005,7 @@ export function ProfileEditorProvider({
     } finally {
       setIsSaving(false);
     }
-  }, [profile, liveProfile, initialProfile, showToast, onSaveSuccess]);
+  }, [profile, liveProfile, initialProfile, showToast, onSaveSuccess, isUploadingAvatar, isUploadingCover]);
 
   // Alias handleSaveChanges directly to saveProfile for 100% unified save behavior across desktop and mobile
   const handleSaveChanges = useCallback(async () => {

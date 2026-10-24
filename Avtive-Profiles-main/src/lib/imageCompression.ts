@@ -111,7 +111,8 @@ export async function compressImageFile(
  */
 export async function uploadImageToStorage(
   fileOrDataUrl: File | string,
-  bucket: 'avatars' | 'profiles' | 'links' = 'profiles'
+  bucket: 'avatars' | 'profiles' | 'links' = 'profiles',
+  options: { profileId?: string; field?: 'avatar' | 'coverImage' } = {}
 ): Promise<string> {
   // If already a remote CDN URL, no upload needed
   if (
@@ -126,7 +127,7 @@ export async function uploadImageToStorage(
     const res = await fetch('/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file: fileOrDataUrl, bucket })
+      body: JSON.stringify({ file: fileOrDataUrl, bucket, ...options })
     });
     const isJson = res.headers.get('content-type')?.includes('application/json');
     const data = isJson ? await res.json().catch(() => ({})) : null;
@@ -138,16 +139,14 @@ export async function uploadImageToStorage(
     }
     return data.url;
   } else {
-    // Compress file first
-    let toUpload = fileOrDataUrl;
-    try {
-      const compressed = await compressImageFile(fileOrDataUrl);
-      toUpload = compressed.file;
-    } catch {}
+    const compressed = await compressImageFile(fileOrDataUrl);
+    const toUpload = compressed.file;
 
     const formData = new FormData();
     formData.append('bucket', bucket);
     formData.append('file', toUpload);
+    if (options.profileId) formData.append('profileId', options.profileId);
+    if (options.field) formData.append('field', options.field);
 
     const res = await fetch('/api/upload', {
       method: 'POST',

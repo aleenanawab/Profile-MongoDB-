@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import { ProfileData, ProfileTheme, ProfileType, CustomFieldItem, normalizeProfileType } from '@/types/profile';
 import { InlineAvatarPicker } from './InlineAvatarPicker';
-import { compressImageFile } from '@/lib/imageCompression';
+import { uploadImageToStorage } from '@/lib/imageCompression';
 
 export interface ProfileSectionEditorProps {
   /** Initial mode for the editor */
@@ -316,83 +316,41 @@ export function ProfileSectionEditor({
 
   // Upload image handlers
   const handleCoverUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setStatusFeedback({ type: 'error', text: 'Please select a valid image file.' });
-      return;
-    }
-    let toUpload = file;
-    try {
-      const { dataUrl, file: compressedFile } = await compressImageFile(file);
-      setCoverImage(dataUrl);
-      onLiveUpdate?.({ coverImage: dataUrl });
-      toUpload = compressedFile;
-    } catch {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          setCoverImage(reader.result as string);
-          onLiveUpdate?.({ coverImage: reader.result as string });
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
+    const previous = coverImage;
+    const localUrl = URL.createObjectURL(file);
+    setCoverImage(localUrl);
+    onLiveUpdate?.({ coverImage: localUrl });
     setIsUploadingCover(true);
     try {
-      const formData = new FormData();
-      formData.append('file', toUpload);
-      formData.append('bucket', 'profiles');
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const isJson = res.headers.get('content-type')?.includes('application/json');
-      const data = isJson ? await res.json().catch(() => ({})) : null;
-      if (res.ok && data?.url) {
-        setCoverImage(data.url);
-        onLiveUpdate?.({ coverImage: data.url });
-      }
-    } catch (e) {
-      console.error('Cover upload failed:', e);
+      const url = await uploadImageToStorage(file, 'profiles', { profileId: profile.id || profile.slug, field: 'coverImage' });
+      setCoverImage(url);
+      onLiveUpdate?.({ coverImage: url });
+    } catch (error) {
+      setCoverImage(previous);
+      onLiveUpdate?.({ coverImage: previous });
+      setStatusFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Cover upload failed.' });
     } finally {
+      URL.revokeObjectURL(localUrl);
       setIsUploadingCover(false);
     }
   };
 
   const handleAvatarUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      setStatusFeedback({ type: 'error', text: 'Please select a valid image file.' });
-      return;
-    }
-    let toUpload = file;
-    try {
-      const { dataUrl, file: compressedFile } = await compressImageFile(file);
-      setAvatar(dataUrl);
-      onLiveUpdate?.({ avatar: dataUrl });
-      toUpload = compressedFile;
-    } catch {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) {
-          setAvatar(reader.result as string);
-          onLiveUpdate?.({ avatar: reader.result as string });
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
+    const previous = avatar;
+    const localUrl = URL.createObjectURL(file);
+    setAvatar(localUrl);
+    onLiveUpdate?.({ avatar: localUrl });
     setIsUploadingAvatar(true);
     try {
-      const formData = new FormData();
-      formData.append('file', toUpload);
-      formData.append('bucket', 'avatars');
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const isJson = res.headers.get('content-type')?.includes('application/json');
-      const data = isJson ? await res.json().catch(() => ({})) : null;
-      if (res.ok && data?.url) {
-        setAvatar(data.url);
-        onLiveUpdate?.({ avatar: data.url });
-      }
-    } catch (e) {
-      console.error('Avatar upload failed:', e);
+      const url = await uploadImageToStorage(file, 'avatars', { profileId: profile.id || profile.slug, field: 'avatar' });
+      setAvatar(url);
+      onLiveUpdate?.({ avatar: url });
+    } catch (error) {
+      setAvatar(previous);
+      onLiveUpdate?.({ avatar: previous });
+      setStatusFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Profile photo upload failed.' });
     } finally {
+      URL.revokeObjectURL(localUrl);
       setIsUploadingAvatar(false);
     }
   };

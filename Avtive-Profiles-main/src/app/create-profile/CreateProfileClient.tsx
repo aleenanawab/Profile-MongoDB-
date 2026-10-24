@@ -25,6 +25,7 @@ import {
   X
 } from 'lucide-react';
 import { ProfileTheme, UserSession, ProfileType, ProfileData } from '@/types/profile';
+import { uploadImageToStorage } from '@/lib/imageCompression';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { PhonePreview } from '@/components/PhonePreview';
 import { AvtiveDigitalCard } from '@/components/AvtiveDigitalCard';
@@ -100,16 +101,24 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
 
   const [activeMobileViewTab, setActiveMobileViewTab] = useState<'form' | 'preview'>('form');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (reader.result) setAvatar(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    const previous = avatar;
+    const localUrl = URL.createObjectURL(file);
+    setAvatar(localUrl);
+    setIsUploadingPhoto(true);
+    try {
+      setAvatar(await uploadImageToStorage(file, 'avatars'));
+    } catch (error) {
+      setAvatar(previous);
+      setErrorMessage(error instanceof Error ? error.message : 'Profile photo upload failed.');
+    } finally {
+      URL.revokeObjectURL(localUrl);
+      setIsUploadingPhoto(false);
     }
   };
 
@@ -192,6 +201,10 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
 
     if (!profileName.trim() || !fullName.trim()) {
       setErrorMessage('Please fill in both your profile persona name and your full name.');
+      return;
+    }
+    if (isUploadingPhoto) {
+      setErrorMessage('Please wait for the profile photo upload to finish.');
       return;
     }
 

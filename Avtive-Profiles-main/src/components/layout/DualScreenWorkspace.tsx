@@ -56,12 +56,12 @@ export function DualScreenWorkspace({
   };
 
   return (
-    <div className={`w-full h-[100dvh] max-h-[100dvh] flex flex-col justify-start bg-slate-100 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-200 overflow-hidden box-border ${className}`}>
+    <div className={`w-full min-h-[100svh] h-[100dvh] max-h-[100dvh] flex flex-col justify-start bg-slate-100 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-200 overflow-hidden box-border ${className}`}>
       
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* PERMANENT TWIN-SCREEN STAGE CONTAINER                                      */}
       {/* ────────────────────────────────────────────────────────────────────────── */}
-      <div className="flex-1 h-full min-h-0 w-full p-0 sm:p-3.5 lg:p-4 2xl:p-6 flex flex-col xl:flex-row items-center xl:items-start justify-center gap-0 sm:gap-4 lg:gap-5 2xl:gap-6 max-w-[1920px] mx-auto box-border min-w-0 overflow-hidden">
+      <div className="flex-1 h-full min-h-0 w-full p-0 sm:p-3.5 lg:p-4 2xl:p-6 flex flex-col xl:flex-row items-center xl:items-start justify-center gap-0 sm:gap-4 lg:gap-5 2xl:gap-6 max-w-[1920px] mx-auto box-border min-w-0 overflow-y-auto overflow-x-hidden">
         
         {/* ======================================================================= */}
         {/* SCREEN 1: DESKTOP WORKING SCREEN (Clean Minimalist Window)              */}

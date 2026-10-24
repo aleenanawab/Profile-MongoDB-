@@ -13,6 +13,19 @@ const ALLOWED_MIME_PREFIXES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+function hasValidImageSignature(buffer: Buffer, mimeType: string): boolean {
+  if (mimeType === 'image/jpeg') {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (mimeType === 'image/png') {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  }
+  if (mimeType === 'image/webp') {
+    return buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+  }
+  return false;
+}
+
 function getExtension(mimeType: string, originalName?: string): string {
   if (originalName) {
     const extMatch = originalName.match(/\.([a-zA-Z0-9]+)$/);
@@ -20,6 +33,7 @@ function getExtension(mimeType: string, originalName?: string): string {
       const ext = `.${extMatch[1].toLowerCase()}`;
       if (ALLOWED_EXTENSIONS.includes(ext)) return ext;
     }
+
   }
   if (mimeType.includes('png')) return '.png';
   if (mimeType.includes('webp')) return '.webp';
@@ -160,12 +174,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    mimeType = mimeType.toLowerCase() === 'image/jpg' ? 'image/jpeg' : mimeType.toLowerCase();
+
     // Validate MIME type
     const isAllowedType = ALLOWED_MIME_PREFIXES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
     const isAllowedExt = originalName ? ALLOWED_EXTENSIONS.some(ext => originalName.toLowerCase().endsWith(ext)) : false;
     if (!isAllowedType && !isAllowedExt) {
       return NextResponse.json(
         { error: 'Invalid file type. Only JPG, PNG, and WebP images are permitted.' },
+        { status: 400 }
+      );
+    }
+    if (!hasValidImageSignature(buffer, mimeType)) {
+      return NextResponse.json(
+        { error: 'The uploaded file is not a valid JPEG, PNG, or WebP image.' },
         { status: 400 }
       );
     }
@@ -219,7 +241,7 @@ export async function POST(request: NextRequest) {
 
     // 4. If target field was supplied with profileId or companyId, persist to MongoDB immediately
     if (profileId && field && (field === 'avatar' || field === 'coverImage')) {
-      await updateProfile(
+      const persisted = await updateProfile(
         profileId,
         {
           [field]: uploadResult.url,
@@ -227,9 +249,13 @@ export async function POST(request: NextRequest) {
         },
         userId,
         session.email
-      ).catch(err => {
-        console.error('Failed to update profile image in MongoDB:', err);
-      });
+      );
+      if (!persisted.success) {
+        return NextResponse.json(
+          { error: persisted.error || 'Image uploaded but could not be saved to the profile.' },
+          { status: persisted.status || 500 }
+        );
+      }
     }
 
     if (companyId && field && (field === 'logo' || field === 'cover')) {

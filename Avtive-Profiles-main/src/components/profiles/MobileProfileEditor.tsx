@@ -54,7 +54,11 @@ export function MobileProfileEditor() {
     isSaving, 
     saveProfile, 
     showToast,
-    currentIdentifier
+    currentIdentifier,
+    handleAvatarUpload,
+    handleCoverUpload,
+    isUploadingAvatar,
+    isUploadingCover
   } = useProfileEditor();
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -159,31 +163,6 @@ export function MobileProfileEditor() {
   };
 
   // Avatar upload
-  const handleAvatarFile = (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        updateField('avatar', reader.result as string);
-        showToast('✓ Avatar updated');
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Cover upload
-  const handleCoverFile = (file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        updateField('coverImage', reader.result as string);
-        showToast('✓ Cover photo updated');
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   // Skills
   const handleAddSkill = (skillText?: string) => {
     const text = (skillText || newSkillText).trim();
@@ -294,7 +273,8 @@ export function MobileProfileEditor() {
           <button
             type="button"
             onClick={() => coverInputRef.current?.click()}
-            className="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+            disabled={isUploadingCover}
+            className="absolute top-3 right-3 min-w-11 min-h-11 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 transition-all cursor-pointer disabled:opacity-50"
             title="Change Cover"
           >
             <Camera className="w-4 h-4" />
@@ -306,7 +286,7 @@ export function MobileProfileEditor() {
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) handleCoverFile(file);
+              if (file) void handleCoverUpload(file);
             }}
           />
         </div>
@@ -324,7 +304,8 @@ export function MobileProfileEditor() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer"
+                disabled={isUploadingAvatar}
+                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer disabled:opacity-50"
               >
                 <Camera className="w-4 h-4" />
               </button>
@@ -335,7 +316,7 @@ export function MobileProfileEditor() {
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleAvatarFile(file);
+                  if (file) void handleAvatarUpload(file);
                 }}
               />
             </div>

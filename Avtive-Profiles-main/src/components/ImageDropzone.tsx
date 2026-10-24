@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { UploadCloud, Image as ImageIcon, Loader2, AlertCircle, Check } from 'lucide-react';
+import { uploadImageToStorage } from '@/lib/imageCompression';
 
 interface ImageDropzoneProps {
   value: string;
@@ -25,7 +26,7 @@ const ALLOWED_TYPES = [
   'image/heif',
   'image/bmp'
 ];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_SIZE_BYTES = 20 * 1024 * 1024;
 
 export function ImageDropzone({
   value,
@@ -43,12 +44,12 @@ export function ImageDropzone({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
-    const isAllowed = ALLOWED_TYPES.includes(file.type) || file.type.startsWith('image/');
+    const isAllowed = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
     if (!isAllowed) {
-      return 'Invalid file type. Please select an image (JPG, PNG, WebP, GIF, SVG, AVIF).';
+      return 'Invalid file type. Please select a JPEG, PNG, or WebP image. iPhone HEIC photos must be converted before upload.';
     }
     if (file.size > MAX_SIZE_BYTES) {
-      return 'File exceeds 10MB limit. Please choose a smaller image.';
+      return 'File exceeds 20MB. Please choose a smaller image.';
     }
     return null;
   };
@@ -64,35 +65,24 @@ export function ImageDropzone({
     setUploadSuccess(false);
 
     // Instant local preview
+    const previousUrl = previewUrl;
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
 
     // Upload to API
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
       const targetBucket = bucket || (label.toLowerCase().includes('avatar') ? 'avatars' : 'profiles');
-      formData.append('bucket', targetBucket);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Upload failed');
-      }
-
-      onChange(data.url);
-      setPreviewUrl(data.url);
+      const url = await uploadImageToStorage(file, targetBucket as 'avatars' | 'profiles' | 'links');
+      onChange(url);
+      setPreviewUrl(url);
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 2500);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMessage(err.message || 'Error uploading file.');
+    } catch (err: unknown) {
+      setPreviewUrl(previousUrl);
+      setErrorMessage(err instanceof Error ? err.message : 'Error uploading file.');
     } finally {
+      URL.revokeObjectURL(localUrl);
       setIsUploading(false);
     }
   };
@@ -178,7 +168,7 @@ export function ImageDropzone({
             <>
               <UploadCloud className="w-5 h-5 mb-1" />
               <span className="text-[11px] font-bold">Replace</span>
-              <span className="text-[9px] text-white/80">JPG, PNG, WebP ≤ 5MB</span>
+              <span className="text-[9px] text-white/80">JPG, PNG, WebP (compressed)</span>
             </>
           )}
         </div>

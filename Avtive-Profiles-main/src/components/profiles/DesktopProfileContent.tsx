@@ -223,6 +223,10 @@ export function DesktopProfileContent({
     isSaving, 
     saveProfile,
     showToast,
+    handleAvatarUpload,
+    handleCoverUpload,
+    isUploadingAvatar,
+    isUploadingCover,
     activeTheme,
     setActiveTheme,
     expandedSections: sharedExpandedSections,
@@ -378,8 +382,6 @@ export function DesktopProfileContent({
     }
   };
 
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -418,73 +420,6 @@ export function DesktopProfileContent({
   const hiddenCount = profile.sectionVisibility 
     ? Object.values(profile.sectionVisibility).filter(v => v === false).length 
     : 0;
-
-  // Image Upload Handlers
-  const handleAvatarUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      showToast('Please select a valid image file.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        updateField('avatar', reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
-
-    setIsUploadingAvatar(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        updateField('avatar', data.url);
-        showToast('✓ Avatar photo updated!');
-      } else {
-        showToast(data.error || 'Avatar photo uploaded locally.');
-      }
-    } catch {
-      showToast('✓ Avatar updated (local mode).');
-    } finally {
-      setIsUploadingAvatar(false);
-    }
-  };
-
-  const handleCoverUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      showToast('Please select a valid image file.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (reader.result) {
-        updateField('coverImage', reader.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
-
-    setIsUploadingCover(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        updateField('coverImage', data.url);
-        showToast('✓ Cover banner updated!');
-      } else {
-        showToast(data.error || 'Cover banner uploaded locally.');
-      }
-    } catch {
-      showToast('✓ Cover updated (local mode).');
-    } finally {
-      setIsUploadingCover(false);
-    }
-  };
 
   // Toggle Section Visibility
   const toggleSectionVisibility = (key: string) => {

@@ -51,10 +51,11 @@ export function NFCTapModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 text-left overflow-y-auto">
-      <div className={`relative w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-[32px] ${theme.cardBg} border ${theme.cardBorder} shadow-2xl p-4 sm:p-6 text-center ${theme.textPrimary} space-y-4 transition-colors`}>
+      <div className={`relative w-full max-w-sm max-h-[85dvh] overflow-y-auto rounded-[32px] ${theme.cardBg} border ${theme.cardBorder} shadow-2xl p-4 sm:p-6 text-center ${theme.textPrimary} space-y-4 transition-colors`}>
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 p-2 rounded-full ${theme.textMuted} hover:${theme.textPrimary} ${theme.subCardBg} transition-colors`}
+          className={`absolute top-4 right-4 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${theme.textMuted} hover:${theme.textPrimary} ${theme.subCardBg} transition-colors flex items-center justify-center cursor-pointer`}
+          aria-label="Close modal"
         >
           <X className="w-4 h-4" />
         </button>
@@ -109,7 +110,7 @@ export function NFCTapModal({
                   onSaveContact();
                   onClose();
                 }}
-                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95`}
+                className={`w-full min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer`}
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Save Contact to Phone (.vcf)</span>
@@ -120,7 +121,7 @@ export function NFCTapModal({
                   onClose();
                   onExchangeContact();
                 }}
-                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${theme.btnSecondary} font-bold text-xs border ${theme.cardBorder} transition-colors`}
+                className={`w-full min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${theme.btnSecondary} font-bold text-xs border ${theme.cardBorder} transition-colors cursor-pointer`}
               >
                 <Sparkles className={`w-3.5 h-3.5 ${theme.accentText}`} />
                 <span>Exchange Contact</span>

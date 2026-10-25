@@ -85,7 +85,7 @@ export function ExchangeContactModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 text-left overflow-y-auto">
-      <div className={`relative w-full max-w-sm max-h-[90dvh] overflow-y-auto rounded-[32px] ${theme.cardBg} border ${theme.cardBorder} shadow-2xl p-5 sm:p-6 space-y-4 transition-colors`}>
+      <div className={`relative w-full max-w-sm max-h-[85dvh] overflow-y-auto rounded-[32px] ${theme.cardBg} border ${theme.cardBorder} shadow-2xl p-5 sm:p-6 space-y-4 transition-colors`}>
         {/* Header with Avatar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -108,7 +108,8 @@ export function ExchangeContactModal({
           </div>
           <button
             onClick={onClose}
-            className={`p-1 rounded-full ${theme.textMuted} hover:${theme.textPrimary} ${theme.subCardBg} transition-colors`}
+            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${theme.textMuted} hover:${theme.textPrimary} ${theme.subCardBg} transition-colors flex items-center justify-center cursor-pointer`}
+            aria-label="Close modal"
           >
             <X className="w-4 h-4" />
           </button>
@@ -134,48 +135,48 @@ export function ExchangeContactModal({
 
             <div className="space-y-2">
               <div className="relative">
-                <User className={`absolute left-3 top-2.5 w-4 h-4 ${theme.textMuted}`} />
+                <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${theme.textMuted}`} />
                 <input
                   type="text"
                   required
                   placeholder="Your Full Name *"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`w-full pl-9 pr-3.5 py-2 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
+                  className={`w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-base sm:text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
                 />
               </div>
 
               <div className="relative">
-                <Mail className={`absolute left-3 top-2.5 w-4 h-4 ${theme.textMuted}`} />
+                <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${theme.textMuted}`} />
                 <input
                   type="email"
                   required
                   placeholder="Your Email Address *"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className={`w-full pl-9 pr-3.5 py-2 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
+                  className={`w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-base sm:text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
                 />
               </div>
 
               <div className="relative">
-                <Phone className={`absolute left-3 top-2.5 w-4 h-4 ${theme.textMuted}`} />
+                <Phone className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${theme.textMuted}`} />
                 <input
                   type="tel"
                   placeholder="Phone Number (Optional)"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className={`w-full pl-9 pr-3.5 py-2 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
+                  className={`w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-base sm:text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
                 />
               </div>
 
               <div className="relative">
-                <Building2 className={`absolute left-3 top-2.5 w-4 h-4 ${theme.textMuted}`} />
+                <Building2 className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${theme.textMuted}`} />
                 <input
                   type="text"
                   placeholder="Company / Organization"
                   value={formData.company}
                   onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  className={`w-full pl-9 pr-3.5 py-2 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
+                  className={`w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl ${theme.subCardBg} border ${theme.subCardBorder} text-base sm:text-xs ${theme.textPrimary} placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-current`}
                 />
               </div>
             </div>
@@ -183,7 +184,7 @@ export function ExchangeContactModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95 mt-2`}
+              className={`w-full min-h-[44px] flex items-center justify-center gap-1.5 py-2.5 rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95 mt-2 cursor-pointer disabled:opacity-50`}
             >
               <Send className="w-3.5 h-3.5" />
               <span>{isSubmitting ? 'Sharing...' : 'Share Contact Details'}</span>

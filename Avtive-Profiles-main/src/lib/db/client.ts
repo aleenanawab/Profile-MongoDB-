@@ -24,6 +24,14 @@ export function getMongoUri(): string {
   if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
     uri = uri.slice(1, -1);
   }
+  const username = process.env.MONGODB_USERNAME?.trim();
+  const password = process.env.MONGODB_PASSWORD?.trim();
+  if (username && password && uri.includes('@')) {
+    uri = uri.replace(
+      /(mongodb(?:\+srv)?:\/\/)([^:]+):([^@]+)@/,
+      `$1${encodeURIComponent(username)}:${encodeURIComponent(password)}@`
+    );
+  }
   return uri.trim();
 }
 

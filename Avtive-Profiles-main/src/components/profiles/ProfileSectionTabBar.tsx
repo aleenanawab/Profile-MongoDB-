@@ -18,7 +18,8 @@ import {
   Building2, 
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import { ProfileData, normalizeProfileType } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/themeStyles';
@@ -179,19 +180,49 @@ export function ProfileSectionTabBar({
     return false;
   };
 
+  const currentActiveItem = sections.find(s => isCurrentActive(s.key)) || sections[0];
+
   return (
     <nav 
       aria-label="Profile Section Navigation" 
-      className={`relative w-full ${theme.headerBg} border-b ${theme.divider} transition-colors select-none ${className}`}
+      className={`relative w-full max-w-full overflow-hidden box-border ${theme.headerBg} border-b ${theme.divider} transition-colors select-none ${className}`}
     >
-      <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 relative flex items-center">
-        {/* Left Scroll Arrow (Desktop/Tablet) */}
+      {/* Mobile & Tablet Section Navigation Dropdown (< lg / 320px - 1023px) */}
+      <div className="lg:hidden w-full px-3 py-2 box-border">
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+            {(() => {
+              const CurrentIcon = currentActiveItem?.icon || Sparkles;
+              return <CurrentIcon className="w-4 h-4 shrink-0" />;
+            })()}
+          </div>
+          <select
+            value={currentActiveItem?.key || sections[0]?.key}
+            onChange={(e) => onSelectSection(e.target.value)}
+            aria-label="Select profile section"
+            className={`w-full min-h-[44px] pl-10 pr-10 py-2.5 rounded-xl text-base font-semibold border ${theme.divider} bg-white dark:bg-[#18181B] text-slate-900 dark:text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-white/20 transition-all box-border`}
+          >
+            {sections.map((sec) => (
+              <option key={sec.key} value={sec.key} className="bg-white dark:bg-[#18181B] text-slate-900 dark:text-white py-1">
+                {sec.label}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
+            <ChevronDown className="w-4 h-4 shrink-0" />
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Horizontal Scrollable Tab Rail (>= lg / 1024px+) */}
+      <div className="hidden lg:flex w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 relative items-center min-w-0 box-border">
+        {/* Left Scroll Arrow */}
         {showLeftArrow && (
           <button
             type="button"
             onClick={handleScrollLeft}
             aria-label="Scroll sections left"
-            className="hidden sm:flex absolute left-1 z-20 w-7 h-7 rounded-full bg-white/90 dark:bg-black/90 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="flex absolute left-1 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/90 dark:bg-black/90 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -200,7 +231,7 @@ export function ProfileSectionTabBar({
         {/* Horizontal Scrollable Tabs Container */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 flex items-center gap-1 sm:gap-1.5 overflow-x-auto scrollbar-none py-2 px-1 sm:px-2 scroll-smooth"
+          className="w-full min-w-0 flex-1 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-2 px-1 sm:px-2 scroll-smooth box-border"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {sections.map((item) => {
@@ -214,26 +245,26 @@ export function ProfileSectionTabBar({
                 type="button"
                 onClick={() => onSelectSection(item.key)}
                 aria-current={active ? 'page' : undefined}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 ${
+                className={`shrink-0 min-h-[44px] flex items-center gap-2 px-3.5 py-2.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${
                   active
                     ? `${theme.btnPrimary} shadow-xs font-bold scale-[1.02]`
                     : `${theme.textSecondary} hover:${theme.textPrimary} hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent`
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? 'opacity-100' : 'opacity-70'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${active ? 'opacity-100' : 'opacity-70'}`} />
                 <span className="whitespace-nowrap">{item.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Right Scroll Arrow (Desktop/Tablet) */}
+        {/* Right Scroll Arrow */}
         {showRightArrow && (
           <button
             type="button"
             onClick={handleScrollRight}
             aria-label="Scroll sections right"
-            className="hidden sm:flex absolute right-1 z-20 w-7 h-7 rounded-full bg-white/90 dark:bg-black/90 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="flex absolute right-1 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/90 dark:bg-black/90 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

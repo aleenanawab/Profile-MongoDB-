@@ -10,7 +10,10 @@ export async function compressImageFile(
   quality = 0.85
 ): Promise<{ dataUrl: string; blob: Blob; file: File }> {
   // If not in browser or not an image, return raw
-  if (typeof window === 'undefined' || !file.type.startsWith('image/')) {
+  if (
+    typeof window === 'undefined' ||
+    (!file.type.startsWith('image/') && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name))
+  ) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () =>
@@ -122,44 +125,66 @@ export async function uploadImageToStorage(
     return fileOrDataUrl;
   }
 
+  let fileToUpload: File;
+
   if (typeof fileOrDataUrl === 'string') {
-    // If it's a data URL, send as JSON to /api/upload
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ file: fileOrDataUrl, bucket, ...options })
-    });
-    const isJson = res.headers.get('content-type')?.includes('application/json');
-    const data = isJson ? await res.json().catch(() => ({})) : null;
-    if (!res.ok) {
-      if (res.status === 413) {
-        throw new Error('Image is too large. Please select a photo under 5MB.');
+    if (fileOrDataUrl.startsWith('data:')) {
+      try {
+        const arr = fileOrDataUrl.split(',');
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const ext = mime === 'image/png' ? '.png' : mime.includes('webp') ? '.webp' : '.jpg';
+        fileToUpload = new File([u8arr], `upload-${Date.now()}${ext}`, { type: mime });
+      } catch {
+        // Fallback to sending dataUrl JSON if binary conversion fails
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: fileOrDataUrl, bucket, ...options })
+        });
+        const isJson = res.headers.get('content-type')?.includes('application/json');
+        const data = isJson ? await res.json().catch(() => ({})) : null;
+        if (!res.ok) {
+          if (res.status === 413) {
+            throw new Error('Image is too large. Please select a photo under 5MB.');
+          }
+          throw new Error(data?.error || `Upload failed with status ${res.status}`);
+        }
+        return data.url;
       }
-      throw new Error(data?.error || `Upload failed with status ${res.status}`);
+    } else {
+      return fileOrDataUrl;
     }
-    return data.url;
   } else {
-    const compressed = await compressImageFile(fileOrDataUrl);
-    const toUpload = compressed.file;
-
-    const formData = new FormData();
-    formData.append('bucket', bucket);
-    formData.append('file', toUpload);
-    if (options.profileId) formData.append('profileId', options.profileId);
-    if (options.field) formData.append('field', options.field);
-
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    });
-    const isJson = res.headers.get('content-type')?.includes('application/json');
-    const data = isJson ? await res.json().catch(() => ({})) : null;
-    if (!res.ok) {
-      if (res.status === 413) {
-        throw new Error('Image is too large. Please select a photo under 5MB.');
-      }
-      throw new Error(data?.error || `Upload failed with status ${res.status}`);
-    }
-    return data.url;
+    fileToUpload = fileOrDataUrl;
   }
+
+  const compressed = await compressImageFile(fileToUpload);
+  const toUpload = compressed.file;
+
+  const formData = new FormData();
+  formData.append('bucket', bucket);
+  formData.append('file', toUpload);
+  if (options.profileId) formData.append('profileId', options.profileId);
+  if (options.field) formData.append('field', options.field);
+
+  const res = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData
+  });
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  const data = isJson ? await res.json().catch(() => ({})) : null;
+  if (!res.ok) {
+    if (res.status === 413) {
+      throw new Error('Image is too large. Please select a photo under 5MB.');
+    }
+    throw new Error(data?.error || `Upload failed with status ${res.status}`);
+  }
+  return data.url;
 }

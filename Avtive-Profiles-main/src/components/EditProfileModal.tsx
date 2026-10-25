@@ -256,7 +256,7 @@ export function EditProfileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 text-left">
-      <div className="relative w-full max-w-xl max-h-[90dvh] overflow-y-auto rounded-[32px] bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 shadow-2xl p-6 sm:p-7 space-y-5 transition-colors">
+      <div className="relative w-full max-w-xl max-h-[85dvh] overflow-y-auto rounded-[32px] bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 shadow-2xl p-6 sm:p-7 space-y-5 transition-colors">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
           <div>
@@ -275,7 +275,8 @@ export function EditProfileModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-[#94A3B8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full text-[#94A3B8] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors flex items-center justify-center shrink-0"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -407,7 +408,7 @@ export function EditProfileModal({
                         value={newContactLabel}
                         onChange={(e) => setNewContactLabel(e.target.value)}
                         placeholder="e.g. LinkedIn / Office"
-                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                        className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                       />
                     </div>
 
@@ -420,7 +421,7 @@ export function EditProfileModal({
                         value={newContactValue}
                         onChange={(e) => setNewContactValue(e.target.value)}
                         placeholder="e.g. linkedin.com/in/... or +92..."
-                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                        className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                       />
                     </div>
                   </div>
@@ -429,7 +430,7 @@ export function EditProfileModal({
                     <button
                       type="button"
                       onClick={() => setShowAddContact(false)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#475569] dark:text-[#94A3B8]"
+                      className="px-3 py-1.5 min-h-[44px] inline-flex items-center rounded-lg text-xs font-semibold text-[#475569] dark:text-[#94A3B8]"
                     >
                       Cancel
                     </button>
@@ -533,7 +534,7 @@ export function EditProfileModal({
                       value={formData.whatsapp || ''}
                       onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                       placeholder="+92 300 1234567"
-                      className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
 
@@ -546,7 +547,7 @@ export function EditProfileModal({
                       value={formData.phone || ''}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="+92 300 1234567"
-                      className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
 
@@ -559,7 +560,7 @@ export function EditProfileModal({
                       value={formData.email || ''}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="name@avtive.app"
-                      className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
 
@@ -572,7 +573,7 @@ export function EditProfileModal({
                       value={formData.website || ''}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                       placeholder="https://www.avtive.app"
-                      className="w-full px-3 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
                 </div>
@@ -593,7 +594,7 @@ export function EditProfileModal({
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                    className="w-full px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                   />
                 </div>
 
@@ -605,7 +606,7 @@ export function EditProfileModal({
                     type="text"
                     value={formData.designation || ''}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                    className="w-full px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                   />
                 </div>
               </div>
@@ -620,7 +621,7 @@ export function EditProfileModal({
                     value={formData.company || ''}
                     onChange={(e) => setFormData({ ...formData, company: e.target.value, companyName: e.target.value })}
                     placeholder="e.g. Avtive"
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                    className="w-full px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                   />
                 </div>
 
@@ -632,7 +633,7 @@ export function EditProfileModal({
                     type="text"
                     value={formData.location || ''}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                    className="w-full px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                   />
                 </div>
               </div>
@@ -649,7 +650,7 @@ export function EditProfileModal({
                     type="text"
                     value={formData.avatar}
                     onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                    className="flex-1 px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                    className="flex-1 px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                   />
                 </div>
               </div>
@@ -662,7 +663,7 @@ export function EditProfileModal({
                   type="text"
                   value={formData.shortBio || ''}
                   onChange={(e) => setFormData({ ...formData, shortBio: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                  className="w-full px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                 />
               </div>
 
@@ -674,7 +675,7 @@ export function EditProfileModal({
                   rows={3}
                   value={formData.fullBio || ''}
                   onChange={(e) => setFormData({ ...formData, fullBio: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
                 />
               </div>
             </div>
@@ -704,12 +705,13 @@ export function EditProfileModal({
                       type="text"
                       value={service.title}
                       onChange={(e) => handleUpdateService(idx, e.target.value)}
-                      className="flex-1 px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      className="flex-1 px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => handleRemoveService(idx)}
-                      className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                      className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                      aria-label="Remove service"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -736,7 +738,7 @@ export function EditProfileModal({
                       type="text"
                       value={soc.url}
                       onChange={(e) => handleUpdateSocial(idx, e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white focus:outline-none"
+                      className="w-full px-3.5 py-2 min-h-[44px] rounded-xl bg-[#F8FAFC] dark:bg-[#18181B] border border-slate-200 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white focus:outline-none"
                     />
                   </div>
                 ))}
@@ -749,7 +751,7 @@ export function EditProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-[#475569] dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+              className="px-4 py-2 min-h-[44px] rounded-xl text-xs font-bold text-[#475569] dark:text-[#94A3B8] hover:bg-slate-100 dark:hover:bg-white/10 transition-colors inline-flex items-center justify-center"
             >
               Cancel
             </button>
@@ -757,7 +759,7 @@ export function EditProfileModal({
             <button
               type="submit"
               disabled={isSaving}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold shadow-xs transition-all active:scale-95 disabled:opacity-50"
+              className="flex items-center justify-center gap-1.5 px-5 py-2 min-h-[44px] rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold shadow-xs transition-all active:scale-95 disabled:opacity-50"
             >
               <Save className="w-3.5 h-3.5" />
               <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>

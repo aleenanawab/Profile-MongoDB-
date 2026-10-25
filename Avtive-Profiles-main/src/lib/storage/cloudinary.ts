@@ -151,3 +151,32 @@ export async function ensureCloudinaryAssetUrl(
 // ─── BACKWARD COMPATIBILITY ALIASES ──────────────────────────────────────────
 export const uploadToSupabaseStorage = uploadToCloudinary;
 export const ensureSupabaseAssetUrl = ensureCloudinaryAssetUrl;
+
+/**
+ * Remove an existing asset from Cloudinary by its public ID.
+ * Returns true if destroyed or not found, false on failure.
+ */
+export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
+  if (!publicId || typeof publicId !== 'string') return true;
+
+  const cName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_NAME || cloudName;
+  const aKey = process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_KEY || apiKey;
+  const aSecret = process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET || apiSecret;
+
+  if (!cName || !aKey || !aSecret) return false;
+
+  cloudinary.config({
+    cloud_name: cName,
+    api_key: aKey,
+    api_secret: aSecret,
+    secure: true
+  });
+
+  try {
+    const res = await cloudinary.uploader.destroy(publicId, { invalidate: true });
+    return res?.result === 'ok' || res?.result === 'not found';
+  } catch (err: unknown) {
+    console.warn('[Cloudinary Delete Warning]:', err instanceof Error ? err.message : String(err));
+    return false;
+  }
+}

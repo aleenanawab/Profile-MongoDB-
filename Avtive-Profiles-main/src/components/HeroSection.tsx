@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Camera, Globe, Mail, Phone, UserPlus, Share2, MessageSquare, Building2, Users, LayoutGrid, SlidersHorizontal } from 'lucide-react';
+import { Pencil, Camera, Globe, Mail, Phone, UserPlus, Share2, MessageSquare, Building2, Users, LayoutGrid, SlidersHorizontal, Loader2, Trash2 } from 'lucide-react';
 import { ProfileData, normalizeProfileType, SocialLink, CompanyInfo } from '../types/profile';
 import { ThemeConfig, getThemeConfig } from './themeStyles';
 import { GithubIcon, LinkedInIcon, TwitterXIcon, WhatsAppIcon } from './BrandIcons';
@@ -69,58 +69,8 @@ export function HeroSection({
   const coverInputRef = React.useRef<HTMLInputElement>(null);
   const avatarInputRef = React.useRef<HTMLInputElement>(null);
 
-  const coverUrl = profile.coverImage || (profile as any).coverUrl || SUPABASE_DEFAULT_COVER;
-  const avatarUrl = profile.avatar || (profile as any).logoUrl || SUPABASE_DEFAULT_AVATAR;
-  const sharing = profile.sharingSettings || {};
-
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const { dataUrl, file: compressedFile } = await compressImageFile(file);
-      onUpdateField?.('coverImage', dataUrl);
-      uploadImageToStorage(compressedFile, 'profiles')
-        .then((cdnUrl) => {
-          if (cdnUrl) onUpdateField?.('coverImage', cdnUrl);
-        })
-        .catch((err) => console.warn('Background cover upload failed, will upload on save:', err));
-    } catch {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          onUpdateField?.('coverImage', reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const { dataUrl, file: compressedFile } = await compressImageFile(file);
-      onUpdateField?.('avatar', dataUrl);
-      uploadImageToStorage(compressedFile, 'avatars')
-        .then((cdnUrl) => {
-          if (cdnUrl) onUpdateField?.('avatar', cdnUrl);
-        })
-        .catch((err) => console.warn('Background avatar upload failed, will upload on save:', err));
-    } catch {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          onUpdateField?.('avatar', reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const normalizedType = normalizeProfileType(profile.type);
-  const isCompany = normalizedType === 'team';
-  const typeBadgeLabel = isCompany ? 'Company · Organization' : 'Individual';
-  const activeMemberCount = profile.teamMembers?.filter((m) => m.status !== 'REMOVED')?.length || 0;
+  const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
+  const [isUploadingCover, setIsUploadingCover] = React.useState(false);
 
   const [heroDraft, setHeroDraft] = React.useState({
     name: profile.name || '',
@@ -132,11 +82,130 @@ export function HeroSection({
     location: profile.location || '',
     country: profile.country || '',
     shortBio: profile.shortBio || '',
+    avatar: profile.avatar || '',
+    coverImage: profile.coverImage || '',
     companyInfo: (profile.companyInfo || {}) as Partial<CompanyInfo>,
   });
   const [snapshot, setSnapshot] = React.useState(heroDraft);
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
+
+  const coverUrl = heroDraft.coverImage || profile.coverImage || (profile as any).coverUrl || SUPABASE_DEFAULT_COVER;
+  const avatarUrl = heroDraft.avatar || profile.avatar || (profile as any).logoUrl || SUPABASE_DEFAULT_AVATAR;
+  const sharing = profile.sharingSettings || {};
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const previousCover = heroDraft.coverImage || profile.coverImage || '';
+    setIsUploadingCover(true);
+    setErrorMessage(undefined);
+    try {
+      const { dataUrl, file: compressedFile } = await compressImageFile(file);
+      // Immediate visual preview
+      setHeroDraft((prev) => ({ ...prev, coverImage: dataUrl }));
+      onUpdateField?.('coverImage', dataUrl);
+
+      // Upload to Cloudinary and persist permanent https URL to MongoDB
+      const targetId = profile.id || profile.slug;
+      const cdnUrl = await uploadImageToStorage(compressedFile, 'profiles', {
+        profileId: targetId,
+        field: 'coverImage'
+      });
+      if (!cdnUrl || !cdnUrl.startsWith('https://')) {
+        throw new Error('Upload succeeded but did not return a permanent HTTPS URL.');
+      }
+
+      setHeroDraft((prev) => ({ ...prev, coverImage: cdnUrl }));
+      setSnapshot((prev) => ({ ...prev, coverImage: cdnUrl }));
+      onUpdateField?.('coverImage', cdnUrl);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2500);
+    } catch (err: any) {
+      console.error('Cover upload and save failed:', err);
+      // Revert preview on failure
+      setHeroDraft((prev) => ({ ...prev, coverImage: previousCover }));
+      onUpdateField?.('coverImage', previousCover);
+      setSaveStatus('error');
+      setErrorMessage(err?.message || 'Failed to upload cover banner. Please select a valid photo under 5MB.');
+    } finally {
+      setIsUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = '';
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const previousAvatar = heroDraft.avatar || profile.avatar || '';
+    setIsUploadingAvatar(true);
+    setErrorMessage(undefined);
+    try {
+      const { dataUrl, file: compressedFile } = await compressImageFile(file);
+      // Immediate visual preview
+      setHeroDraft((prev) => ({ ...prev, avatar: dataUrl }));
+      onUpdateField?.('avatar', dataUrl);
+
+      // Upload to Cloudinary and persist permanent https URL to MongoDB
+      const targetId = profile.id || profile.slug;
+      const cdnUrl = await uploadImageToStorage(compressedFile, 'avatars', {
+        profileId: targetId,
+        field: 'avatar'
+      });
+      if (!cdnUrl || !cdnUrl.startsWith('https://')) {
+        throw new Error('Upload succeeded but did not return a permanent HTTPS URL.');
+      }
+
+      setHeroDraft((prev) => ({ ...prev, avatar: cdnUrl }));
+      setSnapshot((prev) => ({ ...prev, avatar: cdnUrl }));
+      onUpdateField?.('avatar', cdnUrl);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2500);
+    } catch (err: any) {
+      console.error('Avatar upload and save failed:', err);
+      // Revert preview on failure
+      setHeroDraft((prev) => ({ ...prev, avatar: previousAvatar }));
+      onUpdateField?.('avatar', previousAvatar);
+      setSaveStatus('error');
+      setErrorMessage(err?.message || 'Failed to upload profile photo. Please try a valid image under 5MB.');
+    } finally {
+      setIsUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveCover = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHeroDraft((prev) => ({ ...prev, coverImage: '' }));
+    setSnapshot((prev) => ({ ...prev, coverImage: '' }));
+    onUpdateField?.('coverImage', '');
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ coverImage: '' });
+      } catch (err: any) {
+        setErrorMessage(err?.message || 'Failed to remove cover banner.');
+      }
+    }
+  };
+
+  const handleRemoveAvatar = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setHeroDraft((prev) => ({ ...prev, avatar: '' }));
+    setSnapshot((prev) => ({ ...prev, avatar: '' }));
+    onUpdateField?.('avatar', '');
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ avatar: '' });
+      } catch (err: any) {
+        setErrorMessage(err?.message || 'Failed to remove profile photo.');
+      }
+    }
+  };
+
+  const normalizedType = normalizeProfileType(profile.type);
+  const isCompany = normalizedType === 'team';
+  const typeBadgeLabel = isCompany ? 'Company · Organization' : 'Individual';
+  const activeMemberCount = profile.teamMembers?.filter((m) => m.status !== 'REMOVED')?.length || 0;
 
   React.useEffect(() => {
     const nextDraft = {
@@ -149,6 +218,8 @@ export function HeroSection({
       location: profile.location || '',
       country: profile.country || '',
       shortBio: profile.shortBio || '',
+      avatar: profile.avatar || '',
+      coverImage: profile.coverImage || '',
       companyInfo: (profile.companyInfo || {}) as Partial<CompanyInfo>,
     };
     setHeroDraft(nextDraft);
@@ -164,6 +235,8 @@ export function HeroSection({
     profile.location,
     profile.country,
     profile.shortBio,
+    profile.avatar,
+    profile.coverImage,
     profile.companyInfo,
   ]);
 
@@ -175,6 +248,8 @@ export function HeroSection({
     heroDraft.location !== snapshot.location ||
     heroDraft.country !== snapshot.country ||
     heroDraft.shortBio !== snapshot.shortBio ||
+    (heroDraft.avatar && heroDraft.avatar !== snapshot.avatar) ||
+    (heroDraft.coverImage && heroDraft.coverImage !== snapshot.coverImage) ||
     JSON.stringify(heroDraft.companyInfo) !== JSON.stringify(snapshot.companyInfo)
   );
 
@@ -192,6 +267,8 @@ export function HeroSection({
         location: heroDraft.location,
         country: heroDraft.country,
         shortBio: heroDraft.shortBio,
+        ...(heroDraft.avatar ? { avatar: heroDraft.avatar } : profile.avatar ? { avatar: profile.avatar } : {}),
+        ...(heroDraft.coverImage ? { coverImage: heroDraft.coverImage } : profile.coverImage ? { coverImage: profile.coverImage } : {}),
         ...(isCompany && heroDraft.companyInfo ? { companyInfo: heroDraft.companyInfo as CompanyInfo } : {}),
       };
       if (onSavePartial) {
@@ -398,11 +475,12 @@ export function HeroSection({
 
         {/* Cover Edit Overlay Badge */}
         {(isEditing || canEdit) && (
-          <div className={`absolute inset-0 bg-black/25 flex items-center justify-center transition-opacity ${
-            isEditing ? 'opacity-90 hover:opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
+          <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 transition-opacity ${
+            isEditing ? 'opacity-95 hover:opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
           }`}>
             <button
               type="button"
+              disabled={isUploadingCover}
               onClick={(e) => {
                 e.stopPropagation();
                 if (isEditing) {
@@ -411,11 +489,31 @@ export function HeroSection({
                   onOpenEdit?.();
                 }
               }}
-              className="px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 shadow-xl border border-white/20 transition-transform hover:scale-105 cursor-pointer"
+              className="min-h-[44px] px-3.5 py-2 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xl border border-white/20 transition-transform hover:scale-105 cursor-pointer disabled:opacity-75 disabled:pointer-events-none select-none"
             >
-              <Camera className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{isEditing ? 'Change Cover Photo' : 'Edit Cover Banner'}</span>
+              {isUploadingCover ? (
+                <>
+                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4 text-cyan-400" />
+                  <span>{isEditing ? 'Change Cover' : 'Edit Cover'}</span>
+                </>
+              )}
             </button>
+            {isEditing && (heroDraft.coverImage || profile.coverImage) && (
+              <button
+                type="button"
+                onClick={handleRemoveCover}
+                className="min-h-[44px] px-3 py-2 rounded-full bg-rose-600/80 hover:bg-rose-600 backdrop-blur-md text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xl border border-rose-400/30 transition-transform hover:scale-105 cursor-pointer select-none"
+                title="Remove cover banner"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Remove</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -430,7 +528,7 @@ export function HeroSection({
               }}
               onMouseEnter={onSectionsMouseEnter}
               onMouseLeave={onSectionsMouseLeave}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-black/60 hover:bg-black/85 text-white backdrop-blur-md border border-white/20 shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer z-20 ${
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl sm:rounded-2xl bg-black/60 hover:bg-black/85 text-white backdrop-blur-md border border-white/20 shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer z-20 ${
                 isSidebarOpen ? 'ring-2 ring-white/60 bg-black/85' : ''
               }`}
               title="Profile Sections Menu"
@@ -452,10 +550,11 @@ export function HeroSection({
                 e.stopPropagation();
                 onOpenEdit?.();
               }}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 shadow-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 shadow-xs flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
               title="Edit Profile"
+              aria-label="Edit Profile"
             >
-              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              <Pencil className="w-4 h-4 text-white" />
             </button>
           </div>
         )}
@@ -492,8 +591,17 @@ export function HeroSection({
                 <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded-2xl sm:rounded-3xl transition-opacity ${
                   isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
                 }`}>
-                  <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300" />
-                  <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Logo' : 'Edit Logo'}</span>
+                  {isUploadingAvatar ? (
+                    <>
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300 animate-spin" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Logo' : 'Edit Logo'}</span>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -524,12 +632,34 @@ export function HeroSection({
                 <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${
                   isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
                 }`}>
-                  <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300" />
-                  <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Photo' : 'Edit Photo'}</span>
+                  {isUploadingAvatar ? (
+                    <>
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300 animate-spin" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Photo' : 'Edit Photo'}</span>
+                    </>
+                  )}
                 </div>
               )}
             </div>
           )
+        )}
+        {isEditing && (heroDraft.avatar || profile.avatar) && (
+          <div className="pt-2 pb-1">
+            <button
+              type="button"
+              onClick={handleRemoveAvatar}
+              className="inline-flex min-h-[44px] items-center gap-1.5 px-3.5 py-2 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-semibold transition-all cursor-pointer select-none"
+              title="Remove profile photo"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Remove Photo</span>
+            </button>
+          </div>
         )}
 
         {/* Profile Role Badge & Name */}
@@ -659,11 +789,11 @@ export function HeroSection({
                 <SectionSaveBar
                   onSave={handleSaveHero}
                   onCancel={handleCancelHero}
-                  isSaving={saveStatus === 'saving'}
+                  isSaving={saveStatus === 'saving' || isUploadingAvatar || isUploadingCover}
                   isSaved={saveStatus === 'saved'}
                   isDirty={isDirty}
                   errorMessage={errorMessage}
-                  saveLabel="Save Profile Info"
+                  saveLabel={isUploadingAvatar || isUploadingCover ? "Uploading image..." : "Save Profile Info"}
                   cancelLabel="Cancel"
                   className="pt-1"
                 />
@@ -770,7 +900,7 @@ export function HeroSection({
         )}
 
         {/* Action Buttons Below Avatar */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 pt-2 max-w-md w-full min-w-0 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 pt-2 max-w-md w-full min-w-0 flex-wrap sm:flex-nowrap">
           {canEdit ? (
             isEditing ? null : isCompany ? (
               /* Company Owner / Editor Actions */
@@ -778,7 +908,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={() => onOpenEdit?.()}
-                  className={`flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-2.5 sm:px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1 sm:gap-2`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                   title="Edit Company Details"
                 >
                   <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -788,7 +918,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={() => onSelectSection ? onSelectSection('teamMembers') : onOpenEdit?.()}
-                  className="flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-2.5 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1 sm:gap-2"
+                  className="flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none"
                   title="Manage Team Members"
                 >
                   <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-white" />
@@ -798,10 +928,10 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={onOpenShare}
-                  className={`min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-2.5 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0`}
+                  className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
                   title="Share Company Profile"
                 >
-                  <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <Share2 className="w-4 h-4 shrink-0" />
                   <span className="hidden sm:inline">Share</span>
                 </button>
               </>
@@ -811,7 +941,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={() => onOpenEdit?.()}
-                  className={`flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-3 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                   title="Edit Profile"
                 >
                   <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -821,7 +951,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={onOpenShare}
-                  className={`flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-3 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                 >
                   <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Share Profile</span>
@@ -835,7 +965,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={onOpenConnect}
-                  className={`flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                 >
                   <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Contact</span>
@@ -848,7 +978,7 @@ export function HeroSection({
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                     else onSelectSection?.('teamMembers');
                   }}
-                  className={`flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                 >
                   <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Team ({activeMemberCount})</span>
@@ -857,10 +987,10 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={onOpenShare}
-                  className={`min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-2.5 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0`}
+                  className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
                   title="Share Company Profile"
                 >
-                  <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  <Share2 className="w-4 h-4 shrink-0" />
                 </button>
               </>
             ) : (
@@ -869,7 +999,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={onOpenConnect}
-                  className={`flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-3 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                 >
                   <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Connect</span>
@@ -878,7 +1008,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={onOpenShare}
-                  className={`flex-1 min-w-0 min-h-[38px] sm:min-h-[40px] py-2 sm:py-2.5 px-3 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                 >
                   <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Share</span>
@@ -907,7 +1037,7 @@ export function HeroSection({
                 href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
+                className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
                 title="WhatsApp"
                 aria-label="WhatsApp"
               >
@@ -921,7 +1051,7 @@ export function HeroSection({
                 href={`mailto:${profile.email}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
+                className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
                 title="Email"
                 aria-label="Email"
               >
@@ -943,7 +1073,7 @@ export function HeroSection({
                   href={formattedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
                   title={s.label || s.platform}
                   aria-label={s.label || s.platform}
                 >

@@ -1,6 +1,7 @@
 export {
   isCloudinaryConfigured,
   uploadToCloudinary,
+  deleteFromCloudinary,
   ensureCloudinaryAssetUrl,
   uploadToSupabaseStorage,
   ensureSupabaseAssetUrl

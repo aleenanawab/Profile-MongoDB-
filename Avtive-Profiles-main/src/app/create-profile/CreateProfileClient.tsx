@@ -298,7 +298,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-slate-300 transition-colors cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-slate-300 transition-colors cursor-pointer flex items-center justify-center"
             >
               Back
             </button>
@@ -308,7 +308,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all"
             >
               <span>Continue to Details</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -318,7 +318,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
               type="button"
               onClick={() => handleSubmit()}
               disabled={isLoading}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>Finish &amp; View Pass</span>
@@ -469,7 +469,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-slate-200 cursor-pointer transition-colors"
+                className="w-full min-h-[44px] py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-slate-200 cursor-pointer transition-colors flex items-center justify-center"
               >
                 Upload Custom Photo
               </button>
@@ -510,7 +510,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
                   placeholder="e.g. MERN Developer, Product Lead"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 font-semibold"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 font-semibold"
                 />
               </div>
 
@@ -524,7 +524,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Aleena Nawab"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 font-semibold"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 font-semibold"
                 />
               </div>
             </div>
@@ -541,7 +541,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={professionalTitle}
                   onChange={(e) => setProfessionalTitle(e.target.value)}
                   placeholder="e.g. Full Stack Developer"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -554,7 +554,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="e.g. Avtive Network"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -568,7 +568,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. San Francisco, CA"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                 />
               </div>
             </div>
@@ -588,7 +588,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                     if (!whatsapp) setWhatsapp(e.target.value);
                   }}
                   placeholder="+1 (555) 000-0000"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -602,7 +602,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="user@avtive.app"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -616,7 +616,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
                   placeholder="https://myportfolio.dev"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                 />
               </div>
             </div>
@@ -631,7 +631,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="A brief engaging headline for your pass card..."
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 resize-none"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 resize-none"
               />
             </div>
 
@@ -653,12 +653,12 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                     }
                   }}
                   placeholder="Type a skill &amp; press Enter..."
-                  className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
                 />
                 <button
                   type="button"
                   onClick={() => handleAddSkill(skillInput)}
-                  className="px-3 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add</span>
@@ -722,25 +722,25 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
           <button
             type="button"
             onClick={() => setActiveMobileViewTab('form')}
-            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+            className={`min-h-[44px] px-3.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center ${
               activeMobileViewTab === 'form'
                 ? 'bg-white dark:bg-[#1E293B] text-slate-900 dark:text-white shadow-2xs'
                 : 'text-slate-500 dark:text-slate-400'
             }`}
           >
-            <Edit3 className="w-3 h-3 inline mr-1" />
+            <Edit3 className="w-3.5 h-3.5 inline mr-1" />
             <span>Setup</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveMobileViewTab('preview')}
-            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+            className={`min-h-[44px] px-3.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center ${
               activeMobileViewTab === 'preview'
                 ? 'bg-cyan-500 text-white shadow-2xs'
                 : 'text-slate-500 dark:text-slate-400'
             }`}
           >
-            <Eye className="w-3 h-3 inline mr-1" />
+            <Eye className="w-3.5 h-3.5 inline mr-1" />
             <span>Live Pass</span>
           </button>
         </div>
@@ -832,7 +832,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                       key={th.id}
                       type="button"
                       onClick={() => setTheme(th.id)}
-                      className={`p-2 rounded-xl border text-left cursor-pointer transition-all ${
+                      className={`min-h-[44px] p-2 rounded-xl border text-left cursor-pointer transition-all ${
                         theme === th.id
                           ? 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-500'
                           : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10'
@@ -867,7 +867,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-[10px] text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium"
+                    className="min-h-[44px] py-1 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium inline-flex items-center"
                   >
                     Change photo
                   </button>
@@ -881,7 +881,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
                   placeholder="e.g. MERN Developer"
-                  className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -892,7 +892,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full Name"
-                  className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -903,7 +903,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={professionalTitle}
                   onChange={(e) => setProfessionalTitle(e.target.value)}
                   placeholder="e.g. Full Stack Developer"
-                  className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -914,7 +914,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="Organization"
-                  className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -925,7 +925,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Brief summary..."
-                  className="w-full px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white resize-none"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white resize-none"
                 />
               </div>
             </div>
@@ -939,7 +939,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
           <button
             type="button"
             onClick={() => setStep(2)}
-            className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>Continue to Details</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -949,7 +949,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer flex items-center justify-center"
             >
               Back
             </button>
@@ -957,7 +957,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
               type="button"
               onClick={() => handleSubmit()}
               disabled={isLoading}
-              className="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <>

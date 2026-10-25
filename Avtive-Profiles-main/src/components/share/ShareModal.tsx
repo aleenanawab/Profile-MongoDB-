@@ -218,7 +218,7 @@ export function ShareModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 text-left font-sans">
-      <div className="relative w-full max-w-lg max-h-[90dvh] flex flex-col rounded-3xl bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-lg max-h-[85dvh] flex flex-col rounded-3xl bg-white dark:bg-[#121216] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white shadow-2xl overflow-hidden">
         
         {/* Modal Header & Progress Stepper */}
         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 shrink-0 space-y-3">
@@ -239,7 +239,8 @@ export function ShareModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/60 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/60 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="Close modal"
             >
               <X className="w-4 h-4" />
             </button>
@@ -627,7 +628,7 @@ export function ShareModal({
             <button
               type="button"
               onClick={() => setCurrentStep((prev) => (prev - 1) as any)}
-              className="inline-flex items-center gap-1.5 py-2.5 px-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-white/10 dark:hover:bg-white/15 dark:text-white dark:border-white/15 font-medium text-xs transition-all active:scale-[0.98] cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 min-h-[44px] py-2.5 px-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 dark:bg-white/10 dark:hover:bg-white/15 dark:text-white dark:border-white/15 font-medium text-xs transition-all active:scale-[0.98] cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
@@ -636,7 +637,7 @@ export function ShareModal({
             <button
               type="button"
               onClick={onClose}
-              className="py-2.5 px-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70 font-medium text-xs transition-all cursor-pointer"
+              className="min-h-[44px] py-2.5 px-5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70 font-medium text-xs transition-all cursor-pointer flex items-center justify-center"
             >
               Cancel
             </button>
@@ -646,7 +647,7 @@ export function ShareModal({
             <button
               type="button"
               onClick={() => setCurrentStep((prev) => (prev + 1) as any)}
-              className="inline-flex items-center gap-2 py-2.5 px-6 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 font-bold text-xs transition-all active:scale-[0.98] shadow-md cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] py-2.5 px-6 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 font-bold text-xs transition-all active:scale-[0.98] shadow-md cursor-pointer"
             >
               <span>{currentStep === 1 ? 'Next: Visibility' : currentStep === 2 ? 'Next: Reorder' : 'Next: Share Link'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -656,7 +657,7 @@ export function ShareModal({
               type="button"
               onClick={handleSaveAndShare}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 py-2.5 px-6 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 font-bold text-xs transition-all active:scale-[0.98] shadow-md cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] py-2.5 px-6 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 font-bold text-xs transition-all active:scale-[0.98] shadow-md cursor-pointer disabled:opacity-50"
             >
               {isSaving ? (
                 <>

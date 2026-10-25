@@ -527,25 +527,39 @@ function PublicProfileClientInner({
       // Pre-upload raw base64 images to Cloudinary to avoid 413 Payload Too Large on /api/profile/update
       if (payload.avatar && typeof payload.avatar === 'string' && payload.avatar.startsWith('data:')) {
         try {
-          payload.avatar = await uploadImageToStorage(payload.avatar, 'avatars');
+          payload.avatar = await uploadImageToStorage(payload.avatar, 'avatars', {
+            profileId: profile.id || profile.slug,
+            field: 'avatar'
+          });
         } catch (uploadErr) {
           console.warn('Avatar pre-upload warning:', uploadErr);
         }
       }
       if (payload.coverImage && typeof payload.coverImage === 'string' && payload.coverImage.startsWith('data:')) {
         try {
-          payload.coverImage = await uploadImageToStorage(payload.coverImage, 'profiles');
+          payload.coverImage = await uploadImageToStorage(payload.coverImage, 'profiles', {
+            profileId: profile.id || profile.slug,
+            field: 'coverImage'
+          });
         } catch (uploadErr) {
           console.warn('Cover pre-upload warning:', uploadErr);
         }
       }
 
       // Never overwrite existing saved images with an empty value
-      if (!payload.avatar && profile.avatar) {
-        payload.avatar = profile.avatar;
+      if (!payload.avatar) {
+        if (currentDraft?.avatar) {
+          payload.avatar = currentDraft.avatar;
+        } else if (profile.avatar) {
+          payload.avatar = profile.avatar;
+        }
       }
-      if (!payload.coverImage && profile.coverImage) {
-        payload.coverImage = profile.coverImage;
+      if (!payload.coverImage) {
+        if (currentDraft?.coverImage) {
+          payload.coverImage = currentDraft.coverImage;
+        } else if (profile.coverImage) {
+          payload.coverImage = profile.coverImage;
+        }
       }
 
       const res = await fetch('/api/profile/update', {
@@ -594,21 +608,39 @@ function PublicProfileClientInner({
       const sanitizedPartial = { ...partialData };
       if (sanitizedPartial.avatar && typeof sanitizedPartial.avatar === 'string' && sanitizedPartial.avatar.startsWith('data:')) {
         try {
-          sanitizedPartial.avatar = await uploadImageToStorage(sanitizedPartial.avatar, 'avatars');
-        } catch {}
+          sanitizedPartial.avatar = await uploadImageToStorage(sanitizedPartial.avatar, 'avatars', {
+            profileId: profile.id || profile.slug,
+            field: 'avatar'
+          });
+        } catch (uploadErr) {
+          console.warn('Avatar upload warning in handleSavePartial:', uploadErr);
+        }
       }
       if (sanitizedPartial.coverImage && typeof sanitizedPartial.coverImage === 'string' && sanitizedPartial.coverImage.startsWith('data:')) {
         try {
-          sanitizedPartial.coverImage = await uploadImageToStorage(sanitizedPartial.coverImage, 'profiles');
-        } catch {}
+          sanitizedPartial.coverImage = await uploadImageToStorage(sanitizedPartial.coverImage, 'profiles', {
+            profileId: profile.id || profile.slug,
+            field: 'coverImage'
+          });
+        } catch (uploadErr) {
+          console.warn('Cover upload warning in handleSavePartial:', uploadErr);
+        }
       }
 
       // Never overwrite existing saved images with an empty value
-      if (!sanitizedPartial.avatar && profile.avatar) {
-        sanitizedPartial.avatar = profile.avatar;
+      if (!sanitizedPartial.avatar) {
+        if (currentDraft?.avatar) {
+          sanitizedPartial.avatar = currentDraft.avatar;
+        } else if (profile.avatar) {
+          sanitizedPartial.avatar = profile.avatar;
+        }
       }
-      if (!sanitizedPartial.coverImage && profile.coverImage) {
-        sanitizedPartial.coverImage = profile.coverImage;
+      if (!sanitizedPartial.coverImage) {
+        if (currentDraft?.coverImage) {
+          sanitizedPartial.coverImage = currentDraft.coverImage;
+        } else if (profile.coverImage) {
+          sanitizedPartial.coverImage = profile.coverImage;
+        }
       }
 
       const res = await fetch('/api/profile/update', {
@@ -885,6 +917,33 @@ function PublicProfileClientInner({
 
   const mobileView = (
     <div className="w-full h-full flex-1 flex flex-col min-h-0 relative overflow-hidden">
+      {/* If editing on mobile, show an elegant top edit action strip so the user can Save & Exit anytime! */}
+      {isEditing && (
+        <div className="shrink-0 z-40 w-full px-3 py-2 bg-slate-900/95 text-white dark:bg-black/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-400">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span>Editing Profile</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="px-2.5 py-1 text-xs text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isSaving}
+              onClick={handleSaveAndExit}
+              className="px-3 py-1 text-xs font-semibold rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              {isSaving ? 'Saving...' : 'Save & Done'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Pinned Visible Section Navigation Tab Bar (Stitch Design) */}
       <div className="shrink-0 z-30 w-full">
         <ProfileSectionTabBar

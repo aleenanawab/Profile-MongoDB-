@@ -56,7 +56,7 @@ export function DualScreenWorkspace({
   };
 
   return (
-    <div className={`w-full min-h-[100svh] h-[100dvh] max-h-[100dvh] flex flex-col justify-start bg-slate-100 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-200 overflow-hidden box-border ${className}`}>
+    <div className={`w-full min-h-[100vh] min-h-[100dvh] h-[100vh] h-[100dvh] max-h-[100dvh] flex flex-col justify-start bg-slate-100 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-200 overflow-hidden box-border pt-[max(0rem,env(safe-area-inset-top))] pb-[max(0rem,env(safe-area-inset-bottom))] pl-[max(0rem,env(safe-area-inset-left))] pr-[max(0rem,env(safe-area-inset-right))] ${className}`}>
       
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* PERMANENT TWIN-SCREEN STAGE CONTAINER                                      */}
@@ -88,9 +88,9 @@ export function DualScreenWorkspace({
                   onClick={() => setMobileActiveView('preview')}
                   title="Switch to Mobile Phone Preview"
                   aria-label="View Mobile Preview"
-                  className="xl:hidden ml-1 p-1 sm:p-1.5 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-white hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/15 border border-slate-200 dark:border-white/10 flex items-center gap-1 text-[11px] font-semibold transition-all shadow-2xs cursor-pointer active:scale-95"
+                  className="xl:hidden ml-1 min-h-[44px] px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-white hover:bg-slate-100 dark:bg-white/10 dark:hover:bg-white/15 border border-slate-200 dark:border-white/10 flex items-center gap-1.5 text-xs font-semibold transition-all shadow-2xs cursor-pointer active:scale-95"
                 >
-                  <Smartphone className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                  <Smartphone className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                   <span className="hidden xs:inline">Preview</span>
                 </button>
               </div>
@@ -103,16 +103,16 @@ export function DualScreenWorkspace({
               </div>
 
               {/* Desktop Inside Functional Actions Toolbar */}
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 {desktopToolbarRight}
 
                 <Link
                   href="/dashboard"
                   title="Workspaces Dashboard"
                   aria-label="Dashboard"
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <LayoutGrid className="w-4 h-4" />
                 </Link>
 
                 <button
@@ -120,9 +120,9 @@ export function DualScreenWorkspace({
                   onClick={toggleDarkMode}
                   title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
                   aria-label="Toggle Theme"
-                  className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                  {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-700" />}
+                  {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
                 </button>
 
                 <button
@@ -130,9 +130,9 @@ export function DualScreenWorkspace({
                   onClick={handleLogout}
                   title="Sign Out"
                   aria-label="Logout"
-                  className="p-1.5 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/15 border border-rose-500/20 transition-colors cursor-pointer"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/15 border border-rose-500/20 transition-colors cursor-pointer"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -163,10 +163,10 @@ export function DualScreenWorkspace({
             <button
               type="button"
               onClick={() => setMobileActiveView('editor')}
-              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-white/10 text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-white/10 text-slate-800 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
               aria-label="Back to Editor"
             >
-              <Tv className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+              <Tv className="w-4 h-4 text-cyan-500 shrink-0" />
               <span>Back to Editor</span>
             </button>
           </div>

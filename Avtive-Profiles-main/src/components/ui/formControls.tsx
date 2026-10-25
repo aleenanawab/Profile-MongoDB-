@@ -36,7 +36,7 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
     return (
       <input
         ref={ref}
-        className={`w-full h-10 px-3 text-xs sm:text-sm font-normal rounded-xl border ${
+        className={`w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border ${
           hasError
             ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500/20'
             : 'border-slate-200 dark:border-zinc-700/80 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500/20'
@@ -63,7 +63,7 @@ export const FormTextarea = React.forwardRef<HTMLTextAreaElement, FormTextareaPr
       <textarea
         ref={ref}
         rows={rows}
-        className={`w-full p-3 text-xs sm:text-sm font-normal rounded-xl border ${
+        className={`w-full min-h-[44px] p-3.5 text-base sm:text-sm font-normal rounded-xl border ${
           hasError
             ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500/20'
             : 'border-slate-200 dark:border-zinc-700/80 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500/20'
@@ -117,16 +117,16 @@ export function SectionSaveBar({
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-2.5">
         {showCancel && (
           <button
             type="button"
             onClick={onCancel}
             disabled={isSaving}
-            className="h-8 sm:h-9 px-3 sm:px-3.5 rounded-xl text-xs font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-[0.98] flex items-center gap-1 transition-all disabled:opacity-40 cursor-pointer"
+            className="min-h-[44px] px-4 rounded-xl text-xs font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-[0.98] flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 cursor-pointer"
             title="Discard changes in this section"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
             <span>{cancelLabel}</span>
           </button>
         )}
@@ -135,7 +135,7 @@ export function SectionSaveBar({
           type="button"
           onClick={onSave}
           disabled={isSaving || !isDirty}
-          className={`h-8 sm:h-9 px-3.5 sm:px-4 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all active:scale-[0.98] cursor-pointer ${
+          className={`min-h-[44px] px-5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98] cursor-pointer ${
             isSuccess
               ? 'bg-emerald-600 text-white'
               : 'bg-cyan-600 hover:bg-cyan-500 text-white disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:text-slate-400 dark:disabled:text-zinc-600 disabled:cursor-not-allowed disabled:active:scale-100'
@@ -144,17 +144,17 @@ export function SectionSaveBar({
         >
           {isSaving ? (
             <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               <span>Saving...</span>
             </>
           ) : isSuccess ? (
             <>
-              <Check className="w-3.5 h-3.5" />
+              <Check className="w-4 h-4" />
               <span>Saved</span>
             </>
           ) : (
             <>
-              <Save className="w-3.5 h-3.5" />
+              <Save className="w-4 h-4" />
               <span>{saveLabel}</span>
             </>
           )}

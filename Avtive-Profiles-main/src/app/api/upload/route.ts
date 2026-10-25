@@ -9,8 +9,8 @@ import {
   updateCompany 
 } from '@/lib/db';
 
-const ALLOWED_MIME_PREFIXES = ['image/jpeg', 'image/png', 'image/webp'];
-const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+const ALLOWED_MIME_PREFIXES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 function hasValidImageSignature(buffer: Buffer, mimeType: string): boolean {
@@ -23,6 +23,9 @@ function hasValidImageSignature(buffer: Buffer, mimeType: string): boolean {
   if (mimeType === 'image/webp') {
     return buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
   }
+  if (mimeType === 'image/heic' || mimeType === 'image/heif') {
+    return buffer.length >= 12 && buffer.toString('ascii', 4, 8) === 'ftyp';
+  }
   return false;
 }
 
@@ -31,9 +34,11 @@ function getExtension(mimeType: string, originalName?: string): string {
     const extMatch = originalName.match(/\.([a-zA-Z0-9]+)$/);
     if (extMatch && extMatch[1]) {
       const ext = `.${extMatch[1].toLowerCase()}`;
-      if (ALLOWED_EXTENSIONS.includes(ext)) return ext;
+      if (ALLOWED_EXTENSIONS.includes(ext)) {
+        if (ext === '.heic' || ext === '.heif') return '.jpg';
+        return ext;
+      }
     }
-
   }
   if (mimeType.includes('png')) return '.png';
   if (mimeType.includes('webp')) return '.webp';
@@ -181,13 +186,13 @@ export async function POST(request: NextRequest) {
     const isAllowedExt = originalName ? ALLOWED_EXTENSIONS.some(ext => originalName.toLowerCase().endsWith(ext)) : false;
     if (!isAllowedType && !isAllowedExt) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPG, PNG, and WebP images are permitted.' },
+        { error: 'Invalid file type. Only JPG, PNG, WebP, and HEIC images are permitted.' },
         { status: 400 }
       );
     }
     if (!hasValidImageSignature(buffer, mimeType)) {
       return NextResponse.json(
-        { error: 'The uploaded file is not a valid JPEG, PNG, or WebP image.' },
+        { error: 'The uploaded file is not a valid JPEG, PNG, WebP, or HEIC image.' },
         { status: 400 }
       );
     }
@@ -227,10 +232,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Upload strictly to Cloudinary (No fallback to local disk or data URLs)
+    // Namespace storage keys by user: avtive/users/${userId}/${requestedBucket}
     const ext = getExtension(mimeType, originalName);
     const filename = `${requestedBucket}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}${ext}`;
+    const userFolder = `users/${userId}/${requestedBucket}`;
 
-    const uploadResult = await uploadToCloudinary(buffer, filename, mimeType, requestedBucket);
+    const uploadResult = await uploadToCloudinary(buffer, filename, mimeType, userFolder);
 
     if (!uploadResult.success || !uploadResult.url) {
       return NextResponse.json(

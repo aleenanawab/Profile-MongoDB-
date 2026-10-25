@@ -78,8 +78,8 @@ export function HeaderNav({
   );
 
   return (
-    <header className={`sticky top-0 z-40 w-full backdrop-blur-md ${theme.headerBg} border-b ${theme.divider} transition-colors shadow-2xs`}>
-      <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-2.5 flex items-center justify-between gap-1.5 sm:gap-2.5 min-w-0">
+    <header className={`sticky top-0 z-40 w-full pt-[max(0rem,env(safe-area-inset-top))] backdrop-blur-md ${theme.headerBg} border-b ${theme.divider} transition-colors shadow-2xs`}>
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-2 flex items-center justify-between gap-1.5 sm:gap-2.5 min-w-0">
         {/* Left: Menu Toggle & Avtive Brand */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {onToggleSections && (
@@ -88,18 +88,18 @@ export function HeaderNav({
               onClick={onToggleSections}
               onMouseEnter={onSectionsMouseEnter}
               onMouseLeave={onSectionsMouseLeave}
-              className={`h-8 px-2 sm:px-2.5 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 text-xs font-semibold`}
+              className={`min-h-[44px] min-w-[44px] px-2.5 sm:px-3 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 text-xs font-semibold`}
               title="Profile Sections Menu"
               aria-label="Sections Menu"
             >
-              <LayoutGrid className={`w-3.5 h-3.5 ${theme.accentText}`} />
+              <LayoutGrid className={`w-4 h-4 ${theme.accentText}`} />
               <span className="hidden sm:inline">Menu</span>
             </button>
           )}
 
           <Link 
             href="/"
-            className="flex items-center gap-2 group cursor-pointer shrink-0"
+            className="flex items-center gap-2 group cursor-pointer shrink-0 min-h-[44px]"
             title="Avtive Digital Identity"
           >
             <div className="h-8 flex items-center">
@@ -132,7 +132,7 @@ export function HeaderNav({
             <button
               type="button"
               onClick={onOpenMyCard}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${
                 profileType === 'individual'
                   ? `${theme.btnPrimary} shadow-xs`
                   : `${theme.textMuted} hover:${theme.textPrimary}`
@@ -146,7 +146,7 @@ export function HeaderNav({
             <button
               type="button"
               onClick={() => onSelectProfileType('team', 'team')}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${
                 profileType === 'team'
                   ? `${theme.btnPrimary} shadow-xs`
                   : `${theme.textMuted} hover:${theme.textPrimary}`
@@ -165,11 +165,11 @@ export function HeaderNav({
             <button
               type="button"
               onClick={onOpenEdit}
-              className={`h-8 px-2.5 sm:px-3 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 text-xs font-semibold`}
+              className={`min-h-[44px] min-w-[44px] px-2.5 sm:px-3 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 text-xs font-semibold`}
               title="Edit Profile"
               aria-label="Edit Profile"
             >
-              <Edit3 className={`w-3.5 h-3.5 ${theme.accentText}`} />
+              <Edit3 className={`w-4 h-4 ${theme.accentText}`} />
               <span className="hidden sm:inline">Edit Profile</span>
             </button>
           )}
@@ -182,11 +182,11 @@ export function HeaderNav({
                   type="button"
                   onClick={onCancelEdit}
                   disabled={isSaving}
-                  className={`w-8 h-8 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textSecondary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center justify-center active:scale-95 disabled:opacity-50`}
+                  className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textSecondary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center justify-center active:scale-95 disabled:opacity-50`}
                   title="Cancel and discard changes"
                   aria-label="Cancel Changes"
                 >
-                  <X className="w-3.5 h-3.5 text-rose-500" />
+                  <X className="w-4 h-4 text-rose-500" />
                 </button>
               )}
               {onSaveEdits && (
@@ -194,14 +194,14 @@ export function HeaderNav({
                   type="button"
                   onClick={onSaveEdits}
                   disabled={isSaving}
-                  className={`h-8 px-3 rounded-xl ${theme.btnPrimary} text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer flex items-center gap-1.5 active:scale-95 disabled:opacity-50`}
+                  className={`min-h-[44px] px-3.5 rounded-xl ${theme.btnPrimary} text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50`}
                   title="Save profile changes"
                   aria-label="Save Changes"
                 >
                   {isSaving ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Save className="w-3.5 h-3.5" />
+                    <Save className="w-4 h-4" />
                   )}
                   <span>{isSaving ? 'Saving...' : 'Save'}</span>
                 </button>
@@ -214,14 +214,14 @@ export function HeaderNav({
             <button
               type="button"
               onClick={onToggleTheme}
-              className={`w-8 h-8 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center justify-center active:scale-95`}
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center justify-center active:scale-95`}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               aria-label="Toggle Theme"
             >
               {isDark ? (
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <Sun className="w-4 h-4 text-amber-400" />
               ) : (
-                <Moon className={`w-3.5 h-3.5 ${theme.accentText}`} />
+                <Moon className={`w-4 h-4 ${theme.accentText}`} />
               )}
             </button>
           )}
@@ -231,11 +231,11 @@ export function HeaderNav({
             <button
               type="button"
               onClick={onOpenShare}
-              className={`w-8 h-8 rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95 shrink-0 cursor-pointer flex items-center justify-center`}
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95 shrink-0 cursor-pointer flex items-center justify-center`}
               title="Share Profile"
               aria-label="Share Profile"
             >
-              <Share2 className="w-3.5 h-3.5 shrink-0" />
+              <Share2 className="w-4 h-4 shrink-0" />
             </button>
           )}
 
@@ -244,11 +244,11 @@ export function HeaderNav({
             <button
               type="button"
               onClick={onLogout}
-              className="w-8 h-8 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer flex items-center justify-center"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer flex items-center justify-center"
               title="Sign Out"
               aria-label="Logout"
             >
-              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              <LogOut className="w-4 h-4 shrink-0" />
             </button>
           )}
         </div>

@@ -161,29 +161,27 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   return result;
 }
 
-let indexesPromise: Promise<EnsureIndexesResult> | null = null;
+let indexesPromise: Promise<void> | null = null;
 
+/**
+ * Called before every DB operation. Connection errors propagate (once) so the
+ * request fails fast with a single timeout; index-creation problems never block
+ * a request, and a failed attempt is retried on a later request instead of being
+ * marked as done.
+ */
 export async function lazyEnsureIndexes(): Promise<void> {
-  if (indexesEnsured) {
-    return;
-  }
+  if (indexesEnsured) return;
 
-  if (indexesPromise) {
-    try {
-      await indexesPromise;
-    } catch {
-      // Non-blocking
-    }
-    return;
-  }
+  // Connect first: if Atlas is unreachable, fail here (one timeout), not twice.
+  await getMongoDb();
 
-  try {
-    indexesPromise = ensureIndexes();
-    await indexesPromise;
-  } catch (err: any) {
-    console.warn('[lazyEnsureIndexes] Failed to ensure indexes (non-blocking):', err?.message || err);
-  } finally {
-    // Prevent repeated index runs on failed or glitchy connection in this serverless instance
-    indexesEnsured = true;
+  if (!indexesPromise) {
+    indexesPromise = ensureIndexes()
+      .then(() => undefined)
+      .catch((err: unknown) => {
+        console.warn('[lazyEnsureIndexes] Index setup failed, will retry:', err instanceof Error ? err.message : String(err));
+        indexesPromise = null;
+      });
   }
+  await indexesPromise;
 }

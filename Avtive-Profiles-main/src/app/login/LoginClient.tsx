@@ -408,7 +408,7 @@ export default function LoginClient() {
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="e.g. aleena@example.com"
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
+                    className={`w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
                   />
                   <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 </div>
@@ -417,7 +417,7 @@ export default function LoginClient() {
               <button
                 type="submit"
                 disabled={isSendingReset}
-                className={`w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
+                className={`w-full min-h-[44px] py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
               >
                 {isSendingReset ? (
                   <>
@@ -434,9 +434,9 @@ export default function LoginClient() {
               <button
                 type="button"
                 onClick={closeForgotPasswordView}
-                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="text-xs min-h-[44px] inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
               >
-                Remember your password? <span className={`font-semibold ${themeStyles.textLink} hover:underline`}>Sign In</span>
+                Remember your password? <span className={`font-semibold ${themeStyles.textLink} hover:underline ml-1`}>Sign In</span>
               </button>
             </div>
           </div>
@@ -474,7 +474,7 @@ export default function LoginClient() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="e.g. aleena@example.com"
-                  className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
+                  className={`w-full px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
                 />
               </div>
 
@@ -484,7 +484,7 @@ export default function LoginClient() {
                   <button
                     type="button"
                     onClick={openForgotPasswordView}
-                    className={`text-xs font-medium ${themeStyles.textLink} hover:underline cursor-pointer`}
+                    className={`text-xs font-medium min-h-[44px] inline-flex items-center ${themeStyles.textLink} hover:underline cursor-pointer`}
                   >
                     Forgot Password?
                   </button>
@@ -497,12 +497,12 @@ export default function LoginClient() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className={`w-full pl-4 pr-11 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
+                    className={`w-full pl-4 pr-12 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white p-1"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white"
                     aria-label="Toggle password visibility"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -513,7 +513,7 @@ export default function LoginClient() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
+                className={`w-full min-h-[44px] py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
               >
                 {isLoading ? (
                   <>
@@ -538,7 +538,7 @@ export default function LoginClient() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-50"
             >
               {isGoogleLoading ? (
                 <>
@@ -660,7 +660,7 @@ export default function LoginClient() {
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="e.g. aleena@example.com"
-                    className={`w-full max-w-full box-border pl-9 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-[#1B1E26] border border-slate-200 dark:border-white/15 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} transition-all`}
+                    className={`w-full max-w-full box-border pl-9 pr-3.5 py-2.5 min-h-[44px] rounded-xl bg-white dark:bg-[#1B1E26] border border-slate-200 dark:border-white/15 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} transition-all`}
                   />
                   <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 </div>
@@ -670,7 +670,7 @@ export default function LoginClient() {
                 <button
                   type="submit"
                   disabled={isSendingReset}
-                  className={`w-full max-w-full box-border py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
+                  className={`w-full max-w-full box-border min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
                 >
                   {isSendingReset ? (
                     <>
@@ -688,9 +688,9 @@ export default function LoginClient() {
               <button
                 type="button"
                 onClick={closeForgotPasswordView}
-                className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="text-[11px] min-h-[44px] inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
               >
-                Back to <span className={`font-semibold ${themeStyles.textLink} hover:underline`}>Sign In</span>
+                Back to <span className={`font-semibold ${themeStyles.textLink} hover:underline ml-1`}>Sign In</span>
               </button>
             </div>
           </div>
@@ -721,7 +721,7 @@ export default function LoginClient() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="e.g. aleena@example.com"
-                  className={`w-full max-w-full box-border px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#1B1E26] border border-slate-200 dark:border-white/15 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} transition-all`}
+                  className={`w-full max-w-full box-border px-3.5 py-2.5 min-h-[44px] rounded-xl bg-white dark:bg-[#1B1E26] border border-slate-200 dark:border-white/15 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} transition-all`}
                 />
               </div>
 
@@ -731,7 +731,7 @@ export default function LoginClient() {
                   <button
                     type="button"
                     onClick={openForgotPasswordView}
-                    className={`text-[11px] font-medium ${themeStyles.textLink} hover:underline cursor-pointer`}
+                    className={`text-[11px] font-medium min-h-[44px] inline-flex items-center ${themeStyles.textLink} hover:underline cursor-pointer`}
                   >
                     Forgot Password?
                   </button>
@@ -744,12 +744,12 @@ export default function LoginClient() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className={`w-full max-w-full box-border pl-3.5 pr-10 py-2.5 rounded-xl bg-white dark:bg-[#1B1E26] border border-slate-200 dark:border-white/15 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} transition-all`}
+                    className={`w-full max-w-full box-border pl-3.5 pr-11 py-2.5 min-h-[44px] rounded-xl bg-white dark:bg-[#1B1E26] border border-slate-200 dark:border-white/15 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} transition-all`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white p-1"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white"
                     aria-label="Toggle password visibility"
                   >
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -761,7 +761,7 @@ export default function LoginClient() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full max-w-full box-border py-3 px-5 rounded-xl font-bold text-xs bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50`}
+                  className={`w-full max-w-full box-border min-h-[44px] py-3 px-5 rounded-xl font-bold text-xs bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50`}
                 >
                   {isLoading ? (
                     <>
@@ -784,7 +784,7 @@ export default function LoginClient() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="w-full max-w-full box-border py-2.5 px-4 rounded-xl text-xs font-medium bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
+              className="w-full max-w-full box-border min-h-[44px] py-2.5 px-4 rounded-xl text-xs font-medium bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
             >
               {isGoogleLoading ? (
                 <>
@@ -807,9 +807,9 @@ export default function LoginClient() {
         )}
       </div>
 
-      <div className="pt-4 pb-1 text-center text-[11px] text-slate-500 dark:text-slate-400 w-full box-border">
+      <div className="pt-4 pb-1 text-center text-xs text-slate-500 dark:text-slate-400 w-full box-border">
         <span>Don&apos;t have an account? </span>
-        <Link href="/register" className={`font-bold ${themeStyles.textLink} hover:underline ml-1`}>
+        <Link href="/register" className={`font-bold min-h-[44px] inline-flex items-center ${themeStyles.textLink} hover:underline ml-1`}>
           Sign Up
         </Link>
       </div>

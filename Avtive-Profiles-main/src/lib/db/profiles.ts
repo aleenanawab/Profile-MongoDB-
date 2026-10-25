@@ -11,6 +11,7 @@ import {
 import { getMongoDb, COLLECTIONS } from './client';
 import { lazyEnsureIndexes } from './indexes';
 import { slugify } from '../validation';
+import { deleteFromCloudinary } from '@/lib/storage';
 
 export function mapDocToProfileData(doc: any): ProfileData {
   const id = String(doc._id || doc.id);
@@ -329,12 +330,43 @@ export async function updateProfile(
   delete (safeUpdates as any).id;
   delete (safeUpdates as any).userId; // Prevent transferring ownership via update
 
-  // Never overwrite an existing saved image with an empty or missing value
-  if (!safeUpdates.avatar && (existing.avatar || (existing as any).logoUrl)) {
+  // Never save a blob: URL under any circumstances
+  if (typeof safeUpdates.avatar === 'string' && safeUpdates.avatar.startsWith('blob:')) {
+    delete safeUpdates.avatar;
+  }
+  if (typeof safeUpdates.coverImage === 'string' && safeUpdates.coverImage.startsWith('blob:')) {
+    delete safeUpdates.coverImage;
+  }
+
+  // An unrelated profile edit (where avatar/coverImage are undefined) must never erase existing images
+  if (safeUpdates.avatar === undefined && (existing.avatar || (existing as any).logoUrl)) {
     safeUpdates.avatar = existing.avatar || (existing as any).logoUrl;
   }
-  if (!safeUpdates.coverImage && (existing.coverImage || (existing as any).coverUrl)) {
+  if (safeUpdates.coverImage === undefined && (existing.coverImage || (existing as any).coverUrl)) {
     safeUpdates.coverImage = existing.coverImage || (existing as any).coverUrl;
+  }
+
+  // Track old Cloudinary public IDs for safe post-save cleanup
+  const oldAvatarPublicId = (
+    safeUpdates.avatar !== undefined &&
+    safeUpdates.avatar !== existing.avatar &&
+    (existing as any).avatarPublicId
+  ) ? (existing as any).avatarPublicId : null;
+
+  const oldCoverPublicId = (
+    safeUpdates.coverImage !== undefined &&
+    safeUpdates.coverImage !== existing.coverImage &&
+    (existing as any).coverImagePublicId
+  ) ? (existing as any).coverImagePublicId : null;
+
+  // If explicitly cleared/removed, also clear the publicId
+  if (safeUpdates.avatar === '' || safeUpdates.avatar === null) {
+    safeUpdates.avatar = '';
+    (safeUpdates as any).avatarPublicId = '';
+  }
+  if (safeUpdates.coverImage === '' || safeUpdates.coverImage === null) {
+    safeUpdates.coverImage = '';
+    (safeUpdates as any).coverImagePublicId = '';
   }
 
   const res = await profilesCol.findOneAndUpdate(
@@ -345,6 +377,14 @@ export async function updateProfile(
 
   if (!res) {
     return { success: false, error: 'Failed to update profile.', status: 500 };
+  }
+
+  // Delete old files from storage ONLY after the new profile document is safely saved
+  if (oldAvatarPublicId) {
+    deleteFromCloudinary(oldAvatarPublicId).catch((err) => console.warn('Failed to delete old avatar:', err));
+  }
+  if (oldCoverPublicId) {
+    deleteFromCloudinary(oldCoverPublicId).catch((err) => console.warn('Failed to delete old cover:', err));
   }
 
   return { success: true, profile: mapDocToProfileData(res), status: 200 };

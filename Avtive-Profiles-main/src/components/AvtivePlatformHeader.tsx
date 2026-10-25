@@ -66,13 +66,13 @@ export function AvtivePlatformHeader() {
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
   return (
-    <header className="sticky top-0 z-50 w-full transition-colors duration-200 border-b bg-white/95 text-slate-900 border-slate-200 shadow-xs dark:bg-[#0B0D13]/95 dark:text-white dark:border-white/10 dark:shadow-none backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full transition-colors duration-200 border-b bg-white/95 text-slate-900 border-slate-200 shadow-xs dark:bg-[#0B0D13]/95 dark:text-white dark:border-white/10 dark:shadow-none backdrop-blur-md pt-[max(0rem,env(safe-area-inset-top))]">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex items-center justify-between gap-3">
         
         {/* Left Section: Brand Logo */}
         <Link 
           href="/" 
-          className="flex items-center gap-2.5 sm:gap-3 shrink-0 group hover:opacity-95 transition-opacity"
+          className="min-h-[44px] flex items-center gap-2.5 sm:gap-3 shrink-0 group hover:opacity-95 transition-opacity"
           aria-label="Avtive Home"
         >
           {/* Stylized Circle "A" Icon */}
@@ -95,38 +95,38 @@ export function AvtivePlatformHeader() {
                   {primarySlug && (
                     <Link
                       href={`/profile/${encodeURIComponent(primarySlug)}?edit=true`}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                      className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
                         pathname?.includes('/edit') || (typeof window !== 'undefined' && window.location.search.includes('edit=true'))
                           ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-slate-900 dark:border-white'
                           : 'bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15'
                       }`}
                       title="Open Profile Editor"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-4 h-4" />
                       <span className="hidden sm:inline">Edit Profile</span>
                     </Link>
                   )}
 
                   <Link
                     href="/dashboard"
-                    className={`hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                    className={`hidden md:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
                       pathname === '/dashboard'
                         ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-slate-900 dark:border-white'
                         : 'bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15'
                     }`}
                     title="Workspaces Dashboard"
                   >
-                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <LayoutGrid className="w-4 h-4" />
                     <span>Profiles</span>
                   </Link>
 
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 border border-transparent transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-full text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30 border border-transparent transition-all cursor-pointer"
                     title="Sign Out"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="w-4 h-4" />
                     <span className="hidden sm:inline">Logout</span>
                   </button>
                 </div>
@@ -136,10 +136,10 @@ export function AvtivePlatformHeader() {
                   {pathname !== '/login' && (
                     <Link
                       href="/login"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15"
+                      className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15"
                       title="Log In to your existing account"
                     >
-                      <LogIn className="w-3.5 h-3.5" />
+                      <LogIn className="w-4 h-4" />
                       <span>Log In</span>
                     </Link>
                   )}
@@ -147,10 +147,10 @@ export function AvtivePlatformHeader() {
                   {pathname !== '/register' && (
                     <Link
                       href="/register"
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-all cursor-pointer shadow-2xs"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold bg-slate-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-all cursor-pointer shadow-2xs"
                       title="Create a new account"
                     >
-                      <UserPlus className="w-3.5 h-3.5" />
+                      <UserPlus className="w-4 h-4" />
                       <span>Sign Up</span>
                     </Link>
                   )}
@@ -165,17 +165,17 @@ export function AvtivePlatformHeader() {
             onClick={toggleDarkMode}
             aria-label="Toggle Light / Dark Mode"
             title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15 active:scale-95"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] min-w-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15 active:scale-95"
           >
             {isDark ? (
               <>
-                <Sun className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                <span className="hidden sm:inline text-[11px] font-medium">Light</span>
+                <Sun className="w-4 h-4 text-amber-400 fill-amber-400" />
+                <span className="hidden sm:inline text-xs font-medium">Light</span>
               </>
             ) : (
               <>
-                <Moon className="w-3.5 h-3.5 text-slate-700 fill-slate-700" />
-                <span className="hidden sm:inline text-[11px] font-medium">Dark</span>
+                <Moon className="w-4 h-4 text-slate-700 fill-slate-700" />
+                <span className="hidden sm:inline text-xs font-medium">Dark</span>
               </>
             )}
           </button>

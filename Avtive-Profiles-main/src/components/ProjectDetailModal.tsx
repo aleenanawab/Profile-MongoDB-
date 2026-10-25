@@ -16,7 +16,7 @@ export function ProjectDetailModal({ isOpen, onClose, project, profile }: Projec
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 text-left overflow-y-auto">
-      <div className={`relative w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-[32px] ${theme.cardBg} border ${theme.cardBorder} shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 transition-colors`}>
+      <div className={`relative w-full max-w-lg max-h-[85dvh] overflow-y-auto rounded-[32px] ${theme.cardBg} border ${theme.cardBorder} shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5 transition-colors`}>
         <div className="flex items-center justify-between">
           <span className={`px-3 py-1 rounded-full text-xs font-bold ${theme.badgeBg} ${theme.badgeText} border ${theme.subCardBorder} font-mono`}>
             {project.category}
@@ -24,7 +24,8 @@ export function ProjectDetailModal({ isOpen, onClose, project, profile }: Projec
 
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-full ${theme.textMuted} hover:${theme.textPrimary} ${theme.subCardBg} transition-colors`}
+            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${theme.textMuted} hover:${theme.textPrimary} ${theme.subCardBg} transition-colors flex items-center justify-center cursor-pointer`}
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -100,7 +101,7 @@ export function ProjectDetailModal({ isOpen, onClose, project, profile }: Projec
                 href={project.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95`}
+                className={`w-full min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs shadow-xs transition-all active:scale-95`}
               >
                 <span>Visit Live Platform</span>
                 <ExternalLink className="w-4 h-4" />

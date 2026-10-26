@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ProfileData, 
@@ -707,7 +707,9 @@ function PublicProfileClientInner({
     isSaving,
     saveProfile,
     handleSwitchToProfile,
-    flushAutosave
+    flushAutosave,
+    isUploadingAvatar,
+    isUploadingCover
   } = useProfileEditor();
 
   const [currentDraft, setCurrentDraft] = useState<ProfileData>(profile);
@@ -750,20 +752,49 @@ function PublicProfileClientInner({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isEditing]);
 
+  // Mobile best-effort flush on page hidden or mobile app backgrounding
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && isEditing) {
+        if (isProfileDirty(currentDraft, profile)) {
+          saveProfile(currentDraft).catch(() => {});
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handleVisibilityChange);
+    };
+  }, [isEditing, currentDraft, profile, saveProfile]);
+
   const handleSaveAndExit = async () => {
     try {
-      if (flushAutosave) {
-        await flushAutosave();
-      } else {
-        await handleSaveEdits(currentDraft);
+      if (isUploadingAvatar || isUploadingCover) {
+        showToast('Please wait for image upload to complete before saving.');
+        return;
       }
+
+      // Use the single authoritative save pipeline with the exact latest card draft
+      const result = await saveProfile(currentDraft);
+      if (!result.ok) {
+        showToast(result.error || 'Failed to save changes. Please try again.');
+        return; // Stay in edit mode, keep all unsaved changes
+      }
+
+      const freshProfile = result.profile || currentDraft;
+      setProfile(freshProfile);
+      setCurrentDraft(freshProfile);
       setIsEditing(false);
-      const slug = profile.slug || profile.id || initialProfile.slug || initialProfile.id;
-      if (slug && typeof window !== 'undefined') {
-        window.history.pushState(null, '', `/profile/${encodeURIComponent(slug)}`);
+      const targetSlug = freshProfile.slug || freshProfile.id || initialProfile.slug || initialProfile.id;
+      if (targetSlug && typeof window !== 'undefined') {
+        window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
       }
+      showToast('Profile saved successfully!');
     } catch (err: any) {
       console.error('Update profile error:', err);
+      showToast(err?.message || 'Failed to save changes.');
     }
   };
 
@@ -778,6 +809,14 @@ function PublicProfileClientInner({
     }
     router.refresh();
   };
+
+  const cardProfile = useMemo(() => ({
+    ...profile,
+    sectionVisibility: liveProfile.sectionVisibility || profile.sectionVisibility,
+    sharingSettings: liveProfile.sharingSettings || profile.sharingSettings,
+    type: profileType,
+    theme: activeTheme
+  }), [profile, liveProfile.sectionVisibility, liveProfile.sharingSettings, profileType, activeTheme]);
 
   const desktopView = (
     <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 overflow-hidden relative">
@@ -894,7 +933,7 @@ function PublicProfileClientInner({
         >
           <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} shadow-none sm:shadow-xl overflow-hidden relative`}>
             <AvtiveDigitalCard
-              profile={{ ...profile, type: profileType, theme: activeTheme }}
+              profile={cardProfile}
               canEdit={isOwner}
               isEditing={isEditing}
               isConnected={false}
@@ -955,11 +994,11 @@ function PublicProfileClientInner({
             </button>
             <button
               type="button"
-              disabled={isSaving}
+              disabled={isSaving || isUploadingAvatar || isUploadingCover}
               onClick={handleSaveAndExit}
               className="px-3 py-1 text-xs font-semibold rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
             >
-              {isSaving ? 'Saving...' : 'Done'}
+              {isSaving ? 'Saving...' : (isUploadingAvatar || isUploadingCover) ? 'Uploading...' : 'Done'}
             </button>
           </div>
         </div>
@@ -987,7 +1026,7 @@ function PublicProfileClientInner({
           className="h-full min-h-0 overflow-y-auto overscroll-contain transition-all duration-300 w-full flex-1"
         >
           <AvtiveDigitalCard
-            profile={{ ...profile, type: profileType, theme: activeTheme }}
+            profile={cardProfile}
             canEdit={isOwner}
             isEditing={isEditing}
             isConnected={false}

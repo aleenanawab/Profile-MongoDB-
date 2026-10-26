@@ -90,7 +90,11 @@ function extractSkills(p: ProfileData): string[] {
   return [];
 }
 
-// ─── Context Shape ────────────────────────────────────────────────────────────
+export interface SaveProfileResult {
+  ok: boolean;
+  profile?: ProfileData;
+  error?: string;
+}
 
 export interface ProfileEditorContextValue {
   // Core profile object (DB baseline — updated after save/switch)
@@ -195,7 +199,7 @@ export interface ProfileEditorContextValue {
   setActiveSectionTarget: (target: { sectionKey: string; fieldKey?: string; timestamp: number } | null) => void;
   updateField: <K extends keyof ProfileData>(key: K, value: ProfileData[K]) => void;
   updateProfilePartial: (partial: Partial<ProfileData>) => void;
-  saveProfile: (overrideData?: Partial<ProfileData>) => Promise<boolean>;
+  saveProfile: (overrideData?: Partial<ProfileData>) => Promise<SaveProfileResult>;
   toastMessage: string | null;
   showToast: (msg: string) => void;
   isDark: boolean;
@@ -205,8 +209,8 @@ export interface ProfileEditorContextValue {
   handleSwitchPersona: (newProf: ProfileData) => void;
   autosaveStatus: 'idle' | 'saving' | 'saved' | 'error';
   autosaveStatusText: string;
-  flushAutosave: () => Promise<boolean>;
-  retryAutosave: () => Promise<boolean>;
+  flushAutosave: (currentDraftOverride?: Partial<ProfileData>) => Promise<SaveProfileResult>;
+  retryAutosave: () => Promise<SaveProfileResult>;
   canonicalSectionOrder: string[];
   expandedSections: Record<string, boolean>;
   setExpandedSections: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
@@ -251,7 +255,7 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   isDark: true,
   setIsDark: () => {},
   currentIdentifier: 'default',
-  saveProfile: async () => false,
+  saveProfile: async () => ({ ok: false, error: 'Context uninitialized' }),
   updateField: () => {},
   updateProfilePartial: () => {},
   toastMessage: null,
@@ -262,8 +266,8 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   toggleAllSections: () => {},
   autosaveStatus: 'idle',
   autosaveStatusText: '',
-  flushAutosave: async () => false,
-  retryAutosave: async () => false,
+  flushAutosave: async () => ({ ok: true }),
+  retryAutosave: async () => ({ ok: false, error: 'Context uninitialized' }),
   canonicalSectionOrder: [],
   username: '',
   setUsername: () => {},
@@ -423,8 +427,12 @@ export function ProfileEditorProvider({
   const isSavingInProgressRef = React.useRef<boolean>(false);
   const pendingTrailingSaveOverrideRef = React.useRef<Partial<ProfileData> | null>(null);
   const hasPendingTrailingSaveRef = React.useRef<boolean>(false);
+  const trailingDeferredsRef = React.useRef<{
+    resolve: (res: SaveProfileResult) => void;
+    reject: (err: any) => void;
+  }[]>([]);
   const isUserInitiatedChangeRef = React.useRef<boolean>(false);
-  const saveProfileRef = React.useRef<((override?: Partial<ProfileData>) => Promise<boolean>) | null>(null);
+  const saveProfileRef = React.useRef<((override?: Partial<ProfileData>) => Promise<SaveProfileResult>) | null>(null);
 
   // ── Theme ─────────────────────────────────────────────────────────────────
   const [activeTheme, setActiveTheme] = useState<ProfileTheme>(
@@ -717,8 +725,8 @@ export function ProfileEditorProvider({
 
       if (saveProfileRef.current) {
         const saved = await saveProfileRef.current({ coverImage: url });
-        if (!saved) {
-          throw new Error('Failed to save cover banner to database.');
+        if (!saved || !saved.ok) {
+          throw new Error(saved?.error || 'Failed to save cover banner to database.');
         }
       }
       showToast('✓ Cover banner updated and saved!');
@@ -751,8 +759,8 @@ export function ProfileEditorProvider({
 
       if (saveProfileRef.current) {
         const saved = await saveProfileRef.current({ avatar: url });
-        if (!saved) {
-          throw new Error('Failed to save profile photo to database.');
+        if (!saved || !saved.ok) {
+          throw new Error(saved?.error || 'Failed to save profile photo to database.');
         }
       }
       showToast('✓ Profile photo updated and saved!');
@@ -881,7 +889,7 @@ export function ProfileEditorProvider({
     (sectionId: string, makeVisible: boolean) => {
       isUserInitiatedChangeRef.current = true;
       const canonical = normalizeSectionKey(sectionId);
-      const current = sectionVisibility[canonical] !== false && sectionVisibility[sectionId] !== false;
+      const current = isCanonicalSectionVisible(sectionVisibility, sharingSettings, sectionId);
       if (current !== makeVisible) {
         handleToggleSectionVisibility(sectionId);
       }
@@ -890,7 +898,7 @@ export function ProfileEditorProvider({
         return [...without, sectionId];
       });
     },
-    [handleToggleSectionVisibility, sectionVisibility]
+    [handleToggleSectionVisibility, sectionVisibility, sharingSettings]
   );
 
   const toggleVisibilityField = useCallback((field: keyof SharingSettings) => {
@@ -1018,8 +1026,8 @@ export function ProfileEditorProvider({
   }, []);
 
   // ── Centralized Save Profile with Sequence Counter & Concurrency Guard ──
-  const saveProfile = useCallback(async (overrideData?: Partial<ProfileData>): Promise<boolean> => {
-    // 1. Guard against concurrent in-flight saves: coalesce into one trailing save
+  const saveProfile = useCallback(async (overrideData?: Partial<ProfileData>): Promise<SaveProfileResult> => {
+    // 1. Guard against concurrent in-flight saves: coalesce into one trailing save and return deferred Promise
     if (isSavingInProgressRef.current) {
       hasPendingTrailingSaveRef.current = true;
       if (overrideData) {
@@ -1028,7 +1036,9 @@ export function ProfileEditorProvider({
           ...overrideData,
         };
       }
-      return true;
+      return new Promise<SaveProfileResult>((resolve, reject) => {
+        trailingDeferredsRef.current.push({ resolve, reject });
+      });
     }
 
     const hasAvatarOverride = Boolean(overrideData && 'avatar' in overrideData);
@@ -1037,7 +1047,7 @@ export function ProfileEditorProvider({
       const message = 'Please wait for the image upload to finish before saving.';
       setStatusMessage({ type: 'error', text: message });
       showToast(message);
-      return false;
+      return { ok: false, error: message };
     }
 
     const dataToSave: ProfileData = {
@@ -1047,11 +1057,11 @@ export function ProfileEditorProvider({
     };
 
     // 2. Deep normalized dirty-check: no-op if nothing changed
-    if (!overrideData && !isProfileDirty(dataToSave, lastSavedProfileRef.current)) {
+    if (!isProfileDirty(dataToSave, lastSavedProfileRef.current)) {
       isUserInitiatedChangeRef.current = false;
       setAutosaveStatus('saved');
       setAutosaveStatusText('Saved');
-      return true;
+      return { ok: true, profile: lastSavedProfileRef.current };
     }
 
     isSavingInProgressRef.current = true;
@@ -1060,6 +1070,8 @@ export function ProfileEditorProvider({
     setAutosaveStatus('saving');
     setAutosaveStatusText('Saving…');
     setStatusMessage(null);
+
+    let executionResult: SaveProfileResult = { ok: false, error: 'Save failed' };
 
     try {
       // Guard: Never erase existing permanent images if override or state has empty string
@@ -1106,7 +1118,8 @@ export function ProfileEditorProvider({
 
       // Discard stale response if newer request was dispatched
       if (thisRequestId < latestDispatchedRef.current) {
-        return true;
+        executionResult = { ok: true, profile: lastSavedProfileRef.current };
+        return executionResult;
       }
       latestDispatchedRef.current = thisRequestId;
 
@@ -1122,7 +1135,8 @@ export function ProfileEditorProvider({
         setStatusMessage({ type: 'error', text: errorMsg });
         showToast(errorMsg);
         setIsSaving(false);
-        return false;
+        executionResult = { ok: false, error: errorMsg };
+        return executionResult;
       }
 
       const savedSlug =
@@ -1172,19 +1186,22 @@ export function ProfileEditorProvider({
         setStatusMessage((prev) => (prev?.type === 'success' ? null : prev));
       }, 3500);
 
-      return true;
+      executionResult = { ok: true, profile: finalProfile };
+      return executionResult;
     } catch (err: unknown) {
       if (thisRequestId < latestDispatchedRef.current) {
-        return false;
+        executionResult = { ok: true, profile: lastSavedProfileRef.current };
+        return executionResult;
       }
       latestDispatchedRef.current = thisRequestId;
       console.error('Save profile error:', err);
-      const networkErr = 'Unable to save — changes retained locally';
+      const networkErr = err instanceof Error ? err.message : 'Unable to save — changes retained locally';
       setAutosaveStatus('error');
       setAutosaveStatusText(networkErr);
       setStatusMessage({ type: 'error', text: networkErr });
       showToast(networkErr);
-      return false;
+      executionResult = { ok: false, error: networkErr };
+      return executionResult;
     } finally {
       isSavingInProgressRef.current = false;
       setIsSaving(false);
@@ -1193,9 +1210,24 @@ export function ProfileEditorProvider({
         hasPendingTrailingSaveRef.current = false;
         const trailingOverride = pendingTrailingSaveOverrideRef.current;
         pendingTrailingSaveOverrideRef.current = null;
+        const deferreds = [...trailingDeferredsRef.current];
+        trailingDeferredsRef.current = [];
+
         if (saveProfileRef.current) {
-          saveProfileRef.current(trailingOverride || undefined);
+          saveProfileRef.current(trailingOverride || undefined)
+            .then((res) => {
+              deferreds.forEach((d) => d.resolve(res));
+            })
+            .catch((err) => {
+              deferreds.forEach((d) => d.resolve({ ok: false, error: err?.message || 'Trailing save failed' }));
+            });
+        } else {
+          deferreds.forEach((d) => d.resolve(executionResult));
         }
+      } else {
+        const deferreds = [...trailingDeferredsRef.current];
+        trailingDeferredsRef.current = [];
+        deferreds.forEach((d) => d.resolve(executionResult));
       }
     }
   }, [profile, liveProfile, initialProfile, showToast, onSaveSuccess, isUploadingAvatar, isUploadingCover]);
@@ -1206,18 +1238,15 @@ export function ProfileEditorProvider({
   }, [saveProfile]);
 
   // Flush pending autosave immediately
-  const flushAutosave = useCallback(async (): Promise<boolean> => {
+  const flushAutosave = useCallback(async (currentDraftOverride?: Partial<ProfileData>): Promise<SaveProfileResult> => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
-    if (isUserInitiatedChangeRef.current && isProfileDirty(liveProfile, lastSavedProfileRef.current)) {
-      return await saveProfile();
-    }
-    return true;
-  }, [liveProfile, saveProfile]);
+    return await saveProfile(currentDraftOverride);
+  }, [saveProfile]);
 
-  const retryAutosave = useCallback(async (): Promise<boolean> => {
+  const retryAutosave = useCallback(async (): Promise<SaveProfileResult> => {
     return await saveProfile();
   }, [saveProfile]);
 

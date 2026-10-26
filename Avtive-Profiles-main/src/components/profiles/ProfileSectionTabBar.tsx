@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ProfileData, normalizeProfileType } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/themeStyles';
+import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
 
 export interface ProfileSectionTabBarProps {
   profile: ProfileData;
@@ -56,19 +57,19 @@ export function ProfileSectionTabBar({
 
   const isCompany = normalizeProfileType(profile.type) === 'team';
 
-  // Build the list of sections based on profile type and content availability
+  // Build the list of sections based on profile type and content availability, ordered canonically
   const sections = useMemo<SectionTabItem[]>(() => {
     const sharing = profile.sharingSettings || {};
     const visibility = profile.sectionVisibility || {};
 
     const isVisible = (key: string): boolean => {
       if (isEditing || canEdit) return true;
+      const canonicalKey = normalizeSectionKey(key);
+      if (typeof visibility[canonicalKey] === 'boolean') return visibility[canonicalKey];
       if (typeof visibility[key] === 'boolean') return visibility[key];
-      switch (key) {
-        case 'company':
+      switch (canonicalKey) {
         case 'companyInfo':
         case 'teamMembers': return sharing.companySection !== false;
-        case 'about':
         case 'personalDetails': return sharing.bio !== false;
         case 'skills': return sharing.skills !== false || sharing.services !== false;
         case 'experience': return sharing.experience !== false;
@@ -83,8 +84,10 @@ export function ProfileSectionTabBar({
       }
     };
 
+    let baseTabs: SectionTabItem[] = [];
+
     if (isCompany) {
-      const companyTabs: SectionTabItem[] = [
+      baseTabs = [
         { key: 'profile', label: 'Overview', icon: Building2 },
         { key: 'teamMembers', label: 'Team', icon: Users },
         { key: 'skills', label: 'Services', icon: Code },
@@ -93,32 +96,38 @@ export function ProfileSectionTabBar({
         { key: 'socialLinks', label: 'Socials', icon: Link2 },
       ];
       if ((profile.customFields && profile.customFields.length > 0) || isEditing) {
-        companyTabs.push({ key: 'customFields', label: 'Highlights', icon: Tag });
+        baseTabs.push({ key: 'customFields', label: 'Highlights', icon: Tag });
       }
-      companyTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
-      return companyTabs.filter(t => isVisible(t.key));
+      baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
+    } else {
+      baseTabs = [
+        { key: 'profile', label: 'Profile', icon: User },
+        { key: 'personalDetails', label: 'About', icon: FileText },
+        { key: 'skills', label: 'Skills', icon: Code },
+        { key: 'experience', label: 'Experience', icon: Briefcase },
+        { key: 'projects', label: 'Projects', icon: FolderGit2 },
+        { key: 'education', label: 'Education', icon: GraduationCap },
+        { key: 'certifications', label: 'Certificates', icon: Award },
+        { key: 'languages', label: 'Languages', icon: Globe },
+        { key: 'contactInfo', label: 'Contact', icon: Phone },
+        { key: 'socialLinks', label: 'Socials', icon: Link2 },
+      ];
+      if ((profile.customFields && profile.customFields.length > 0) || isEditing) {
+        baseTabs.push({ key: 'customFields', label: 'Custom', icon: Tag });
+      }
+      baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
     }
 
-    // Individual Profile Tabs
-    const individualTabs: SectionTabItem[] = [
-      { key: 'profile', label: 'Profile', icon: User },
-      { key: 'personalDetails', label: 'About', icon: FileText },
-      { key: 'skills', label: 'Skills', icon: Code },
-      { key: 'experience', label: 'Experience', icon: Briefcase },
-      { key: 'projects', label: 'Projects', icon: FolderGit2 },
-      { key: 'education', label: 'Education', icon: GraduationCap },
-      { key: 'certifications', label: 'Certificates', icon: Award },
-      { key: 'languages', label: 'Languages', icon: Globe },
-      { key: 'contactInfo', label: 'Contact', icon: Phone },
-      { key: 'socialLinks', label: 'Socials', icon: Link2 },
-    ];
+    const availableTabs = baseTabs.filter(t => isVisible(t.key));
+    const canonicalOrder = getCanonicalSectionOrder(profile.sectionOrder, profile.type);
 
-    if ((profile.customFields && profile.customFields.length > 0) || isEditing) {
-      individualTabs.push({ key: 'customFields', label: 'Custom', icon: Tag });
-    }
-    individualTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
-
-    return individualTabs.filter(t => isVisible(t.key));
+    return [...availableTabs].sort((a, b) => {
+      if (a.key === 'profile') return -1;
+      if (b.key === 'profile') return 1;
+      const idxA = canonicalOrder.indexOf(normalizeSectionKey(a.key));
+      const idxB = canonicalOrder.indexOf(normalizeSectionKey(b.key));
+      return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+    });
   }, [profile, isCompany, isEditing, canEdit]);
 
   // Check scroll container overflow to toggle scroll arrows
@@ -143,13 +152,18 @@ export function ProfileSectionTabBar({
     };
   }, [sections]);
 
-  // Auto-scroll active tab into view in tab bar when activeSection changes
+  // Keep active tab in view inside the scroll container without scrolling the window
   useEffect(() => {
     if (activeTabRef.current && scrollContainerRef.current) {
-      activeTabRef.current.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest'
+      const container = scrollContainerRef.current;
+      const tab = activeTabRef.current;
+      const tabLeft = tab.offsetLeft;
+      const tabWidth = tab.offsetWidth;
+      const containerWidth = container.offsetWidth;
+      const targetScroll = tabLeft - (containerWidth / 2) + (tabWidth / 2);
+      container.scrollTo({
+        left: Math.max(0, targetScroll),
+        behavior: 'smooth'
       });
     }
   }, [activeSection]);
@@ -180,49 +194,19 @@ export function ProfileSectionTabBar({
     return false;
   };
 
-  const currentActiveItem = sections.find(s => isCurrentActive(s.key)) || sections[0];
-
   return (
     <nav 
       aria-label="Profile Section Navigation" 
       className={`relative w-full max-w-full overflow-hidden box-border ${theme.headerBg} border-b ${theme.divider} transition-colors select-none ${className}`}
     >
-      {/* Mobile & Tablet Section Navigation Dropdown (< lg / 320px - 1023px) */}
-      <div className="lg:hidden w-full px-3 py-2 box-border">
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
-            {(() => {
-              const CurrentIcon = currentActiveItem?.icon || Sparkles;
-              return <CurrentIcon className="w-4 h-4 shrink-0" />;
-            })()}
-          </div>
-          <select
-            value={currentActiveItem?.key || sections[0]?.key}
-            onChange={(e) => onSelectSection(e.target.value)}
-            aria-label="Select profile section"
-            className={`w-full min-h-[44px] pl-10 pr-10 py-2.5 rounded-xl text-base font-semibold border ${theme.divider} bg-white dark:bg-[#18181B] text-slate-900 dark:text-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-white/20 transition-all box-border`}
-          >
-            {sections.map((sec) => (
-              <option key={sec.key} value={sec.key} className="bg-white dark:bg-[#18181B] text-slate-900 dark:text-white py-1">
-                {sec.label}
-              </option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
-            <ChevronDown className="w-4 h-4 shrink-0" />
-          </div>
-        </div>
-      </div>
-
-      {/* Desktop Horizontal Scrollable Tab Rail (>= lg / 1024px+) */}
-      <div className="hidden lg:flex w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 relative items-center min-w-0 box-border">
+      <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 relative flex items-center min-w-0 box-border">
         {/* Left Scroll Arrow */}
         {showLeftArrow && (
           <button
             type="button"
             onClick={handleScrollLeft}
             aria-label="Scroll sections left"
-            className="flex absolute left-1 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/90 dark:bg-black/90 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="flex absolute left-1 z-20 w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full bg-white/95 dark:bg-black/95 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -245,13 +229,13 @@ export function ProfileSectionTabBar({
                 type="button"
                 onClick={() => onSelectSection(item.key)}
                 aria-current={active ? 'page' : undefined}
-                className={`shrink-0 min-h-[44px] flex items-center gap-2 px-3.5 py-2.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${
+                className={`shrink-0 min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${
                   active
                     ? `${theme.btnPrimary} shadow-xs font-bold scale-[1.02]`
                     : `${theme.textSecondary} hover:${theme.textPrimary} hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent`
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${active ? 'opacity-100' : 'opacity-70'}`} />
+                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${active ? 'opacity-100' : 'opacity-70'}`} />
                 <span className="whitespace-nowrap">{item.label}</span>
               </button>
             );
@@ -264,7 +248,7 @@ export function ProfileSectionTabBar({
             type="button"
             onClick={handleScrollRight}
             aria-label="Scroll sections right"
-            className="flex absolute right-1 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/90 dark:bg-black/90 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="flex absolute right-1 z-20 w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full bg-white/95 dark:bg-black/95 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

@@ -695,7 +695,8 @@ function PublicProfileClientInner({
     setActiveSection,
     isSaving,
     saveProfile,
-    handleSwitchToProfile
+    handleSwitchToProfile,
+    flushAutosave
   } = useProfileEditor();
 
   const [currentDraft, setCurrentDraft] = useState<ProfileData>(profile);
@@ -740,7 +741,16 @@ function PublicProfileClientInner({
 
   const handleSaveAndExit = async () => {
     try {
-      await handleSaveEdits(currentDraft);
+      if (flushAutosave) {
+        await flushAutosave();
+      } else {
+        await handleSaveEdits(currentDraft);
+      }
+      setIsEditing(false);
+      const slug = profile.slug || profile.id || initialProfile.slug || initialProfile.id;
+      if (slug && typeof window !== 'undefined') {
+        window.history.pushState(null, '', `/profile/${encodeURIComponent(slug)}`);
+      }
     } catch (err: any) {
       console.error('Update profile error:', err);
     }
@@ -938,7 +948,7 @@ function PublicProfileClientInner({
               onClick={handleSaveAndExit}
               className="px-3 py-1 text-xs font-semibold rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
             >
-              {isSaving ? 'Saving...' : 'Save & Done'}
+              {isSaving ? 'Saving...' : 'Done'}
             </button>
           </div>
         </div>

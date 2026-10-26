@@ -80,15 +80,21 @@ export function CertificationsSection({
       credentialId: '',
       url: ''
     };
-    setCertsDraft((prev) => [newCert, ...prev]);
+    const next = [newCert, ...certsDraft];
+    setCertsDraft(next);
+    onUpdateField?.('certifications', next);
   };
 
   const handleUpdateItem = (id: string, updates: Partial<CertificationItem>) => {
-    setCertsDraft((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    const next = certsDraft.map((c) => (c.id === id ? { ...c, ...updates } : c));
+    setCertsDraft(next);
+    onUpdateField?.('certifications', next);
   };
 
   const handleRemoveItem = (id: string) => {
-    setCertsDraft((prev) => prev.filter((c) => c.id !== id));
+    const next = certsDraft.filter((c) => c.id !== id);
+    setCertsDraft(next);
+    onUpdateField?.('certifications', next);
   };
 
   return (

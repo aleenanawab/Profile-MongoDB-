@@ -483,6 +483,10 @@ export function SlidingEditorPanel({
     handleProfileSectionLiveUpdate,
     handleProfileSectionSaveSuccess,
     liveProfile,
+    flushAutosave,
+    autosaveStatus,
+    autosaveStatusText,
+    retryAutosave,
   } = useProfileEditor();
 
   // 2. Skills (panel-only input state)
@@ -962,7 +966,7 @@ export function SlidingEditorPanel({
                           type="submit"
                           className="figma-pill-primary px-3 py-1 text-xs font-bold cursor-pointer"
                         >
-                          Save Project
+                          Add Project
                         </button>
                       </div>
                     </form>
@@ -1432,34 +1436,42 @@ export function SlidingEditorPanel({
           </div>
 
           {/* Sticky Action Footer */}
-          {/* Sticky Action Footer */}
           <div className="shrink-0 border-t border-slate-200/80 dark:border-white/10 bg-white/70 dark:bg-[#111319]/70 backdrop-blur-md z-20">
-            {/* Inline confirmation checkbox */}
-            <div className="px-3.5 sm:px-4 py-2.5 border-b border-slate-200/50 dark:border-white/5 bg-slate-50/70 dark:bg-black/30">
-              <label htmlFor="sliding-editor-confirm" className="flex items-center gap-2.5 cursor-pointer select-none group">
-                <input
-                  type="checkbox"
-                  id="sliding-editor-confirm"
-                  checked={isConfirmed}
-                  onChange={(e) => setIsConfirmed(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600 shrink-0"
-                />
-                <span className="text-[11px] font-medium text-slate-700 dark:text-white/80 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  I confirm that all profile changes are accurate and ready to save.
-                </span>
-              </label>
-            </div>
-
             <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={onClose}
                 className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
               >
-                Collapse
+                Close
               </button>
 
               <div className="flex items-center gap-2">
+                {/* Autosave Status */}
+                <div className="text-xs font-medium px-2 py-1">
+                  {autosaveStatus === 'saving' && (
+                    <span className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving…</span>
+                    </span>
+                  )}
+                  {autosaveStatus === 'saved' && (
+                    <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Saved</span>
+                    </span>
+                  )}
+                  {autosaveStatus === 'error' && (
+                    <button
+                      type="button"
+                      onClick={retryAutosave}
+                      className="text-rose-500 text-xs underline cursor-pointer"
+                    >
+                      Unable to save (Retry)
+                    </button>
+                  )}
+                </div>
+
                 <Link
                   href={`/profile/${profile.slug || profile.id || initialProfile.slug || initialProfile.id}`}
                   target="_blank"
@@ -1473,21 +1485,14 @@ export function SlidingEditorPanel({
 
                 <button
                   type="button"
-                  onClick={handleSaveChanges}
-                  disabled={isSaving || !isConfirmed}
-                  className="figma-pill-primary py-2 px-5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md transition-all"
+                  onClick={async () => {
+                    await flushAutosave();
+                    onClose();
+                  }}
+                  className="figma-pill-primary py-2 px-5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
                 >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Save Changes</span>
-                    </>
-                  )}
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Done</span>
                 </button>
               </div>
             </div>

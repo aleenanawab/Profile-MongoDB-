@@ -73,20 +73,26 @@ export function EducationSection({
   const handleAddEducation = () => {
     const newEdu: EducationItem = {
       id: `edu-${Date.now()}`,
-      degree: 'Degree / Program',
-      institution: 'University / Institution',
-      period: '2019 - 2023',
+      degree: '',
+      institution: '',
+      period: '',
       description: ''
     };
-    setEducationDraft((prev) => [newEdu, ...prev]);
+    const next = [newEdu, ...educationDraft];
+    setEducationDraft(next);
+    onUpdateField?.('education', next);
   };
 
   const handleUpdateItem = (id: string, updates: Partial<EducationItem>) => {
-    setEducationDraft((prev) => prev.map((edu) => (edu.id === id ? { ...edu, ...updates } : edu)));
+    const next = educationDraft.map((edu) => (edu.id === id ? { ...edu, ...updates } : edu));
+    setEducationDraft(next);
+    onUpdateField?.('education', next);
   };
 
   const handleRemoveItem = (id: string) => {
-    setEducationDraft((prev) => prev.filter((edu) => edu.id !== id));
+    const next = educationDraft.filter((edu) => edu.id !== id);
+    setEducationDraft(next);
+    onUpdateField?.('education', next);
   };
 
   return (

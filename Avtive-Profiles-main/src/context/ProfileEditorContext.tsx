@@ -37,6 +37,8 @@ import {
 } from '@/types/profile';
 import { ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
+import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
+
 
 // ─── DraggableLinkItem ────────────────────────────────────────────────────────
 
@@ -193,6 +195,11 @@ export interface ProfileEditorContextValue {
   userProfiles?: ProfileData[];
   currentIdentifier: string;
   handleSwitchPersona: (newProf: ProfileData) => void;
+  autosaveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  autosaveStatusText: string;
+  flushAutosave: () => Promise<boolean>;
+  retryAutosave: () => Promise<boolean>;
+  canonicalSectionOrder: string[];
   expandedSections: Record<string, boolean>;
   setExpandedSections: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   toggleSectionExpanded: (secKey: string) => void;
@@ -245,6 +252,11 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   setExpandedSections: () => {},
   toggleSectionExpanded: () => {},
   toggleAllSections: () => {},
+  autosaveStatus: 'idle',
+  autosaveStatusText: '',
+  flushAutosave: async () => false,
+  retryAutosave: async () => false,
+  canonicalSectionOrder: [],
   username: '',
   setUsername: () => {},
   fullName: '',
@@ -327,6 +339,49 @@ export function useProfileEditor(): ProfileEditorContextValue {
   return ctx;
 }
 
+function getProfileSnapshot(p: ProfileData): string {
+  return JSON.stringify({
+    name: p.name,
+    firstName: p.firstName,
+    secondName: p.secondName,
+    lastName: p.lastName,
+    username: p.username,
+    slug: p.slug,
+    type: p.type,
+    professionalTitle: p.professionalTitle,
+    designation: p.designation,
+    profession: p.profession,
+    bio: p.bio,
+    about: p.about,
+    tagline: p.tagline,
+    company: p.company,
+    location: p.location,
+    email: p.email,
+    phone: p.phone,
+    whatsapp: p.whatsapp,
+    website: p.website,
+    theme: p.theme,
+    avatar: p.avatar,
+    coverImage: p.coverImage,
+    skills: p.skills,
+    projects: p.projects,
+    experiences: p.experiences,
+    experience: p.experience,
+    education: p.education,
+    certifications: p.certifications,
+    languages: p.languages,
+    socials: p.socials,
+    socialLinks: p.socialLinks,
+    customFields: p.customFields,
+    dynamicSections: p.dynamicSections,
+    sectionOrder: p.sectionOrder,
+    sectionVisibility: p.sectionVisibility,
+    sharingSettings: p.sharingSettings,
+    companyInfo: p.companyInfo,
+    teamMembers: p.teamMembers
+  });
+}
+
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 export interface ProfileEditorProviderProps {
@@ -345,6 +400,17 @@ export function ProfileEditorProvider({
 }: ProfileEditorProviderProps) {
   // ── Core profile baseline ─────────────────────────────────────────────────
   const [profile, setProfile] = useState<ProfileData>(initialProfile);
+
+  // ── Autosave & Request Sequence State ─────────────────────────────────────
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [autosaveStatusText, setAutosaveStatusText] = useState<string>('');
+
+  const requestCounterRef = React.useRef<number>(0);
+  const latestDispatchedRef = React.useRef<number>(0);
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = React.useRef<boolean>(false);
+  const lastSavedSnapshotRef = React.useRef<string>('');
+  const saveProfileRef = React.useRef<((override?: Partial<ProfileData>) => Promise<boolean>) | null>(null);
 
   // ── Theme ─────────────────────────────────────────────────────────────────
   const [activeTheme, setActiveTheme] = useState<ProfileTheme>(
@@ -420,10 +486,14 @@ export function ProfileEditorProvider({
 
   // ── Section Order & Visibility ────────────────────────────────────────────
   const [sectionOrder, setSectionOrder] = useState<string[]>(() =>
-    Array.isArray(initialProfile.sectionOrder) && initialProfile.sectionOrder.length > 0
-      ? initialProfile.sectionOrder
-      : DEFAULT_SECTION_ORDER
+    getCanonicalSectionOrder(initialProfile.sectionOrder, initialProfile.type)
   );
+
+  const canonicalSectionOrder = useMemo(
+    () => getCanonicalSectionOrder(sectionOrder, profile.type || initialProfile.type),
+    [sectionOrder, profile.type, initialProfile.type]
+  );
+
   const [sectionVisibility, setSectionVisibility] = useState<Record<string, boolean>>(() =>
     initialProfile.sectionVisibility && Object.keys(initialProfile.sectionVisibility).length > 0
       ? initialProfile.sectionVisibility
@@ -453,7 +523,9 @@ export function ProfileEditorProvider({
   const [copySuccess, setCopySuccess] = useState(false);
 
   // ── Derived values ────────────────────────────────────────────────────────
-  const fullName = (profile.name || `${firstName} ${secondName}`).trim();
+  const fullName = (firstName.trim() || secondName.trim()) 
+    ? `${firstName.trim()} ${secondName.trim()}`.trim() 
+    : (profile.name || '').trim();
 
   const activeSocialsPayload = useMemo<SocialLink[]>(
     () =>
@@ -466,40 +538,42 @@ export function ProfileEditorProvider({
   const liveProfile = useMemo<ProfileData>(
     () => ({
       ...profile,
-      username: (profile.username || username || profile.slug || '').trim().replace(/^@/, ''),
-      slug: (profile.slug || username || initialProfile.slug || initialProfile.id || '').trim().replace(/^@/, ''),
-      name: profile.name !== undefined ? profile.name : fullName,
-      firstName: profile.firstName !== undefined ? profile.firstName : (firstName.trim() || (profile.name ? profile.name.split(' ')[0] : '')),
-      secondName: profile.secondName !== undefined ? profile.secondName : (secondName.trim() || (profile.name ? profile.name.split(' ').slice(1).join(' ') : '')),
-      lastName: profile.lastName !== undefined ? profile.lastName : (secondName.trim() || (profile.name ? profile.name.split(' ').slice(1).join(' ') : '')),
-      professionalTitle: profile.professionalTitle !== undefined ? profile.professionalTitle : (professionalTitle || profile.designation || ''),
-      designation: profile.designation !== undefined ? profile.designation : (professionalTitle || profile.professionalTitle || ''),
-      profession: profile.profession !== undefined ? profile.profession : (professionalTitle || profile.professionalTitle || ''),
-      bio: profile.bio !== undefined ? profile.bio : (bio || profile.shortBio || ''),
-      shortBio: profile.shortBio !== undefined ? profile.shortBio : (bio || profile.bio || ''),
-      about: profile.about !== undefined ? profile.about : (about || profile.fullBio || ''),
-      fullBio: profile.fullBio !== undefined ? profile.fullBio : (about || profile.about || ''),
-      tagline: profile.tagline !== undefined ? profile.tagline : (tagline || ''),
-      company: profile.company !== undefined ? profile.company : (company || ''),
-      location: profile.location !== undefined ? profile.location : (location || ''),
-      email: profile.email !== undefined ? profile.email : '',
-      phone: profile.phone !== undefined ? profile.phone : '',
-      whatsapp: profile.whatsapp !== undefined ? profile.whatsapp : '',
-      theme: profile.theme || activeTheme,
+      username: (username || profile.username || profile.slug || '').trim().replace(/^@/, ''),
+      slug: (username || profile.slug || initialProfile.slug || initialProfile.id || '').trim().replace(/^@/, ''),
+      name: fullName,
+      firstName: firstName.trim() || profile.firstName || '',
+      secondName: secondName.trim() || profile.secondName || profile.lastName || '',
+      lastName: secondName.trim() || profile.lastName || profile.secondName || '',
+      professionalTitle: professionalTitle || profile.professionalTitle || profile.designation || '',
+      designation: professionalTitle || profile.designation || profile.professionalTitle || '',
+      profession: professionalTitle || profile.profession || profile.professionalTitle || '',
+      bio: bio !== undefined ? bio : (profile.bio || ''),
+      shortBio: bio !== undefined ? bio : (profile.shortBio || ''),
+      about: about !== undefined ? about : (profile.about || ''),
+      fullBio: about !== undefined ? about : (profile.fullBio || ''),
+      tagline: tagline !== undefined ? tagline : (profile.tagline || ''),
+      company: company !== undefined ? company : (profile.company || ''),
+      location: location !== undefined ? location : (profile.location || ''),
+      email: profile.email || '',
+      phone: profile.phone || '',
+      whatsapp: profile.whatsapp || '',
+      theme: activeTheme || profile.theme,
       avatar: avatar || profile.avatar || '',
       coverImage: coverImage || profile.coverImage || '',
-      skills: profile.skills !== undefined ? profile.skills : (skills.length > 0 ? skills : []),
-      projects: profile.projects !== undefined ? profile.projects : (projects.length > 0 ? projects : []),
-      experience: profile.experience !== undefined ? profile.experience : (profile.experiences !== undefined ? profile.experiences : experiences),
-      experiences: profile.experiences !== undefined ? profile.experiences : (profile.experience !== undefined ? profile.experience : experiences),
-      education: profile.education !== undefined ? profile.education : (education.length > 0 ? education : []),
-      socials: activeSocialsPayload.length > 0 ? activeSocialsPayload : (profile.socials || []),
-      socialLinks: activeSocialsPayload.length > 0 ? activeSocialsPayload : (profile.socialLinks || []),
-      customFields: profile.customFields !== undefined ? profile.customFields : (customFields.length > 0 ? customFields : []),
-      dynamicSections: profile.dynamicSections !== undefined ? profile.dynamicSections : dynamicSections,
-      sectionOrder: profile.sectionOrder !== undefined ? profile.sectionOrder : sectionOrder,
-      sectionVisibility: profile.sectionVisibility !== undefined ? profile.sectionVisibility : sectionVisibility,
-      sharingSettings: profile.sharingSettings !== undefined ? profile.sharingSettings : sharingSettings,
+      skills: skills,
+      projects: projects,
+      experience: experiences,
+      experiences: experiences,
+      education: education,
+      socials: activeSocialsPayload,
+      socialLinks: activeSocialsPayload,
+      customFields: customFields,
+      dynamicSections: dynamicSections,
+      sectionOrder: canonicalSectionOrder,
+      sectionVisibility: sectionVisibility,
+      sharingSettings: sharingSettings,
+      companyInfo: profile.companyInfo,
+      teamMembers: profile.teamMembers
     }),
     [
       profile,
@@ -508,7 +582,7 @@ export function ProfileEditorProvider({
       activeTheme, avatar, coverImage,
       skills, projects, experiences, education,
       activeSocialsPayload, customFields, dynamicSections,
-      sectionOrder, sectionVisibility, sharingSettings,
+      canonicalSectionOrder, sectionVisibility, sharingSettings,
       initialProfile.slug, initialProfile.id,
     ]
   );
@@ -625,6 +699,9 @@ export function ProfileEditorProvider({
       });
       setCoverImage(url);
       updateField('coverImage', url);
+      if (saveProfileRef.current) {
+        await saveProfileRef.current({ coverImage: url });
+      }
       showToast('✓ Cover banner updated and saved!');
     } catch (error) {
       setCoverImage(previous);
@@ -651,6 +728,9 @@ export function ProfileEditorProvider({
       });
       setAvatar(url);
       updateField('avatar', url);
+      if (saveProfileRef.current) {
+        await saveProfileRef.current({ avatar: url });
+      }
       showToast('✓ Profile photo updated and saved!');
     } catch (error) {
       setAvatar(previous);
@@ -663,6 +743,7 @@ export function ProfileEditorProvider({
       setIsUploadingAvatar(false);
     }
   }, [avatar, profile, showToast, updateField]);
+
 
   // ── Social Link Handlers ──────────────────────────────────────────────────
   const handleUpdateLink = useCallback((id: string, patch: Partial<DraggableLinkItem>) => {
@@ -741,22 +822,30 @@ export function ProfileEditorProvider({
     (index: number, direction: 'up' | 'down') => {
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       setSectionOrder((prev) => {
-        if (targetIndex < 0 || targetIndex >= prev.length) return prev;
-        const copy = [...prev];
+        const canonical = getCanonicalSectionOrder(prev, profile.type);
+        if (targetIndex < 0 || targetIndex >= canonical.length) return canonical;
+        const copy = [...canonical];
         const [moved] = copy.splice(index, 1);
         copy.splice(targetIndex, 0, moved);
         return copy;
       });
     },
-    []
+    [profile.type]
   );
 
   const handleToggleSectionVisibility = useCallback((sectionKey: string) => {
-    setSectionVisibility((prev) => ({
-      ...prev,
-      [sectionKey]: prev[sectionKey] === false ? true : false,
-    }));
+    const canonical = normalizeSectionKey(sectionKey);
+    setSectionVisibility((prev) => {
+      const current = prev[canonical] !== false && prev[sectionKey] !== false;
+      const nextVal = !current;
+      return {
+        ...prev,
+        [canonical]: nextVal,
+        [sectionKey]: nextVal,
+      };
+    });
   }, []);
+
 
   /** Used by DynamicSectionGroups — toggles both sharingSettings key and sectionOrder */
   const handleInstantToggleSection = useCallback(
@@ -898,7 +987,7 @@ export function ProfileEditorProvider({
     }, 3500);
   }, []);
 
-  // ── Centralized Save Profile ──────────────────────────────────────────────
+  // ── Centralized Save Profile with Sequence Counter & Stale Protection ────
   const saveProfile = useCallback(async (overrideData?: Partial<ProfileData>): Promise<boolean> => {
     if (isUploadingAvatar || isUploadingCover) {
       const message = 'Please wait for the image upload to finish before saving.';
@@ -906,14 +995,35 @@ export function ProfileEditorProvider({
       showToast(message);
       return false;
     }
+
+    const thisRequestId = ++requestCounterRef.current;
     setIsSaving(true);
+    setAutosaveStatus('saving');
+    setAutosaveStatusText('Saving…');
     setStatusMessage(null);
+
     try {
       const dataToSave: ProfileData = {
         ...profile,
         ...liveProfile,
         ...(overrideData || {}),
       };
+
+      // Guard: Never erase existing permanent images if override or state has empty string
+      if (!dataToSave.avatar && profile.avatar) {
+        dataToSave.avatar = profile.avatar;
+      }
+      if (!dataToSave.coverImage && profile.coverImage) {
+        dataToSave.coverImage = profile.coverImage;
+      }
+
+      // Guard: Do not send local blob URLs to API
+      if (typeof dataToSave.avatar === 'string' && dataToSave.avatar.startsWith('blob:')) {
+        dataToSave.avatar = profile.avatar || '';
+      }
+      if (typeof dataToSave.coverImage === 'string' && dataToSave.coverImage.startsWith('blob:')) {
+        dataToSave.coverImage = profile.coverImage || '';
+      }
 
       const profileIdentifier =
         dataToSave.slug ||
@@ -941,6 +1051,12 @@ export function ProfileEditorProvider({
         }),
       });
 
+      // Discard stale response if newer request was dispatched
+      if (thisRequestId < latestDispatchedRef.current) {
+        return true;
+      }
+      latestDispatchedRef.current = thisRequestId;
+
       const isJson = res.headers.get('content-type')?.includes('application/json');
       const data = isJson ? await res.json().catch(() => ({})) : null;
 
@@ -948,6 +1064,8 @@ export function ProfileEditorProvider({
         const errorMsg = res.status === 413
           ? 'Profile payload is too large. Please select a photo under 4.5MB.'
           : (data?.error || `Failed to save changes (${res.status}).`);
+        setAutosaveStatus('error');
+        setAutosaveStatusText('Unable to save — changes retained locally');
         setStatusMessage({ type: 'error', text: errorMsg });
         showToast(errorMsg);
         setIsSaving(false);
@@ -966,6 +1084,9 @@ export function ProfileEditorProvider({
         data.updatedProfile || data.profile || { ...dataToSave, slug: savedSlug };
 
       setProfile(finalProfile);
+      lastSavedSnapshotRef.current = getProfileSnapshot(finalProfile);
+      setAutosaveStatus('saved');
+      setAutosaveStatusText('Saved');
 
       // Cache locally and dispatch update event
       try {
@@ -987,18 +1108,25 @@ export function ProfileEditorProvider({
         type: 'success',
         text: successMsg,
       });
-      showToast('✓ Profile saved successfully!');
 
       onSaveSuccess?.(finalProfile);
 
       setTimeout(() => {
+        setAutosaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
+        setAutosaveStatusText((prev) => (prev === 'Saved' ? '' : prev));
         setStatusMessage((prev) => (prev?.type === 'success' ? null : prev));
-      }, 4000);
+      }, 3500);
 
       return true;
     } catch (err: unknown) {
+      if (thisRequestId < latestDispatchedRef.current) {
+        return false;
+      }
+      latestDispatchedRef.current = thisRequestId;
       console.error('Save profile error:', err);
-      const networkErr = 'Network error while saving changes.';
+      const networkErr = 'Unable to save — changes retained locally';
+      setAutosaveStatus('error');
+      setAutosaveStatusText(networkErr);
       setStatusMessage({ type: 'error', text: networkErr });
       showToast(networkErr);
       return false;
@@ -1007,10 +1135,84 @@ export function ProfileEditorProvider({
     }
   }, [profile, liveProfile, initialProfile, showToast, onSaveSuccess, isUploadingAvatar, isUploadingCover]);
 
+  // Keep saveProfileRef updated for image uploads
+  useEffect(() => {
+    saveProfileRef.current = saveProfile;
+  }, [saveProfile]);
+
+  // Flush pending autosave immediately
+  const flushAutosave = useCallback(async (): Promise<boolean> => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    const currentSnapshot = getProfileSnapshot(liveProfile);
+    if (currentSnapshot !== lastSavedSnapshotRef.current || autosaveStatus === 'error') {
+      return await saveProfile();
+    }
+    return true;
+  }, [liveProfile, autosaveStatus, saveProfile]);
+
+  const retryAutosave = useCallback(async (): Promise<boolean> => {
+    return await saveProfile();
+  }, [saveProfile]);
+
+  // ── Autosave 600ms Debounce Effect ────────────────────────────────────────
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      lastSavedSnapshotRef.current = getProfileSnapshot(liveProfile);
+      return;
+    }
+
+    if (isUploadingAvatar || isUploadingCover) return;
+    if (liveProfile.avatar?.startsWith('blob:') || liveProfile.coverImage?.startsWith('blob:')) return;
+
+    const currentSnapshot = getProfileSnapshot(liveProfile);
+    if (currentSnapshot === lastSavedSnapshotRef.current) {
+      return;
+    }
+
+    setAutosaveStatus('saving');
+    setAutosaveStatusText('Saving…');
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      debounceTimerRef.current = null;
+      await saveProfile();
+    }, 600);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [liveProfile, isUploadingAvatar, isUploadingCover, saveProfile]);
+
+  // Flush on field blur and before leaving
+  useEffect(() => {
+    const handleWindowBlur = () => {
+      flushAutosave();
+    };
+    const handleBeforeUnload = () => {
+      flushAutosave();
+    };
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [flushAutosave]);
+
   // Alias handleSaveChanges directly to saveProfile for 100% unified save behavior across desktop and mobile
   const handleSaveChanges = useCallback(async () => {
     await saveProfile();
   }, [saveProfile]);
+
 
   // Update multiple fields at once
   const updateProfilePartial = useCallback((partial: Partial<ProfileData>) => {
@@ -1113,6 +1315,11 @@ export function ProfileEditorProvider({
       setExpandedSections,
       toggleSectionExpanded,
       toggleAllSections,
+      autosaveStatus,
+      autosaveStatusText,
+      flushAutosave,
+      retryAutosave,
+      canonicalSectionOrder,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -1124,7 +1331,7 @@ export function ProfileEditorProvider({
       fullName, liveProfile, activeSocialsPayload,
       isUploadingAvatar, isUploadingCover, isSaving, isConfirmed, statusMessage, copySuccess,
       activeSection, activeSectionTarget, isDark, toastMessage, _userProfiles, currentIdentifier,
-      expandedSections,
+      expandedSections, autosaveStatus, autosaveStatusText, canonicalSectionOrder,
     ]
   );
 

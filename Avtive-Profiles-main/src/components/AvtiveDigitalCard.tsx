@@ -24,6 +24,7 @@ import {
   ProfileTheme,
   normalizeProfileType
 } from '../types/profile';
+import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
 import { HeroSection } from './HeroSection';
 import { AboutSection } from './AboutSection';
 import { SkillsServicesSection } from './SkillsServicesSection';
@@ -275,77 +276,38 @@ export function AvtiveDigitalCard({
         {/* DYNAMIC PROFILE SECTIONS RENDERED ACCORDING TO sectionOrder & sectionVisibility */}
         {/* ========================================================================= */}
         {(() => {
-          const defaultCardSectionOrder = [
-            ...(isCompany ? ['teamMembers'] : ['company']),
-            'about',
-            'contact',
-            'custom-fields',
-            'skills',
-            'services',
-            'projects',
-            'experience',
-            'education',
-            'certifications',
-            'languages',
-            'socialLinks',
-            'virtual-card'
-          ];
-
-          // Dynamic sections registered by the user
-          const dynamicSectionKeys = (activeProfile.dynamicSections || []).map(s => s.key || s.id);
-
-          const allKnownSections = [...defaultCardSectionOrder, ...dynamicSectionKeys];
-
-          const userOrder = (activeProfile.sectionOrder || []).filter((s) => s !== 'hero' && s !== 'volunteer');
-          const effectiveOrder: string[] = [];
-          
-          for (const s of userOrder) {
-            const normalized = (s === 'services' || s === 'skills') 
-              ? 'skills' 
-              : (s === 'socials' 
-              ? 'socialLinks' 
-              : ((s === 'company' || s === 'team' || s === 'companyInfo') && isCompany ? 'teamMembers' : s));
-            if (!effectiveOrder.includes(normalized) && allKnownSections.includes(normalized)) {
-              effectiveOrder.push(normalized);
-            }
-          }
-          
-          for (const s of allKnownSections) {
-            const normalized = (s === 'services' || s === 'skills') 
-              ? 'skills' 
-              : (s === 'socials' 
-              ? 'socialLinks' 
-              : ((s === 'company' || s === 'team' || s === 'companyInfo') && isCompany ? 'teamMembers' : s));
-            if (!effectiveOrder.includes(normalized) && allKnownSections.includes(normalized)) {
-              effectiveOrder.push(normalized);
-            }
-          }
+          const dynamicSectionKeys = (activeProfile.dynamicSections || []).map((s) => s.key || s.id);
+          const customFieldKeys = (activeProfile.customFields || []).map((f) => `custom-field-${f.id}`);
+          const extraKeys = [...dynamicSectionKeys, ...customFieldKeys];
+          const effectiveOrder = getCanonicalSectionOrder(activeProfile.sectionOrder, activeProfile.type, extraKeys);
 
           const sharing = activeProfile.sharingSettings || {};
           const visibility = activeProfile.sectionVisibility || {};
 
-          const isSectionVisible = (key: string): boolean => {
+          const isSectionVisible = (rawKey: string): boolean => {
+            const key = normalizeSectionKey(rawKey);
             if (key === 'volunteer') return false;
             if (isEditing) return true;
-            // 1. Direct sectionVisibility dictionary check if explicitly defined
+            // 1. Direct sectionVisibility dictionary check
             if (typeof visibility[key] === 'boolean') {
               return visibility[key];
             }
+            if (typeof visibility[rawKey] === 'boolean') {
+              return visibility[rawKey];
+            }
             // Check individual custom fields
-            if (key.startsWith('custom-field-')) {
-              const fieldId = key.replace('custom-field-', '');
-              const cf = (activeProfile.customFields || []).find(f => f.id === fieldId || `custom-field-${f.id}` === key);
+            if (rawKey.startsWith('custom-field-') || key.startsWith('custom-field-')) {
+              const fieldId = rawKey.replace('custom-field-', '');
+              const cf = (activeProfile.customFields || []).find((f) => f.id === fieldId || `custom-field-${f.id}` === rawKey);
               return cf ? cf.visible !== false : true;
             }
             // 2. Fallback to sharingSettings for legacy profiles
             switch (key) {
-              case 'company':
-              case 'teamMembers':
-              case 'team': return sharing.companySection !== false;
-              case 'about': return sharing.bio !== false;
-              case 'contact': return true;
-              case 'custom-fields': return true;
-              case 'services':
+              case 'companyInfo':
+              case 'teamMembers': return sharing.companySection !== false;
+              case 'personalDetails': return sharing.bio !== false;
+              case 'contactInfo': return true;
+              case 'customFields': return true;
               case 'skills': return sharing.services !== false || sharing.skills !== false;
               case 'experience': return sharing.experience !== false;
               case 'education': return sharing.education !== false;
@@ -353,18 +315,19 @@ export function AvtiveDigitalCard({
               case 'certifications': return sharing.certifications !== false;
               case 'languages': return sharing.languages !== false;
               case 'recommendations': return false;
-              case 'socialLinks':
-              case 'socials': return sharing.socialLinks !== false;
-              case 'virtual-card': return sharing.nfcCard !== false;
+              case 'socialLinks': return sharing.socialLinks !== false;
+              case 'virtualCard': return sharing.nfcCard !== false;
               default: return true;
             }
           };
 
-          const renderSectionContent = (sectionKey: string) => {
+          const renderSectionContent = (rawSectionKey: string) => {
+            const sectionKey = normalizeSectionKey(rawSectionKey);
             switch (sectionKey) {
+              case 'companyInfo':
               case 'company':
                 if (isCompany) return null;
-                if (!isSectionVisible('company')) return null;
+                if (!isSectionVisible(sectionKey)) return null;
                 return (
                   <CompanyCard
                     key="company"
@@ -701,6 +664,7 @@ export function AvtiveDigitalCard({
             const content = renderSectionContent(sectionKey);
             if (!content) return null;
 
+            const canonicalKey = normalizeSectionKey(sectionKey);
             const extraAliases: Record<string, string> = {
               about: 'personalDetails',
               personalDetails: 'about',
@@ -723,39 +687,27 @@ export function AvtiveDigitalCard({
               'virtual-card': 'virtualCard',
               virtualCard: 'virtual-card'
             };
-            const alias = extraAliases[sectionKey];
+            const alias = extraAliases[sectionKey] || (sectionKey !== canonicalKey ? canonicalKey : undefined);
 
             return (
               <div
                 key={sectionKey}
-                id={`section-${sectionKey}`}
-                data-section={sectionKey}
+                id={`section-${canonicalKey}`}
+                data-section={canonicalKey}
                 className="scroll-mt-16 relative"
               >
-                {alias && <div id={`section-${alias}`} className="absolute -top-16" />}
+                {alias && alias !== canonicalKey && <div id={`section-${alias}`} className="absolute -top-16" />}
+                {sectionKey !== canonicalKey && <div id={`section-${sectionKey}`} className="absolute -top-16" />}
                 {content}
               </div>
             );
           };
 
-          if (viewMode === 'web') {
-            const leftKeys = ['company', 'about', 'contact', 'custom-fields', 'virtual-card'];
-            const leftSections = effectiveOrder.filter((k) => leftKeys.includes(k));
-            const rightSections = effectiveOrder.filter((k) => !leftKeys.includes(k));
-
-            return (
-              <div className="grid grid-cols-1 lg:grid-cols-12 border-t border-slate-200/80 dark:border-zinc-800/80 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/80 dark:divide-zinc-800/80">
-                <div className="lg:col-span-5 flex flex-col">
-                  {leftSections.map(renderSection)}
-                </div>
-                <div className="lg:col-span-7 flex flex-col">
-                  {rightSections.map(renderSection)}
-                </div>
-              </div>
-            );
-          }
-
-          return effectiveOrder.map(renderSection);
+          return (
+            <div className="flex flex-col border-t border-slate-200/80 dark:border-zinc-800/80 divide-y divide-slate-200/80 dark:divide-zinc-800/80">
+              {effectiveOrder.map(renderSection)}
+            </div>
+          );
         })()}
 
         {/* ========================================================================= */}

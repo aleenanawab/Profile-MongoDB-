@@ -92,21 +92,27 @@ export const DEFAULT_SECTION_VISIBILITY: Record<string, boolean> = {
 };
 
 export const DEFAULT_SECTION_ORDER: string[] = [
-  'hero',
-  'about',
-  'contact',
-  'services',
+  'personalDetails',
+  'contactInfo',
   'skills',
   'projects',
-  'custom-fields',
+  'customFields',
   'experience',
   'education',
   'certifications',
   'languages',
   'socialLinks',
-  'virtual-card',
-  'company'
+  'virtualCard'
 ];
+
+export {
+  CANONICAL_SECTION_ALIASES,
+  normalizeSectionKey,
+  getCanonicalSectionOrder,
+  INDIVIDUAL_DEFAULT_SECTION_ORDER,
+  COMPANY_DEFAULT_SECTION_ORDER
+} from '@/lib/sections';
+
 
 
 export interface UserSession {

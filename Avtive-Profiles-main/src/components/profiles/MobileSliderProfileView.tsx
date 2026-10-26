@@ -10,7 +10,10 @@ import {
   Sun,
   Moon,
   Eye,
-  EyeOff
+  EyeOff,
+  Check,
+  AlertCircle,
+  RotateCw
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
 import { usePortfolioTheme } from '@/context/ThemeContext';
@@ -33,7 +36,10 @@ export function MobileSliderProfileView({ onSave, onNext: _onNext, className = '
     activeSection,
     setActiveSection,
     sectionVisibility,
-    handleToggleSectionVisibility
+    handleToggleSectionVisibility,
+    autosaveStatus,
+    autosaveStatusText,
+    retryAutosave
   } = useProfileEditor();
 
   const { isDark, toggleDarkMode } = usePortfolioTheme();
@@ -248,24 +254,32 @@ export function MobileSliderProfileView({ onSave, onNext: _onNext, className = '
 
         </div>
 
-        {/* Right: Theme Toggle & Save Controls */}
+        {/* Right: Theme Toggle & Autosave Status */}
         <div className="flex items-center gap-1.5">
-          {/* Mobile Save Icon Button — Uses same save logic as desktop */}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            aria-label="Save Profile"
-            title="Save Profile"
-            className="p-1.5 px-2.5 rounded-lg text-white bg-cyan-600 hover:bg-cyan-500 dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-600 transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs shrink-0 flex items-center gap-1 text-xs font-semibold"
-          >
-            {isSaving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Save className="w-3.5 h-3.5" />
-            )}
-            <span>Save</span>
-          </button>
+          {/* Mobile Autosave Status Indicator */}
+          {autosaveStatus === 'saving' && (
+            <div className="p-1 px-2 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/40 flex items-center gap-1 text-[11px] font-medium shrink-0 animate-pulse">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Saving…</span>
+            </div>
+          )}
+          {autosaveStatus === 'saved' && (
+            <div className="p-1 px-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1 text-[11px] font-medium shrink-0">
+              <Check className="w-3 h-3 text-emerald-500" />
+              <span>Saved</span>
+            </div>
+          )}
+          {autosaveStatus === 'error' && (
+            <button
+              type="button"
+              onClick={retryAutosave}
+              title="Unable to save — click to retry"
+              className="p-1 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 flex items-center gap-1 text-[11px] font-medium shrink-0 cursor-pointer"
+            >
+              <RotateCw className="w-3 h-3 text-rose-500" />
+              <span>Retry</span>
+            </button>
+          )}
 
           {/* Theme Toggle Icon Button */}
           <button

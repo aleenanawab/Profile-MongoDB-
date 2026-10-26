@@ -94,7 +94,7 @@ export interface SectionSaveBarProps {
 }
 
 export function SectionSaveBar({
-  onSave,
+  onSave: _onSave,
   onCancel,
   isSaving = false,
   isSaved = false,
@@ -104,12 +104,16 @@ export function SectionSaveBar({
   saveLabel = 'Save Changes',
   cancelLabel = 'Cancel',
   className = '',
-  showCancel = true
+  showCancel = false
 }: SectionSaveBarProps) {
   const isSuccess = isSaved || saveStatus === 'success' || saveStatus === 'saved';
 
+  if (!errorMessage && !isSaving && !isSuccess && !showCancel) {
+    return null;
+  }
+
   return (
-    <div className={`pt-3 space-y-2 ${className}`}>
+    <div className={`pt-2 space-y-2 ${className}`}>
       {errorMessage && (
         <div className="p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 animate-in fade-in">
           <AlertCircle className="w-4 h-4 shrink-0" />
@@ -117,49 +121,36 @@ export function SectionSaveBar({
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-2.5">
-        {showCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isSaving}
-            className="min-h-[44px] px-4 rounded-xl text-xs font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-[0.98] flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 cursor-pointer"
-            title="Discard changes in this section"
-          >
-            <X className="w-4 h-4" />
-            <span>{cancelLabel}</span>
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={isSaving || !isDirty}
-          className={`min-h-[44px] px-5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98] cursor-pointer ${
-            isSuccess
-              ? 'bg-emerald-600 text-white'
-              : 'bg-cyan-600 hover:bg-cyan-500 text-white disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:text-slate-400 dark:disabled:text-zinc-600 disabled:cursor-not-allowed disabled:active:scale-100'
-          }`}
-          title="Save changes in this section"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Saving...</span>
-            </>
-          ) : isSuccess ? (
-            <>
-              <Check className="w-4 h-4" />
-              <span>Saved</span>
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              <span>{saveLabel}</span>
-            </>
+      {(isSaving || isSuccess || showCancel) && (
+        <div className="flex items-center justify-end gap-2.5">
+          {showCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isSaving}
+              className="min-h-[44px] px-3.5 rounded-xl text-xs font-medium text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-[0.98] flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 cursor-pointer"
+              title="Discard changes in this section"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>{cancelLabel}</span>
+            </button>
           )}
-        </button>
-      </div>
+
+          {isSaving && (
+            <span className="text-[11px] font-medium text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 py-1">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Saving…</span>
+            </span>
+          )}
+
+          {isSuccess && !isSaving && (
+            <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 py-1">
+              <Check className="w-3.5 h-3.5" />
+              <span>Saved</span>
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

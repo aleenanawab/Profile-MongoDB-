@@ -81,21 +81,30 @@ export function ExperienceSection({
   const handleAddExperience = () => {
     const newExp: ExperienceItem = {
       id: `exp-${Date.now()}`,
-      company: 'Company Name',
-      role: 'Job Title / Role',
-      period: '2023 - Present',
+      company: '',
+      role: '',
+      period: '',
       location: '',
       description: ''
     };
-    setExperiencesDraft((prev) => [newExp, ...prev]);
+    const next = [newExp, ...experiencesDraft];
+    setExperiencesDraft(next);
+    onUpdateField?.('experiences', next);
+    onUpdateField?.('experience', next);
   };
 
   const handleUpdateItem = (id: string, updates: Partial<ExperienceItem>) => {
-    setExperiencesDraft((prev) => prev.map((exp) => (exp.id === id ? { ...exp, ...updates } : exp)));
+    const next = experiencesDraft.map((exp) => (exp.id === id ? { ...exp, ...updates } : exp));
+    setExperiencesDraft(next);
+    onUpdateField?.('experiences', next);
+    onUpdateField?.('experience', next);
   };
 
   const handleRemoveItem = (id: string) => {
-    setExperiencesDraft((prev) => prev.filter((exp) => exp.id !== id));
+    const next = experiencesDraft.filter((exp) => exp.id !== id);
+    setExperiencesDraft(next);
+    onUpdateField?.('experiences', next);
+    onUpdateField?.('experience', next);
   };
 
   return (

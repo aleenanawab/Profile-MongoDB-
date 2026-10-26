@@ -75,21 +75,26 @@ export function PortfolioSection({
   const handleAddProject = () => {
     const newProject: ProjectItem = {
       id: `proj-${Date.now()}`,
-      title: 'New Project',
-      category: 'Web App',
-      description: 'Project overview, technology used, and results achieved.',
-      tags: ['React', 'TypeScript'],
+      title: '',
+      description: '',
+      tags: [],
       link: ''
     };
-    setProjectsDraft((prev) => [newProject, ...prev]);
+    const next = [newProject, ...projectsDraft];
+    setProjectsDraft(next);
+    onUpdateField?.('projects', next);
   };
 
   const handleUpdateProject = (id: string, updates: Partial<ProjectItem>) => {
-    setProjectsDraft((prev) => prev.map((p) => (p.id === id ? { ...p, ...updates } : p)));
+    const next = projectsDraft.map((p) => (p.id === id ? { ...p, ...updates } : p));
+    setProjectsDraft(next);
+    onUpdateField?.('projects', next);
   };
 
   const handleRemoveProject = (id: string) => {
-    setProjectsDraft((prev) => prev.filter((p) => p.id !== id));
+    const next = projectsDraft.filter((p) => p.id !== id);
+    setProjectsDraft(next);
+    onUpdateField?.('projects', next);
   };
 
   return (

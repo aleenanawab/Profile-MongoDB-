@@ -27,16 +27,21 @@ import {
   ShieldCheck, 
   Settings, 
   UserCheck, 
-  Archive,
   ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  CheckCircle2,
+  AlertCircle,
   Mail,
   MapPin,
   Globe,
   Tag,
   RotateCcw,
-  X
+  X,
+  Archive
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
+import { normalizeSectionKey } from '@/lib/sections';
 import { 
   ProjectItem, 
   ExperienceItem, 
@@ -58,7 +63,13 @@ export function MobileProfileEditor() {
     handleAvatarUpload,
     handleCoverUpload,
     isUploadingAvatar,
-    isUploadingCover
+    isUploadingCover,
+    canonicalSectionOrder,
+    handleMoveSection,
+    autosaveStatus,
+    autosaveStatusText,
+    retryAutosave,
+    flushAutosave
   } = useProfileEditor();
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -251,8 +262,25 @@ export function MobileProfileEditor() {
     { key: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  const visibleSections = allSections.filter(s => isSectionVisible(s.key));
-  const hiddenSections = allSections.filter(s => !isSectionVisible(s.key));
+  const sectionMap = new Map(allSections.map(s => [normalizeSectionKey(s.key), s]));
+  const orderedSections: typeof allSections = [];
+  
+  for (const k of canonicalSectionOrder) {
+    const norm = normalizeSectionKey(k);
+    const item = sectionMap.get(norm);
+    if (item && !orderedSections.some(s => normalizeSectionKey(s.key) === norm)) {
+      orderedSections.push(item);
+    }
+  }
+  for (const s of allSections) {
+    const norm = normalizeSectionKey(s.key);
+    if (!orderedSections.some(x => normalizeSectionKey(x.key) === norm)) {
+      orderedSections.push(s);
+    }
+  }
+
+  const visibleSections = orderedSections.filter(s => isSectionVisible(s.key));
+  const hiddenSections = orderedSections.filter(s => !isSectionVisible(s.key));
 
   return (
     <div className="w-full min-h-screen bg-[#070D18] text-slate-100 flex flex-col items-center pb-28 font-sans select-none">
@@ -380,7 +408,44 @@ export function MobileProfileEditor() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* Move Up/Down Controls for Canonical Dynamic Sections */}
+                      {(() => {
+                        const normKey = normalizeSectionKey(sec.key);
+                        const orderIndex = canonicalSectionOrder.indexOf(normKey);
+                        if (orderIndex === -1) return null;
+                        return (
+                          <div className="flex items-center gap-0.5">
+                            {orderIndex > 0 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveSection(orderIndex, 'up');
+                                }}
+                                aria-label={`Move ${sec.label} up`}
+                                className="p-1 rounded text-slate-400 hover:text-white cursor-pointer"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {orderIndex < canonicalSectionOrder.length - 1 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveSection(orderIndex, 'down');
+                                }}
+                                aria-label={`Move ${sec.label} down`}
+                                className="p-1 rounded text-slate-400 hover:text-white cursor-pointer"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                       {/* iOS-Style Toggle Switch */}
                       <button
                         type="button"
@@ -564,7 +629,7 @@ export function MobileProfileEditor() {
                                 onClick={handleSaveProject}
                                 className="w-full py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-xs"
                               >
-                                Save Project
+                                Add Project
                               </button>
                             </div>
                           )}
@@ -621,7 +686,7 @@ export function MobileProfileEditor() {
                                 onClick={handleSaveEducation}
                                 className="w-full py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-bold text-xs"
                               >
-                                Save Education
+                                Add Education
                               </button>
                             </div>
                           )}
@@ -908,37 +973,53 @@ export function MobileProfileEditor() {
       {/* ──────────────────────────────────────────────────────────────────────── */}
       {/* FIXED BOTTOM BAR (Save & Next - Image 1)                                   */}
       {/* ──────────────────────────────────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-[#070D18]/95 backdrop-blur-xl border-t border-white/10 flex justify-center">
+      {/* FIXED BOTTOM BAR (Central Autosave Status + Done) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-[#070D18]/95 backdrop-blur-xl border-t border-white/10 flex justify-center">
         <div className="w-full max-w-md flex items-center justify-between gap-3">
           
-          {/* Save Button */}
+          {/* Central Autosave Status */}
+          <div className="flex items-center gap-1.5 text-xs font-medium px-2 py-1">
+            {autosaveStatus === 'saving' && (
+              <span className="flex items-center gap-1.5 text-cyan-400">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Saving…</span>
+              </span>
+            )}
+            {autosaveStatus === 'saved' && (
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <Check className="w-3.5 h-3.5" />
+                <span>Saved</span>
+              </span>
+            )}
+            {autosaveStatus === 'error' && (
+              <button
+                type="button"
+                onClick={retryAutosave}
+                className="flex items-center gap-1 text-rose-400 text-xs underline cursor-pointer"
+              >
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Unable to save (Retry)</span>
+              </button>
+            )}
+            {autosaveStatus === 'idle' && (
+              <span className="text-slate-400 text-[11px]">
+                Autosave active
+              </span>
+            )}
+          </div>
+
+          {/* Done Button */}
           <button
             type="button"
-            onClick={() => saveProfile()}
-            disabled={isSaving}
-            className="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98 transition-all"
+            onClick={async () => {
+              await flushAutosave();
+              router.push(`/profile/${currentIdentifier}`);
+            }}
+            className="min-h-[44px] px-6 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-all shrink-0 ml-auto"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Check className="w-4 h-4" />
-                <span>Save</span>
-              </>
-            )}
+            <span>Done</span>
+            <CheckCircle2 className="w-4 h-4" />
           </button>
-
-          {/* Next Button */}
-          <Link
-            href={`/profile/${currentIdentifier}`}
-            className="flex-1 py-3 px-5 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-extrabold text-sm border border-white/10 flex items-center justify-center gap-2 transition-all active:scale-98 shadow-md"
-          >
-            <span>Next</span>
-            <ArrowRight className="w-4 h-4 text-cyan-400" />
-          </Link>
 
         </div>
       </div>

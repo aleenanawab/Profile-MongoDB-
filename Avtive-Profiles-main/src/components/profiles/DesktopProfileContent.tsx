@@ -46,7 +46,11 @@ import {
   X,
   Building2,
   Users,
-  Award
+  Award,
+  ArrowUp,
+  ArrowDown,
+  GripVertical,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
@@ -55,6 +59,7 @@ import { PhonePreview } from '@/components/PhonePreview';
 import { DESKTOP_SIDEBAR_SECTIONS } from './DesktopProfileSidebar';
 import { ProfileSectionTabBar } from './ProfileSectionTabBar';
 import { CompanyTeamManager } from './CompanyTeamManager';
+import { normalizeSectionKey } from '@/lib/sections';
 import { 
   ProfileTheme, 
   ProjectItem, 
@@ -85,6 +90,8 @@ interface SectionCardProps {
   onMouseLeave: () => void;
   onToggle: () => void;
   onToggleVisibility?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   children?: React.ReactNode;
 }
 
@@ -102,6 +109,8 @@ function SectionCard({
   onMouseLeave,
   onToggle,
   onToggleVisibility,
+  onMoveUp,
+  onMoveDown,
   children
 }: SectionCardProps) {
   return (
@@ -131,8 +140,17 @@ function SectionCard({
         }}
         className="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none group"
       >
-        {/* Left: Icon + Title + Description/Badge */}
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+        {/* Left: Drag Handle + Icon + Title + Description/Badge */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          {(onMoveUp || onMoveDown) && (
+            <div 
+              className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1 cursor-grab active:cursor-grabbing shrink-0" 
+              title="Drag or use Move Up/Down buttons to reorder"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <GripVertical className="w-4 h-4" />
+            </div>
+          )}
           <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
             isOpen
               ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'
@@ -158,8 +176,38 @@ function SectionCard({
           </div>
         </div>
 
-        {/* Right: Visibility Toggle + THE YELLOW ARROW DROPDOWN TRIGGER */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right: Reorder Up/Down + Visibility Toggle + THE YELLOW ARROW DROPDOWN TRIGGER */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onMoveUp && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveUp();
+              }}
+              aria-label={`Move ${title} up`}
+              title={`Move ${title} up`}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {onMoveDown && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveDown();
+              }}
+              aria-label={`Move ${title} down`}
+              title={`Move ${title} down`}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          )}
+
           {hasVisibilityToggle && onToggleVisibility && (
             <button
               type="button"
@@ -232,7 +280,13 @@ export function DesktopProfileContent({
     expandedSections: sharedExpandedSections,
     setExpandedSections: setSharedExpandedSections,
     toggleSectionExpanded: sharedToggleSectionExpanded,
-    toggleAllSections: sharedToggleAllSections
+    toggleAllSections: sharedToggleAllSections,
+    canonicalSectionOrder,
+    handleMoveSection,
+    autosaveStatus,
+    autosaveStatusText,
+    retryAutosave,
+    flushAutosave
   } = useProfileEditor();
 
   const isCompany = profile.type === 'team';
@@ -660,6 +714,12 @@ export function DesktopProfileContent({
     hasVisibilityToggle = true,
     children?: React.ReactNode
   ) => {
+    const normKey = normalizeSectionKey(secKey);
+    const orderIndex = canonicalSectionOrder.indexOf(normKey);
+    const isReorderable = orderIndex !== -1;
+    const onMoveUp = isReorderable && orderIndex > 0 ? () => handleMoveSection(orderIndex, 'up') : undefined;
+    const onMoveDown = isReorderable && orderIndex < canonicalSectionOrder.length - 1 ? () => handleMoveSection(orderIndex, 'down') : undefined;
+
     return (
       <SectionCard
         key={secKey}
@@ -676,6 +736,8 @@ export function DesktopProfileContent({
         onMouseLeave={() => handleSectionMouseLeave(secKey)}
         onToggle={() => handleSectionToggle(secKey)}
         onToggleVisibility={() => toggleSectionVisibility(secKey)}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
       >
         {children}
       </SectionCard>
@@ -780,15 +842,37 @@ export function DesktopProfileContent({
               <span>Toggle All</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => saveProfile()}
-              disabled={isSaving}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 dark:bg-gradient-to-r dark:from-cyan-500 dark:to-blue-600 dark:hover:from-cyan-400 dark:hover:to-blue-500 text-white shadow-2xs dark:shadow-md dark:shadow-cyan-500/25 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              <span>Save</span>
-            </button>
+            {/* Central Autosave Status */}
+            <div className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">
+              {autosaveStatus === 'saving' && (
+                <span className="flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Saving…</span>
+                </span>
+              )}
+              {autosaveStatus === 'saved' && (
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Saved</span>
+                </span>
+              )}
+              {autosaveStatus === 'error' && (
+                <button
+                  type="button"
+                  onClick={retryAutosave}
+                  title="Click to retry saving"
+                  className="flex items-center gap-1 text-rose-500 hover:text-rose-600 dark:text-rose-400 text-xs cursor-pointer underline"
+                >
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Unable to save — changes retained locally (Retry)</span>
+                </button>
+              )}
+              {autosaveStatus === 'idle' && (
+                <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+                  Autosave active
+                </span>
+              )}
+            </div>
 
             <button
               type="button"
@@ -1021,10 +1105,10 @@ export function DesktopProfileContent({
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* COMPANY INFORMATION SECTION (Role: Company)                                */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {isCompany && renderSectionCard(
+        {/* Dynamic Reorderable Profile Sections in Canonical Order */}
+        {(() => {
+          const sectionElements: Record<string, React.ReactNode> = {
+            companyInfo: isCompany ? renderSectionCard(
           'companyInfo',
           'Company Information',
           Building2,
@@ -1105,13 +1189,8 @@ export function DesktopProfileContent({
                 />
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* TEAM MEMBERS SECTION (Role: Company)                                       */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {isCompany && renderSectionCard(
+          )) : null,
+          teamMembers: isCompany ? renderSectionCard(
           'teamMembers',
           'Team Members',
           Users,
@@ -1126,13 +1205,8 @@ export function DesktopProfileContent({
               showToast={showToast}
               instanceId={instanceId}
             />
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 2. CONTACT INFORMATION SECTION                                             */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {renderSectionCard(
+          )) : null,
+          contactInfo: renderSectionCard(
           'contactInfo',
           'Contact Information',
           Phone,
@@ -1211,13 +1285,8 @@ export function DesktopProfileContent({
                 </div>
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 3. PERSONAL DETAILS SECTION                                                */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {!isCompany && renderSectionCard(
+          )),
+          personalDetails: !isCompany ? renderSectionCard(
           'personalDetails',
           'Personal Details',
           FileText,
@@ -1295,13 +1364,8 @@ export function DesktopProfileContent({
                 />
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 4. SKILLS & EXPERTISE SECTION                                              */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {renderSectionCard(
+          )) : null,
+          skills: renderSectionCard(
           'skills',
           'Skills & Expertise',
           Code,
@@ -1373,13 +1437,8 @@ export function DesktopProfileContent({
                 )}
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 5. WORK EXPERIENCE SECTION                                                 */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {!isCompany && renderSectionCard(
+          )),
+          experience: !isCompany ? renderSectionCard(
           'experience',
           'Work Experience',
           Briefcase,
@@ -1468,7 +1527,7 @@ export function DesktopProfileContent({
                       onClick={handleSaveNewExperience}
                       className="px-4 py-1.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs hover:bg-cyan-400 cursor-pointer"
                     >
-                      Save Experience
+                      Add Experience
                     </button>
                   </div>
                 </div>
@@ -1500,13 +1559,8 @@ export function DesktopProfileContent({
                 )}
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 6. EDUCATION & CREDENTIALS SECTION                                         */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {!isCompany && renderSectionCard(
+          )) : null,
+          education: !isCompany ? renderSectionCard(
           'education',
           'Education & Credentials',
           GraduationCap,
@@ -1575,7 +1629,7 @@ export function DesktopProfileContent({
                       onClick={handleSaveNewEducation}
                       className="px-4 py-1.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs hover:bg-cyan-400 cursor-pointer"
                     >
-                      Save Education
+                      Add Education
                     </button>
                   </div>
                 </div>
@@ -1604,13 +1658,8 @@ export function DesktopProfileContent({
                 )}
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 7. PROJECTS & PORTFOLIO SECTION                                            */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {renderSectionCard(
+          )) : null,
+          projects: renderSectionCard(
           'projects',
           'Projects & Portfolio',
           FolderGit2,
@@ -1691,7 +1740,7 @@ export function DesktopProfileContent({
                       onClick={handleSaveNewProject}
                       className="px-4 py-1.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs hover:bg-cyan-400 cursor-pointer"
                     >
-                      Save Project
+                      Add Project
                     </button>
                   </div>
                 </div>
@@ -1720,13 +1769,8 @@ export function DesktopProfileContent({
                 )}
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* CERTIFICATES & LICENSES SECTION                                            */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {!isCompany && renderSectionCard(
+          )),
+          certifications: !isCompany ? renderSectionCard(
           'certifications',
           'Certificates & Licenses',
           Award,
@@ -1825,7 +1869,7 @@ export function DesktopProfileContent({
                       onClick={handleSaveNewCertification}
                       className="px-4 py-1.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs hover:bg-cyan-400 cursor-pointer"
                     >
-                      Save Certificate
+                      Add Certificate
                     </button>
                   </div>
                 </div>
@@ -1854,13 +1898,8 @@ export function DesktopProfileContent({
                 )}
               </div>
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 8. SOCIAL MEDIA & LINKS SECTION                                            */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {renderSectionCard(
+          )) : null,
+          socialLinks: renderSectionCard(
           'socialLinks',
           'Social Media & Links',
           Link2,
@@ -1902,13 +1941,8 @@ export function DesktopProfileContent({
                 </div>
               ))}
             </div>
-          )
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {/* 9. ENHANCE PROFILE & CUSTOM FIELDS                                         */}
-        {/* ══════════════════════════════════════════════════════════════════════════ */}
-        {renderSectionCard(
+          )),
+          enhanceProfile: renderSectionCard(
           'enhanceProfile',
           'Enhance Profile & Custom Fields',
           Sparkles,
@@ -2000,8 +2034,15 @@ export function DesktopProfileContent({
                 )}
               </div>
             </div>
-          )
-        )}
+          )),
+        };
+
+        return canonicalSectionOrder.map((secKey) => {
+          const norm = normalizeSectionKey(secKey);
+          const el = sectionElements[norm];
+          return el ? <React.Fragment key={secKey}>{el}</React.Fragment> : null;
+        });
+      })()}
 
         {/* ══════════════════════════════════════════════════════════════════════════ */}
         {/* 10. PRIVACY & VISIBILITY LIMITATIONS                                       */}

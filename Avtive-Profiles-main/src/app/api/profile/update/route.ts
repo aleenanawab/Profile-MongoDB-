@@ -12,6 +12,7 @@ import {
   createProfileForUser
 } from '@/lib/db';
 import { ensureCloudinaryAssetUrl } from '@/lib/storage';
+import { getCanonicalSectionOrder } from '@/lib/sections';
 import { ProfileData } from '@/types/profile';
 
 async function handleProfileUpdate(request: NextRequest) {
@@ -58,6 +59,14 @@ async function handleProfileUpdate(request: NextRequest) {
       );
     }
 
+    // Never erase existing saved images with an empty/null or local blob: URL value on unrelated saves
+    if (updatedData.avatar === '' || updatedData.avatar === null || (typeof updatedData.avatar === 'string' && updatedData.avatar.startsWith('blob:'))) {
+      delete updatedData.avatar;
+    }
+    if (updatedData.coverImage === '' || updatedData.coverImage === null || (typeof updatedData.coverImage === 'string' && updatedData.coverImage.startsWith('blob:'))) {
+      delete updatedData.coverImage;
+    }
+
     // Process and auto-upload any base64 images to Cloudinary
     if (updatedData.avatar) {
       updatedData.avatar = await ensureCloudinaryAssetUrl(updatedData.avatar, 'avatars');
@@ -86,14 +95,12 @@ async function handleProfileUpdate(request: NextRequest) {
       });
     }
 
-    // Deduplicate sectionOrder entries
+    // Canonicalize and deduplicate sectionOrder entries
     if (Array.isArray(updatedData.sectionOrder)) {
-      const seenOrder = new Set<string>();
-      updatedData.sectionOrder = updatedData.sectionOrder.filter((key: any) => {
-        if (!key || typeof key !== 'string' || seenOrder.has(key)) return false;
-        seenOrder.add(key);
-        return true;
-      });
+      updatedData.sectionOrder = getCanonicalSectionOrder(
+        updatedData.sectionOrder,
+        updatedData.type || session.role
+      );
     }
 
     // 2. Perform update with automatic upsert fallback for serverless persistence

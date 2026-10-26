@@ -16,6 +16,7 @@ import {
   LogOut,
   LayoutGrid,
   Save,
+  Check,
   X,
   Loader2
 } from 'lucide-react';
@@ -195,15 +196,15 @@ export function HeaderNav({
                   onClick={onSaveEdits}
                   disabled={isSaving}
                   className={`min-h-[44px] px-3.5 rounded-xl ${theme.btnPrimary} text-xs font-bold shadow-xs transition-all shrink-0 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50`}
-                  title="Save profile changes"
-                  aria-label="Save Changes"
+                  title="Finish editing and view profile"
+                  aria-label="Done Editing"
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Save className="w-4 h-4" />
+                    <Check className="w-4 h-4" />
                   )}
-                  <span>{isSaving ? 'Saving...' : 'Save'}</span>
+                  <span>{isSaving ? 'Saving...' : 'Done'}</span>
                 </button>
               )}
             </div>

@@ -102,9 +102,8 @@ export function HeroSection({
     setErrorMessage(undefined);
     try {
       const { dataUrl, file: compressedFile } = await compressImageFile(file);
-      // Immediate visual preview
+      // Immediate visual preview in local draft
       setHeroDraft((prev) => ({ ...prev, coverImage: dataUrl }));
-      onUpdateField?.('coverImage', dataUrl);
 
       // Upload to Cloudinary and persist permanent https URL to MongoDB
       const targetId = profile.id || profile.slug;
@@ -125,7 +124,6 @@ export function HeroSection({
       console.error('Cover upload and save failed:', err);
       // Revert preview on failure
       setHeroDraft((prev) => ({ ...prev, coverImage: previousCover }));
-      onUpdateField?.('coverImage', previousCover);
       setSaveStatus('error');
       setErrorMessage(err?.message || 'Failed to upload cover banner. Please select a valid photo under 5MB.');
     } finally {
@@ -142,9 +140,8 @@ export function HeroSection({
     setErrorMessage(undefined);
     try {
       const { dataUrl, file: compressedFile } = await compressImageFile(file);
-      // Immediate visual preview
+      // Immediate visual preview in local draft
       setHeroDraft((prev) => ({ ...prev, avatar: dataUrl }));
-      onUpdateField?.('avatar', dataUrl);
 
       // Upload to Cloudinary and persist permanent https URL to MongoDB
       const targetId = profile.id || profile.slug;
@@ -165,7 +162,6 @@ export function HeroSection({
       console.error('Avatar upload and save failed:', err);
       // Revert preview on failure
       setHeroDraft((prev) => ({ ...prev, avatar: previousAvatar }));
-      onUpdateField?.('avatar', previousAvatar);
       setSaveStatus('error');
       setErrorMessage(err?.message || 'Failed to upload profile photo. Please try a valid image under 5MB.');
     } finally {

@@ -413,6 +413,8 @@ export function ProfileEditorProvider({
   const lastSavedSnapshotRef = React.useRef<string>('');
   const lastSavedProfileRef = React.useRef<ProfileData>(initialProfile);
   const isSavingInProgressRef = React.useRef<boolean>(false);
+  const pendingTrailingSaveOverrideRef = React.useRef<Partial<ProfileData> | null>(null);
+  const hasPendingTrailingSaveRef = React.useRef<boolean>(false);
   const isUserInitiatedChangeRef = React.useRef<boolean>(false);
   const saveProfileRef = React.useRef<((override?: Partial<ProfileData>) => Promise<boolean>) | null>(null);
 
@@ -698,27 +700,32 @@ export function ProfileEditorProvider({
     updateField('coverImage', localUrl);
     setIsUploadingCover(true);
     try {
-      const url = await uploadImageToStorage(file, 'profiles', {
-        profileId: profile.id || profile.slug,
-        field: 'coverImage',
-      });
+      const url = await uploadImageToStorage(file, 'profiles');
+      if (!url || typeof url !== 'string' || !url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:')) {
+        throw new Error('Upload succeeded but did not return a permanent HTTPS image URL.');
+      }
       setCoverImage(url);
       updateField('coverImage', url);
+      setIsUploadingCover(false);
+      URL.revokeObjectURL(localUrl);
+
       if (saveProfileRef.current) {
-        await saveProfileRef.current({ coverImage: url });
+        const saved = await saveProfileRef.current({ coverImage: url });
+        if (!saved) {
+          throw new Error('Failed to save cover banner to database.');
+        }
       }
       showToast('✓ Cover banner updated and saved!');
     } catch (error) {
       setCoverImage(previous);
       updateField('coverImage', previous);
+      setIsUploadingCover(false);
+      URL.revokeObjectURL(localUrl);
       const message = error instanceof Error ? error.message : 'Cover upload failed.';
       setStatusMessage({ type: 'error', text: message });
       showToast(message);
-    } finally {
-      URL.revokeObjectURL(localUrl);
-      setIsUploadingCover(false);
     }
-  }, [coverImage, profile, showToast, updateField]);
+  }, [coverImage, showToast, updateField]);
 
   const handleAvatarUpload = useCallback(async (file: File) => {
     const previous = avatar;
@@ -727,27 +734,32 @@ export function ProfileEditorProvider({
     updateField('avatar', localUrl);
     setIsUploadingAvatar(true);
     try {
-      const url = await uploadImageToStorage(file, 'avatars', {
-        profileId: profile.id || profile.slug,
-        field: 'avatar',
-      });
+      const url = await uploadImageToStorage(file, 'avatars');
+      if (!url || typeof url !== 'string' || !url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:')) {
+        throw new Error('Upload succeeded but did not return a permanent HTTPS image URL.');
+      }
       setAvatar(url);
       updateField('avatar', url);
+      setIsUploadingAvatar(false);
+      URL.revokeObjectURL(localUrl);
+
       if (saveProfileRef.current) {
-        await saveProfileRef.current({ avatar: url });
+        const saved = await saveProfileRef.current({ avatar: url });
+        if (!saved) {
+          throw new Error('Failed to save profile photo to database.');
+        }
       }
       showToast('✓ Profile photo updated and saved!');
     } catch (error) {
       setAvatar(previous);
       updateField('avatar', previous);
+      setIsUploadingAvatar(false);
+      URL.revokeObjectURL(localUrl);
       const message = error instanceof Error ? error.message : 'Profile photo upload failed.';
       setStatusMessage({ type: 'error', text: message });
       showToast(message);
-    } finally {
-      URL.revokeObjectURL(localUrl);
-      setIsUploadingAvatar(false);
     }
-  }, [avatar, profile, showToast, updateField]);
+  }, [avatar, showToast, updateField]);
 
 
   // ── Social Link Handlers ──────────────────────────────────────────────────
@@ -994,12 +1006,21 @@ export function ProfileEditorProvider({
 
   // ── Centralized Save Profile with Sequence Counter & Concurrency Guard ──
   const saveProfile = useCallback(async (overrideData?: Partial<ProfileData>): Promise<boolean> => {
-    // 1. Guard against concurrent in-flight saves
+    // 1. Guard against concurrent in-flight saves: coalesce into one trailing save
     if (isSavingInProgressRef.current) {
-      return false;
+      hasPendingTrailingSaveRef.current = true;
+      if (overrideData) {
+        pendingTrailingSaveOverrideRef.current = {
+          ...(pendingTrailingSaveOverrideRef.current || {}),
+          ...overrideData,
+        };
+      }
+      return true;
     }
 
-    if (isUploadingAvatar || isUploadingCover) {
+    const hasAvatarOverride = Boolean(overrideData && 'avatar' in overrideData);
+    const hasCoverOverride = Boolean(overrideData && 'coverImage' in overrideData);
+    if ((isUploadingAvatar && !hasAvatarOverride) || (isUploadingCover && !hasCoverOverride)) {
       const message = 'Please wait for the image upload to finish before saving.';
       setStatusMessage({ type: 'error', text: message });
       showToast(message);
@@ -1154,6 +1175,15 @@ export function ProfileEditorProvider({
     } finally {
       isSavingInProgressRef.current = false;
       setIsSaving(false);
+
+      if (hasPendingTrailingSaveRef.current) {
+        hasPendingTrailingSaveRef.current = false;
+        const trailingOverride = pendingTrailingSaveOverrideRef.current;
+        pendingTrailingSaveOverrideRef.current = null;
+        if (saveProfileRef.current) {
+          saveProfileRef.current(trailingOverride || undefined);
+        }
+      }
     }
   }, [profile, liveProfile, initialProfile, showToast, onSaveSuccess, isUploadingAvatar, isUploadingCover]);
 

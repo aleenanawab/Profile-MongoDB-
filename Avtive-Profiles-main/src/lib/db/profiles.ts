@@ -12,6 +12,7 @@ import { getMongoDb, COLLECTIONS } from './client';
 import { lazyEnsureIndexes } from './indexes';
 import { slugify } from '../validation';
 import { deleteFromCloudinary } from '@/lib/storage';
+import { isCanonicalSectionVisible } from '@/lib/sections';
 
 export function mapDocToProfileData(doc: any): ProfileData {
   const id = String(doc._id || doc.id);
@@ -93,7 +94,7 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
   const visibility = profile.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
   const sanitized: ProfileData = { ...profile };
 
-  if (settings.photo === false || visibility['photo'] === false) {
+  if (settings.photo === false || !isCanonicalSectionVisible(visibility, settings, 'profile') || visibility['photo'] === false) {
     sanitized.avatar = '';
     sanitized.coverImage = undefined;
   }
@@ -104,23 +105,24 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
     sanitized.tagline = '';
   }
 
-  if (settings.bio === false || visibility['about'] === false) {
+  if (!isCanonicalSectionVisible(visibility, settings, 'personalDetails')) {
     sanitized.bio = '';
     sanitized.about = '';
     sanitized.shortBio = '';
     sanitized.fullBio = '';
   }
 
-  if (settings.contactInfo === false || settings.phone === false || visibility['contact'] === false) {
+  const isContactVisible = isCanonicalSectionVisible(visibility, settings, 'contactInfo');
+  if (!isContactVisible || settings.phone === false) {
     sanitized.phone = '';
     sanitized.whatsapp = '';
   }
 
-  if (settings.contactInfo === false || settings.email === false || visibility['contact'] === false) {
+  if (!isContactVisible || settings.email === false) {
     sanitized.email = '';
   }
 
-  if (settings.socialLinks === false || visibility['social-links'] === false || visibility['socialLinks'] === false) {
+  if (!isCanonicalSectionVisible(visibility, settings, 'socialLinks')) {
     sanitized.socials = [];
     sanitized.socialLinks = [];
   } else {
@@ -132,27 +134,29 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
     }
   }
 
-  if (settings.skills === false || visibility['skills'] === false) sanitized.skills = [];
-  if (settings.experience === false || visibility['experience'] === false) {
+  if (!isCanonicalSectionVisible(visibility, settings, 'skills')) sanitized.skills = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'experience')) {
     sanitized.experiences = [];
     sanitized.experience = [];
   }
-  if (settings.education === false || visibility['education'] === false) sanitized.education = [];
-  if (settings.certifications === false || visibility['certifications'] === false) sanitized.certifications = [];
-  if (settings.projects === false || visibility['projects'] === false) sanitized.projects = [];
-  if (settings.services === false || visibility['services'] === false) sanitized.services = [];
-  if (settings.recommendations === false || visibility['recommendations'] === false) {
+  if (!isCanonicalSectionVisible(visibility, settings, 'education')) sanitized.education = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'certifications')) sanitized.certifications = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'projects')) sanitized.projects = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'services')) sanitized.services = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'recommendations')) {
     sanitized.recommendations = [];
     sanitized.testimonials = [];
   }
-  if (settings.languages === false || visibility['languages'] === false) sanitized.languages = [];
-  if (settings.companySection === false || visibility['company'] === false) {
+  if (!isCanonicalSectionVisible(visibility, settings, 'languages')) sanitized.languages = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'companyInfo')) {
     sanitized.companyInfo = undefined;
+  }
+  if (!isCanonicalSectionVisible(visibility, settings, 'teamMembers')) {
     sanitized.teamMembers = [];
   }
-  if (settings.nfcCard === false || visibility['virtual-card'] === false) sanitized.nfcCard = undefined;
+  if (!isCanonicalSectionVisible(visibility, settings, 'virtualCard')) sanitized.nfcCard = undefined;
 
-  if (visibility['custom-fields'] === false) {
+  if (!isCanonicalSectionVisible(visibility, settings, 'customFields')) {
     sanitized.customFields = [];
   } else if (Array.isArray(sanitized.customFields)) {
     sanitized.customFields = sanitized.customFields.filter((f) => f && f.visible !== false);

@@ -27,6 +27,7 @@ import {
   Info
 } from 'lucide-react';
 import { SharingSettings } from '@/types/profile';
+import { isCanonicalSectionVisible } from '@/lib/sections';
 
 export interface ProfileSectionMeta {
   id: string;
@@ -273,6 +274,7 @@ function SectionReorderCard({
 export interface DynamicSectionGroupsProps {
   sectionOrder: string[];
   sharingSettings: SharingSettings;
+  sectionVisibility?: Record<string, boolean>;
   onSectionOrderChange: (newOrder: string[]) => void;
   onSharingSettingsChange: (newSettings: SharingSettings) => void;
   onInstantToggle: (sectionId: string, makeVisible: boolean) => void;
@@ -281,6 +283,7 @@ export interface DynamicSectionGroupsProps {
 export function DynamicSectionGroups({
   sectionOrder,
   sharingSettings,
+  sectionVisibility,
   onSectionOrderChange,
   onSharingSettingsChange,
   onInstantToggle
@@ -309,7 +312,7 @@ export function DynamicSectionGroups({
   effectiveSectionOrder.forEach((id) => {
     const sec = allMap.get(id);
     if (!sec) return;
-    const isVisible = sharingSettings[sec.key] !== false;
+    const isVisible = isCanonicalSectionVisible(sectionVisibility, sharingSettings, sec.id);
     if (isVisible) {
       visibleList.push(sec);
     } else {

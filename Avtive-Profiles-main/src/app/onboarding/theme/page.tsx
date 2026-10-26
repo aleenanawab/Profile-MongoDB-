@@ -83,32 +83,16 @@ function ThemeStepContent() {
   const handleFinish = async (themeToSave: ProfileTheme) => {
     setContextTheme(themeToSave as PortfolioTheme);
     try {
-      const res = await fetch('/api/auth/onboarding', {
+      await fetch('/api/auth/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role, theme: themeToSave })
       });
-      const data = await res.json().catch(() => ({}));
-      const targetSlug = data.profileSlug || data.profile?.slug || data.profile?.id || data.user?.profileSlug;
-      if (targetSlug) {
-        router.push(`/profile/${encodeURIComponent(targetSlug)}`);
-        return;
-      }
     } catch (err) {
       console.error('Theme onboarding save error:', err);
     }
 
-    try {
-      const meRes = await fetch('/api/auth/me');
-      const meData = await meRes.json().catch(() => ({}));
-      const fallbackSlug = meData.profileSlug || meData.profile?.slug || meData.profile?.id;
-      if (fallbackSlug) {
-        router.push(`/profile/${encodeURIComponent(fallbackSlug)}`);
-        return;
-      }
-    } catch {}
-
-    router.push('/');
+    router.push(`/edit-profile?role=${encodeURIComponent(role)}&theme=${encodeURIComponent(themeToSave)}`);
   };
 
   const handleNext = () => handleFinish(selectedTheme);

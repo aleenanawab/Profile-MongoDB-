@@ -25,7 +25,7 @@ export const CANONICAL_SECTION_ALIASES: Record<string, string> = {
   teamMembers: 'teamMembers',
   'virtual-card': 'virtualCard',
   virtualCard: 'virtualCard',
-  enhanceProfile: 'virtualCard'
+  enhanceProfile: 'customFields'
 };
 
 export function normalizeSectionKey(key: string): string {

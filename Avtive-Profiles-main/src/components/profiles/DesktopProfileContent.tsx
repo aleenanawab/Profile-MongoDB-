@@ -2039,7 +2039,7 @@ export function DesktopProfileContent({
 
         return canonicalSectionOrder.map((secKey) => {
           const norm = normalizeSectionKey(secKey);
-          const el = sectionElements[norm];
+          const el = sectionElements[norm] || (norm === 'customFields' ? sectionElements.enhanceProfile : undefined);
           return el ? <React.Fragment key={secKey}>{el}</React.Fragment> : null;
         });
       })()}

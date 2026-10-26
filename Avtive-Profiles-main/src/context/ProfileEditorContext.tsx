@@ -38,6 +38,7 @@ import {
 import { ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
+import { isProfileDirty } from '@/lib/profileDiff';
 
 
 // ─── DraggableLinkItem ────────────────────────────────────────────────────────
@@ -410,6 +411,9 @@ export function ProfileEditorProvider({
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = React.useRef<boolean>(false);
   const lastSavedSnapshotRef = React.useRef<string>('');
+  const lastSavedProfileRef = React.useRef<ProfileData>(initialProfile);
+  const isSavingInProgressRef = React.useRef<boolean>(false);
+  const isUserInitiatedChangeRef = React.useRef<boolean>(false);
   const saveProfileRef = React.useRef<((override?: Partial<ProfileData>) => Promise<boolean>) | null>(null);
 
   // ── Theme ─────────────────────────────────────────────────────────────────
@@ -648,6 +652,7 @@ export function ProfileEditorProvider({
 
   // Update a single field in state
   const updateField = useCallback(<K extends keyof ProfileData>(key: K, val: ProfileData[K]) => {
+    isUserInitiatedChangeRef.current = true;
     setProfile((prev) => ({
       ...prev,
       [key]: val,
@@ -987,8 +992,13 @@ export function ProfileEditorProvider({
     }, 3500);
   }, []);
 
-  // ── Centralized Save Profile with Sequence Counter & Stale Protection ────
+  // ── Centralized Save Profile with Sequence Counter & Concurrency Guard ──
   const saveProfile = useCallback(async (overrideData?: Partial<ProfileData>): Promise<boolean> => {
+    // 1. Guard against concurrent in-flight saves
+    if (isSavingInProgressRef.current) {
+      return false;
+    }
+
     if (isUploadingAvatar || isUploadingCover) {
       const message = 'Please wait for the image upload to finish before saving.';
       setStatusMessage({ type: 'error', text: message });
@@ -996,6 +1006,21 @@ export function ProfileEditorProvider({
       return false;
     }
 
+    const dataToSave: ProfileData = {
+      ...profile,
+      ...liveProfile,
+      ...(overrideData || {}),
+    };
+
+    // 2. Deep normalized dirty-check: no-op if nothing changed
+    if (!overrideData && !isProfileDirty(dataToSave, lastSavedProfileRef.current)) {
+      isUserInitiatedChangeRef.current = false;
+      setAutosaveStatus('saved');
+      setAutosaveStatusText('Saved');
+      return true;
+    }
+
+    isSavingInProgressRef.current = true;
     const thisRequestId = ++requestCounterRef.current;
     setIsSaving(true);
     setAutosaveStatus('saving');
@@ -1003,12 +1028,6 @@ export function ProfileEditorProvider({
     setStatusMessage(null);
 
     try {
-      const dataToSave: ProfileData = {
-        ...profile,
-        ...liveProfile,
-        ...(overrideData || {}),
-      };
-
       // Guard: Never erase existing permanent images if override or state has empty string
       if (!dataToSave.avatar && profile.avatar) {
         dataToSave.avatar = profile.avatar;
@@ -1084,7 +1103,9 @@ export function ProfileEditorProvider({
         data.updatedProfile || data.profile || { ...dataToSave, slug: savedSlug };
 
       setProfile(finalProfile);
+      lastSavedProfileRef.current = finalProfile;
       lastSavedSnapshotRef.current = getProfileSnapshot(finalProfile);
+      isUserInitiatedChangeRef.current = false;
       setAutosaveStatus('saved');
       setAutosaveStatusText('Saved');
 
@@ -1131,6 +1152,7 @@ export function ProfileEditorProvider({
       showToast(networkErr);
       return false;
     } finally {
+      isSavingInProgressRef.current = false;
       setIsSaving(false);
     }
   }, [profile, liveProfile, initialProfile, showToast, onSaveSuccess, isUploadingAvatar, isUploadingCover]);
@@ -1146,30 +1168,31 @@ export function ProfileEditorProvider({
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
-    const currentSnapshot = getProfileSnapshot(liveProfile);
-    if (currentSnapshot !== lastSavedSnapshotRef.current || autosaveStatus === 'error') {
+    if (isUserInitiatedChangeRef.current && isProfileDirty(liveProfile, lastSavedProfileRef.current)) {
       return await saveProfile();
     }
     return true;
-  }, [liveProfile, autosaveStatus, saveProfile]);
+  }, [liveProfile, saveProfile]);
 
   const retryAutosave = useCallback(async (): Promise<boolean> => {
     return await saveProfile();
   }, [saveProfile]);
 
-  // ── Autosave 600ms Debounce Effect ────────────────────────────────────────
+  // ── Autosave Debounce Effect (Triggers ONLY on real user-initiated changes) ─
   useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
-      lastSavedSnapshotRef.current = getProfileSnapshot(liveProfile);
+      lastSavedProfileRef.current = initialProfile;
+      lastSavedSnapshotRef.current = getProfileSnapshot(initialProfile);
+      isUserInitiatedChangeRef.current = false;
       return;
     }
 
+    if (!isUserInitiatedChangeRef.current) return;
     if (isUploadingAvatar || isUploadingCover) return;
     if (liveProfile.avatar?.startsWith('blob:') || liveProfile.coverImage?.startsWith('blob:')) return;
 
-    const currentSnapshot = getProfileSnapshot(liveProfile);
-    if (currentSnapshot === lastSavedSnapshotRef.current) {
+    if (!isProfileDirty(liveProfile, lastSavedProfileRef.current)) {
       return;
     }
 
@@ -1182,15 +1205,17 @@ export function ProfileEditorProvider({
 
     debounceTimerRef.current = setTimeout(async () => {
       debounceTimerRef.current = null;
-      await saveProfile();
-    }, 600);
+      if (isUserInitiatedChangeRef.current && isProfileDirty(liveProfile, lastSavedProfileRef.current)) {
+        await saveProfile();
+      }
+    }, 1000);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [liveProfile, isUploadingAvatar, isUploadingCover, saveProfile]);
+  }, [liveProfile, isUploadingAvatar, isUploadingCover, saveProfile, initialProfile]);
 
   // Flush on field blur and before leaving
   useEffect(() => {
@@ -1212,6 +1237,7 @@ export function ProfileEditorProvider({
   const handleSaveChanges = useCallback(async () => {
     await saveProfile();
   }, [saveProfile]);
+
 
 
   // Update multiple fields at once

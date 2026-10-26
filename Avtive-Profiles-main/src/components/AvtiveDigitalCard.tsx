@@ -316,7 +316,8 @@ export function AvtiveDigitalCard({
               case 'languages': return sharing.languages !== false;
               case 'recommendations': return false;
               case 'socialLinks': return sharing.socialLinks !== false;
-              case 'virtualCard': return sharing.nfcCard !== false;
+              case 'virtualCard':
+              case 'virtual-card': return sharing.nfcCard !== false;
               default: return true;
             }
           };
@@ -517,8 +518,9 @@ export function AvtiveDigitalCard({
                   />
                 );
 
+              case 'virtualCard':
               case 'virtual-card':
-                if (!isSectionVisible('virtual-card')) return null;
+                if (!isSectionVisible('virtualCard') && !isSectionVisible('virtual-card')) return null;
                 return (
                   <div key="virtual-card" id="virtual-card-section" className={`px-4 sm:px-6 md:px-8 py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
                     <div className="flex items-center justify-between mb-4">
@@ -533,7 +535,6 @@ export function AvtiveDigitalCard({
                     <NFCCardPreview
                       profile={activeProfile}
                       onViewCompany={onViewCompany}
-                      onDownloadCard={onSaveContact}
                       onOpenShare={onOpenShare}
                       isDark={isDark}
                       theme={theme}

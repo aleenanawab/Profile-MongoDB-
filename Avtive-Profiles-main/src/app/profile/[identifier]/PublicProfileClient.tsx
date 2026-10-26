@@ -27,6 +27,7 @@ import { Edit3, Save, X, Loader2, LayoutGrid, Sun, Moon, LogOut } from 'lucide-r
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
+import { isProfileDirty } from '@/lib/profileDiff';
 
 export interface PublicProfileClientProps {
   initialProfile: ProfileData;
@@ -560,6 +561,16 @@ function PublicProfileClientInner({
         } else if (profile.coverImage) {
           payload.coverImage = profile.coverImage;
         }
+      }
+
+      // If no dirty changes exist compared to baseline profile, no-op without sending request
+      if (!isProfileDirty(payload, profile)) {
+        setIsEditing(false);
+        const targetSlug = profile.slug || profile.id;
+        if (targetSlug && typeof window !== 'undefined') {
+          window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
+        }
+        return;
       }
 
       const res = await fetch('/api/profile/update', {

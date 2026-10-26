@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, setSessionCookie } from '@/lib/auth';
-import { getProfileByUserId, updateProfile, getMongoDb, COLLECTIONS, getUserById, createProfileForUser, completeUserOnboarding } from '@/lib/db';
+import { getProfileByUserId, updateProfile, getMongoDb, COLLECTIONS, getUserById, createProfileForUser } from '@/lib/db';
 import { normalizeProfileType, ProfileTheme, UserSession } from '@/types/profile';
 
 export async function POST(request: NextRequest) {
@@ -16,19 +16,15 @@ export async function POST(request: NextRequest) {
     const selectedRole = role || profileType ? normalizeProfileType(role || profileType) : undefined;
     const selectedTheme = theme && theme !== 'default' ? (theme as ProfileTheme) : undefined;
 
-    // If theme is provided, user is at Step 2 (Theme) and completing onboarding
-    if (selectedTheme) {
-      await completeUserOnboarding(session.id, selectedRole, selectedTheme);
-    } else {
-      const db = await getMongoDb();
-      const usersCol = db.collection(COLLECTIONS.USERS);
-      const userUpdates: Record<string, any> = { updatedAt: new Date().toISOString() };
-      if (selectedRole) userUpdates.role = selectedRole;
-      await usersCol.updateOne(
-        { $or: [{ _id: session.id as any }, { id: session.id }] },
-        { $set: userUpdates }
-      );
-    }
+    const db = await getMongoDb();
+    const usersCol = db.collection(COLLECTIONS.USERS);
+    const userUpdates: Record<string, any> = { updatedAt: new Date().toISOString() };
+    if (selectedRole) userUpdates.role = selectedRole;
+    if (selectedTheme) userUpdates.preferredTheme = selectedTheme;
+    await usersCol.updateOne(
+      { $or: [{ _id: session.id as any }, { id: session.id }] },
+      { $set: userUpdates }
+    );
 
     // Save role and theme on existing profile if found (find-first check to prevent duplicates)
     const targetType = selectedRole || session.role || 'individual';
@@ -57,12 +53,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const isOnboardingComplete = Boolean(selectedTheme);
     const updatedSession: UserSession = {
       ...session,
       ...(selectedRole ? { role: selectedRole } : {}),
       ...(selectedTheme ? { preferredTheme: selectedTheme } : {}),
-      onboardingCompleted: isOnboardingComplete || session.onboardingCompleted
+      onboardingCompleted: Boolean(session.onboardingCompleted)
     };
 
     const response = NextResponse.json({

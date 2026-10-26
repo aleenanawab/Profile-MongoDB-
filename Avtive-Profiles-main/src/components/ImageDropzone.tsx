@@ -44,9 +44,10 @@ export function ImageDropzone({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
-    const isAllowed = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
-    if (!isAllowed) {
-      return 'Invalid file type. Please select a JPEG, PNG, or WebP image. iPhone HEIC photos must be converted before upload.';
+    const isAllowedType = ALLOWED_TYPES.includes(file.type);
+    const isAllowedExt = /\.(jpe?g|png|webp|gif|svg|avif|heic|heif|bmp)$/i.test(file.name);
+    if (!isAllowedType && !isAllowedExt) {
+      return 'Invalid file type. Please select a valid image (JPEG, PNG, WebP, GIF, SVG, HEIC).';
     }
     if (file.size > MAX_SIZE_BYTES) {
       return 'File exceeds 20MB. Please choose a smaller image.';
@@ -139,7 +140,7 @@ export function ImageDropzone({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/avif,image/heic,image/heif,.heic,.heif"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -168,7 +169,7 @@ export function ImageDropzone({
             <>
               <UploadCloud className="w-5 h-5 mb-1" />
               <span className="text-[11px] font-bold">Replace</span>
-              <span className="text-[9px] text-white/80">JPG, PNG, WebP (compressed)</span>
+              <span className="text-[9px] text-white/80">JPG, PNG, WebP, HEIC</span>
             </>
           )}
         </div>

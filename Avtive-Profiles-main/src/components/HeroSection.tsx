@@ -105,12 +105,8 @@ export function HeroSection({
       // Immediate visual preview in local draft
       setHeroDraft((prev) => ({ ...prev, coverImage: dataUrl }));
 
-      // Upload to Cloudinary and persist permanent https URL to MongoDB
-      const targetId = profile.id || profile.slug;
-      const cdnUrl = await uploadImageToStorage(compressedFile, 'profiles', {
-        profileId: targetId,
-        field: 'coverImage'
-      });
+      // Upload to Cloudinary storage and obtain permanent HTTPS URL
+      const cdnUrl = await uploadImageToStorage(compressedFile, 'profiles');
       if (!cdnUrl || !cdnUrl.startsWith('https://')) {
         throw new Error('Upload succeeded but did not return a permanent HTTPS URL.');
       }
@@ -118,6 +114,9 @@ export function HeroSection({
       setHeroDraft((prev) => ({ ...prev, coverImage: cdnUrl }));
       setSnapshot((prev) => ({ ...prev, coverImage: cdnUrl }));
       onUpdateField?.('coverImage', cdnUrl);
+      if (onSavePartial) {
+        await onSavePartial({ coverImage: cdnUrl });
+      }
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2500);
     } catch (err: any) {
@@ -143,12 +142,8 @@ export function HeroSection({
       // Immediate visual preview in local draft
       setHeroDraft((prev) => ({ ...prev, avatar: dataUrl }));
 
-      // Upload to Cloudinary and persist permanent https URL to MongoDB
-      const targetId = profile.id || profile.slug;
-      const cdnUrl = await uploadImageToStorage(compressedFile, 'avatars', {
-        profileId: targetId,
-        field: 'avatar'
-      });
+      // Upload to Cloudinary storage and obtain permanent HTTPS URL
+      const cdnUrl = await uploadImageToStorage(compressedFile, 'avatars');
       if (!cdnUrl || !cdnUrl.startsWith('https://')) {
         throw new Error('Upload succeeded but did not return a permanent HTTPS URL.');
       }
@@ -156,6 +151,9 @@ export function HeroSection({
       setHeroDraft((prev) => ({ ...prev, avatar: cdnUrl }));
       setSnapshot((prev) => ({ ...prev, avatar: cdnUrl }));
       onUpdateField?.('avatar', cdnUrl);
+      if (onSavePartial) {
+        await onSavePartial({ avatar: cdnUrl });
+      }
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2500);
     } catch (err: any) {

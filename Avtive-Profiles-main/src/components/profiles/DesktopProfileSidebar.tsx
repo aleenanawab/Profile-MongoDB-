@@ -96,6 +96,7 @@ export function DesktopProfileSidebar({
     sectionOrder,
     setSectionOrder,
     sectionVisibility,
+    isSectionVisible,
     handleToggleSectionVisibility
   } = useProfileEditor();
 
@@ -285,7 +286,7 @@ export function DesktopProfileSidebar({
             {orderedCoreSections.map((sec) => {
               const Icon = sec.icon;
               const isActive = activeSection === sec.key;
-              const isVisible = sectionVisibility[sec.key] !== false && sectionVisibility[sec.key === 'personalDetails' ? 'about' : sec.key === 'contactInfo' ? 'contact' : sec.key] !== false;
+              const isVisible = isSectionVisible ? isSectionVisible(sec.key) : (sectionVisibility[sec.key] !== false);
               if (isPublicView && !isVisible) return null;
               const badge = getSectionBadge(sec.key);
 
@@ -350,13 +351,11 @@ export function DesktopProfileSidebar({
                         onClick={(e) => {
                           e.stopPropagation();
                           handleToggleSectionVisibility(sec.key);
-                          if (sec.key === 'personalDetails') handleToggleSectionVisibility('about');
-                          if (sec.key === 'contactInfo') handleToggleSectionVisibility('contact');
-                          if (sec.key === 'customFields') handleToggleSectionVisibility('custom-fields');
                         }}
                         title={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
                         aria-label={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
-                        className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                        aria-pressed={isVisible}
+                        className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
                       >
                         {isVisible ? (
                           <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300" />

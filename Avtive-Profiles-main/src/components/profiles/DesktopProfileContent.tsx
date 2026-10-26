@@ -283,6 +283,8 @@ export function DesktopProfileContent({
     toggleAllSections: sharedToggleAllSections,
     canonicalSectionOrder,
     handleMoveSection,
+    isSectionVisible,
+    handleToggleSectionVisibility,
     autosaveStatus,
     autosaveStatusText,
     retryAutosave,
@@ -475,15 +477,9 @@ export function DesktopProfileContent({
     ? Object.values(profile.sectionVisibility).filter(v => v === false).length 
     : 0;
 
-  // Toggle Section Visibility
+  // Toggle Section Visibility via Central Context
   const toggleSectionVisibility = (key: string) => {
-    const current = profile.sectionVisibility || {};
-    const updated = {
-      ...current,
-      [key]: current[key] === false ? true : false
-    };
-    updateField('sectionVisibility', updated);
-    showToast(`Section "${key}" is now ${updated[key] ? 'Visible' : 'Hidden'}`);
+    handleToggleSectionVisibility(key);
   };
 
   // Skill Handlers
@@ -730,7 +726,7 @@ export function DesktopProfileContent({
         badgeText={badgeText}
         hasVisibilityToggle={hasVisibilityToggle}
         isOpen={isSectionExpanded(secKey)}
-        isVisible={profile.sectionVisibility?.[secKey] !== false}
+        isVisible={isSectionVisible ? isSectionVisible(secKey) : (profile.sectionVisibility?.[secKey] !== false)}
         instanceId={instanceId}
         onMouseEnter={() => handleSectionMouseEnter(secKey)}
         onMouseLeave={() => handleSectionMouseLeave(secKey)}

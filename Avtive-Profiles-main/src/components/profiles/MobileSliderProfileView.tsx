@@ -36,6 +36,7 @@ export function MobileSliderProfileView({ onSave, onNext: _onNext, className = '
     activeSection,
     setActiveSection,
     sectionVisibility,
+    isSectionVisible,
     handleToggleSectionVisibility,
     autosaveStatus,
     autosaveStatusText,
@@ -197,7 +198,7 @@ export function MobileSliderProfileView({ onSave, onNext: _onNext, className = '
                   {DESKTOP_SIDEBAR_SECTIONS.map((sec) => {
                     const Icon = sec.icon;
                     const isActive = activeSection === sec.key;
-                    const isVisible = sectionVisibility[sec.key] !== false;
+                    const isVisible = isSectionVisible ? isSectionVisible(sec.key) : (sectionVisibility[sec.key] !== false);
 
                     return (
                       <div
@@ -230,17 +231,16 @@ export function MobileSliderProfileView({ onSave, onNext: _onNext, className = '
                             onClick={(e) => {
                               e.stopPropagation();
                               handleToggleSectionVisibility(sec.key);
-                              if (sec.key === 'personalDetails') handleToggleSectionVisibility('about');
-                              if (sec.key === 'contactInfo') handleToggleSectionVisibility('contact');
                             }}
                             title={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
                             aria-label={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
-                            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                            aria-pressed={isVisible}
+                            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
                           >
                             {isVisible ? (
-                              <Eye className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
+                              <Eye className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                             ) : (
-                              <EyeOff className="w-3 h-3 text-slate-400 dark:text-slate-600" />
+                              <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-600" />
                             )}
                           </button>
                         </div>

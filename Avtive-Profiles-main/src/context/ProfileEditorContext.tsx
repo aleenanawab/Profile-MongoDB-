@@ -37,7 +37,13 @@ import {
 } from '@/types/profile';
 import { ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
-import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
+import {
+  getCanonicalSectionOrder,
+  normalizeSectionKey,
+  isCanonicalSectionVisible,
+  reconcileSectionVisibility,
+  toggleCanonicalSectionVisibility,
+} from '@/lib/sections';
 import { isProfileDirty } from '@/lib/profileDiff';
 
 
@@ -167,6 +173,7 @@ export interface ProfileEditorContextValue {
   handleDeleteCustomField: (id: string) => void;
   handleMoveCustomField: (index: number, direction: 'up' | 'down') => void;
   handleMoveSection: (index: number, direction: 'up' | 'down') => void;
+  isSectionVisible: (sectionKey: string) => boolean;
   handleToggleSectionVisibility: (sectionKey: string) => void;
   handleInstantToggleSection: (sectionId: string, makeVisible: boolean) => void;
   toggleVisibilityField: (field: keyof SharingSettings) => void;
@@ -321,6 +328,7 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   handleDeleteCustomField: () => {},
   handleMoveCustomField: () => {},
   handleMoveSection: () => {},
+  isSectionVisible: () => true,
   handleToggleSectionVisibility: () => {},
   handleInstantToggleSection: () => {},
   toggleVisibilityField: () => {},
@@ -501,9 +509,7 @@ export function ProfileEditorProvider({
   );
 
   const [sectionVisibility, setSectionVisibility] = useState<Record<string, boolean>>(() =>
-    initialProfile.sectionVisibility && Object.keys(initialProfile.sectionVisibility).length > 0
-      ? initialProfile.sectionVisibility
-      : DEFAULT_SECTION_VISIBILITY
+    reconcileSectionVisibility(initialProfile.sectionVisibility, initialProfile.sharingSettings)
   );
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>(
     initialProfile.sharingSettings || {
@@ -850,32 +856,41 @@ export function ProfileEditorProvider({
     [profile.type]
   );
 
-  const handleToggleSectionVisibility = useCallback((sectionKey: string) => {
-    const canonical = normalizeSectionKey(sectionKey);
-    setSectionVisibility((prev) => {
-      const current = prev[canonical] !== false && prev[sectionKey] !== false;
-      const nextVal = !current;
-      return {
-        ...prev,
-        [canonical]: nextVal,
-        [sectionKey]: nextVal,
-      };
-    });
-  }, []);
+  const isSectionVisible = useCallback(
+    (sectionKey: string): boolean => {
+      return isCanonicalSectionVisible(sectionVisibility, sharingSettings, sectionKey);
+    },
+    [sectionVisibility, sharingSettings]
+  );
 
+  const handleToggleSectionVisibility = useCallback((sectionKey: string) => {
+    isUserInitiatedChangeRef.current = true;
+    const { nextVisibility, nextSharingPatch } = toggleCanonicalSectionVisibility(
+      sectionVisibility,
+      sectionKey
+    );
+    setSectionVisibility(nextVisibility);
+    setSharingSettings((prev) => ({
+      ...prev,
+      ...nextSharingPatch,
+    }));
+  }, [sectionVisibility]);
 
   /** Used by DynamicSectionGroups — toggles both sharingSettings key and sectionOrder */
   const handleInstantToggleSection = useCallback(
     (sectionId: string, makeVisible: boolean) => {
-      const def = ALL_PROFILE_SECTIONS.find((s) => s.id === sectionId);
-      if (!def) return;
-      setSharingSettings((prev) => ({ ...prev, [def.key]: makeVisible }));
+      isUserInitiatedChangeRef.current = true;
+      const canonical = normalizeSectionKey(sectionId);
+      const current = sectionVisibility[canonical] !== false && sectionVisibility[sectionId] !== false;
+      if (current !== makeVisible) {
+        handleToggleSectionVisibility(sectionId);
+      }
       setSectionOrder((prev) => {
-        const without = prev.filter((id) => id !== sectionId);
+        const without = prev.filter((id) => id !== sectionId && normalizeSectionKey(id) !== canonical);
         return [...without, sectionId];
       });
     },
-    []
+    [handleToggleSectionVisibility, sectionVisibility]
   );
 
   const toggleVisibilityField = useCallback((field: keyof SharingSettings) => {
@@ -987,11 +1002,9 @@ export function ProfileEditorProvider({
     } else {
       setSectionOrder(DEFAULT_SECTION_ORDER);
     }
-    if (newProf.sectionVisibility && Object.keys(newProf.sectionVisibility).length > 0) {
-      setSectionVisibility(newProf.sectionVisibility);
-    } else {
-      setSectionVisibility(DEFAULT_SECTION_VISIBILITY);
-    }
+    setSectionVisibility(
+      reconcileSectionVisibility(newProf.sectionVisibility || DEFAULT_SECTION_VISIBILITY, newProf.sharingSettings)
+    );
     if (newProf.sharingSettings) setSharingSettings(newProf.sharingSettings);
     setIsConfirmed(false);
 
@@ -1343,6 +1356,7 @@ export function ProfileEditorProvider({
       handleDeleteCustomField,
       handleMoveCustomField,
       handleMoveSection,
+      isSectionVisible,
       handleToggleSectionVisibility,
       handleInstantToggleSection,
       toggleVisibilityField,

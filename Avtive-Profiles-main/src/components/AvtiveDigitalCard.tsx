@@ -24,7 +24,7 @@ import {
   ProfileTheme,
   normalizeProfileType
 } from '../types/profile';
-import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
+import { getCanonicalSectionOrder, normalizeSectionKey, isCanonicalSectionVisible } from '@/lib/sections';
 import { HeroSection } from './HeroSection';
 import { AboutSection } from './AboutSection';
 import { SkillsServicesSection } from './SkillsServicesSection';
@@ -285,41 +285,15 @@ export function AvtiveDigitalCard({
           const visibility = activeProfile.sectionVisibility || {};
 
           const isSectionVisible = (rawKey: string): boolean => {
-            const key = normalizeSectionKey(rawKey);
-            if (key === 'volunteer') return false;
+            if (rawKey === 'volunteer' || rawKey === 'recommendations') return false;
             if (isEditing) return true;
-            // 1. Direct sectionVisibility dictionary check
-            if (typeof visibility[key] === 'boolean') {
-              return visibility[key];
-            }
-            if (typeof visibility[rawKey] === 'boolean') {
-              return visibility[rawKey];
-            }
             // Check individual custom fields
-            if (rawKey.startsWith('custom-field-') || key.startsWith('custom-field-')) {
+            if (rawKey.startsWith('custom-field-')) {
               const fieldId = rawKey.replace('custom-field-', '');
               const cf = (activeProfile.customFields || []).find((f) => f.id === fieldId || `custom-field-${f.id}` === rawKey);
               return cf ? cf.visible !== false : true;
             }
-            // 2. Fallback to sharingSettings for legacy profiles
-            switch (key) {
-              case 'companyInfo':
-              case 'teamMembers': return sharing.companySection !== false;
-              case 'personalDetails': return sharing.bio !== false;
-              case 'contactInfo': return true;
-              case 'customFields': return true;
-              case 'skills': return sharing.services !== false || sharing.skills !== false;
-              case 'experience': return sharing.experience !== false;
-              case 'education': return sharing.education !== false;
-              case 'projects': return sharing.projects !== false;
-              case 'certifications': return sharing.certifications !== false;
-              case 'languages': return sharing.languages !== false;
-              case 'recommendations': return false;
-              case 'socialLinks': return sharing.socialLinks !== false;
-              case 'virtualCard':
-              case 'virtual-card': return sharing.nfcCard !== false;
-              default: return true;
-            }
+            return isCanonicalSectionVisible(visibility, sharing, rawKey);
           };
 
           const renderSectionContent = (rawSectionKey: string) => {
@@ -362,8 +336,9 @@ export function AvtiveDigitalCard({
                   />
                 );
 
+              case 'personalDetails':
               case 'about':
-                if (!isSectionVisible('about')) return null;
+                if (!isSectionVisible('personalDetails') && !isSectionVisible('about')) return null;
                 return (
                   <AboutSection 
                     key="about"
@@ -377,8 +352,9 @@ export function AvtiveDigitalCard({
                   />
                 );
 
+              case 'contactInfo':
               case 'contact':
-                if (!isSectionVisible('contact')) return null;
+                if (!isSectionVisible('contactInfo') && !isSectionVisible('contact')) return null;
                 return (
                   <ProfileContactSection
                     key="contact"
@@ -392,8 +368,10 @@ export function AvtiveDigitalCard({
                   />
                 );
 
+              case 'customFields':
               case 'custom-fields':
-                if (!isSectionVisible('custom-fields')) return null;
+              case 'enhanceProfile':
+                if (!isSectionVisible('customFields') && !isSectionVisible('custom-fields')) return null;
                 return (
                   <CustomFieldsSection
                     key="custom-fields"

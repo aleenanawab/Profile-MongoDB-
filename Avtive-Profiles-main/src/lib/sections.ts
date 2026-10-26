@@ -6,6 +6,7 @@
 
 export const CANONICAL_SECTION_ALIASES: Record<string, string> = {
   about: 'personalDetails',
+  personal: 'personalDetails',
   personalDetails: 'personalDetails',
   contact: 'contactInfo',
   contactInfo: 'contactInfo',
@@ -25,13 +26,170 @@ export const CANONICAL_SECTION_ALIASES: Record<string, string> = {
   teamMembers: 'teamMembers',
   'virtual-card': 'virtualCard',
   virtualCard: 'virtualCard',
-  enhanceProfile: 'customFields'
+  nfc: 'virtualCard',
+  nfcCard: 'virtualCard',
+  enhanceProfile: 'customFields',
+  expertise: 'skills',
+  languages: 'languages',
+  experience: 'experience',
+  education: 'education',
+  hero: 'profile',
+  profile: 'profile'
+};
+
+export const CANONICAL_TO_PRIMARY_ALIASES: Record<string, string[]> = {
+  personalDetails: ['about', 'personal'],
+  contactInfo: ['contact'],
+  customFields: ['custom-fields', 'enhanceProfile'],
+  skills: ['services', 'expertise'],
+  projects: ['portfolio'],
+  socialLinks: ['socials'],
+  certifications: ['certificates'],
+  companyInfo: ['company'],
+  teamMembers: ['team'],
+  virtualCard: ['virtual-card', 'nfc', 'nfcCard']
+};
+
+export const SECTION_TO_SHARING_KEY: Record<string, string> = {
+  personalDetails: 'bio',
+  contactInfo: 'contactInfo',
+  skills: 'skills',
+  projects: 'projects',
+  experience: 'experience',
+  education: 'education',
+  certifications: 'certifications',
+  languages: 'languages',
+  socialLinks: 'socialLinks',
+  customFields: 'customFields',
+  virtualCard: 'nfcCard',
+  companyInfo: 'companySection',
+  teamMembers: 'companySection'
 };
 
 export function normalizeSectionKey(key: string): string {
   if (!key) return '';
   if (key.startsWith('custom-field-')) return key;
   return CANONICAL_SECTION_ALIASES[key] || key;
+}
+
+export function isCanonicalSectionVisible(
+  visibility: Record<string, boolean> | undefined,
+  sharing: any | undefined,
+  rawKey: string
+): boolean {
+  if (!rawKey) return true;
+  const canonical = normalizeSectionKey(rawKey);
+
+  if (visibility && typeof visibility[canonical] === 'boolean') {
+    return visibility[canonical];
+  }
+
+  if (visibility && typeof visibility[rawKey] === 'boolean') {
+    return visibility[rawKey];
+  }
+
+  const aliases = CANONICAL_TO_PRIMARY_ALIASES[canonical];
+  if (visibility && aliases) {
+    for (const alias of aliases) {
+      if (typeof visibility[alias] === 'boolean') {
+        return visibility[alias];
+      }
+    }
+  }
+
+  const sharingKey = SECTION_TO_SHARING_KEY[canonical];
+  if (sharing && sharingKey && typeof sharing[sharingKey] === 'boolean') {
+    return sharing[sharingKey];
+  }
+
+  return true;
+}
+
+export function reconcileSectionVisibility(
+  rawVisibility?: Record<string, boolean>,
+  sharing?: any
+): Record<string, boolean> {
+  const result: Record<string, boolean> = {};
+  const allCanonical = [
+    'personalDetails',
+    'contactInfo',
+    'skills',
+    'projects',
+    'customFields',
+    'experience',
+    'education',
+    'certifications',
+    'languages',
+    'socialLinks',
+    'virtualCard',
+    'companyInfo',
+    'teamMembers'
+  ];
+
+  for (const canon of allCanonical) {
+    const isVisible = isCanonicalSectionVisible(rawVisibility, sharing, canon);
+    result[canon] = isVisible;
+    const aliases = CANONICAL_TO_PRIMARY_ALIASES[canon];
+    if (aliases) {
+      for (const alias of aliases) {
+        result[alias] = isVisible;
+      }
+    }
+  }
+
+  // Preserve any custom field keys
+  if (rawVisibility) {
+    for (const [key, val] of Object.entries(rawVisibility)) {
+      if (key.startsWith('custom-field-')) {
+        result[key] = val;
+      }
+    }
+  }
+
+  return result;
+}
+
+export function toggleCanonicalSectionVisibility(
+  currentVisibility: Record<string, boolean>,
+  sectionKey: string
+): {
+  nextVisibility: Record<string, boolean>;
+  nextSharingPatch: Record<string, boolean>;
+  canonicalKey: string;
+  nextValue: boolean;
+} {
+  const canonical = normalizeSectionKey(sectionKey);
+  const current = currentVisibility[canonical] !== false && currentVisibility[sectionKey] !== false;
+  const nextVal = !current;
+
+  const nextVisibility: Record<string, boolean> = {
+    ...currentVisibility,
+    [canonical]: nextVal,
+    [sectionKey]: nextVal
+  };
+
+  const aliases = CANONICAL_TO_PRIMARY_ALIASES[canonical];
+  if (aliases) {
+    for (const alias of aliases) {
+      nextVisibility[alias] = nextVal;
+    }
+  }
+
+  const sharingKey = SECTION_TO_SHARING_KEY[canonical];
+  const nextSharingPatch: Record<string, boolean> = {};
+  if (sharingKey) {
+    nextSharingPatch[sharingKey] = nextVal;
+  }
+  if (canonical === 'skills') {
+    nextSharingPatch.services = nextVal;
+  }
+
+  return {
+    nextVisibility,
+    nextSharingPatch,
+    canonicalKey: canonical,
+    nextValue: nextVal
+  };
 }
 
 export const INDIVIDUAL_DEFAULT_SECTION_ORDER: string[] = [

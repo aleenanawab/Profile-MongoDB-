@@ -44,7 +44,7 @@ import {
   reconcileSectionVisibility,
   toggleCanonicalSectionVisibility,
 } from '@/lib/sections';
-import { isProfileDirty } from '@/lib/profileDiff';
+import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
 
 
 // ─── DraggableLinkItem ────────────────────────────────────────────────────────
@@ -199,7 +199,7 @@ export interface ProfileEditorContextValue {
   setActiveSectionTarget: (target: { sectionKey: string; fieldKey?: string; timestamp: number } | null) => void;
   updateField: <K extends keyof ProfileData>(key: K, value: ProfileData[K]) => void;
   updateProfilePartial: (partial: Partial<ProfileData>) => void;
-  saveProfile: (overrideData?: Partial<ProfileData>) => Promise<SaveProfileResult>;
+  saveProfile: (overrideData?: Partial<ProfileData>, options?: { keepalive?: boolean }) => Promise<SaveProfileResult>;
   toastMessage: string | null;
   showToast: (msg: string) => void;
   isDark: boolean;
@@ -209,7 +209,7 @@ export interface ProfileEditorContextValue {
   handleSwitchPersona: (newProf: ProfileData) => void;
   autosaveStatus: 'idle' | 'saving' | 'saved' | 'error';
   autosaveStatusText: string;
-  flushAutosave: (currentDraftOverride?: Partial<ProfileData>) => Promise<SaveProfileResult>;
+  flushAutosave: (currentDraftOverride?: Partial<ProfileData>, options?: { keepalive?: boolean }) => Promise<SaveProfileResult>;
   retryAutosave: () => Promise<SaveProfileResult>;
   canonicalSectionOrder: string[];
   expandedSections: Record<string, boolean>;
@@ -432,7 +432,7 @@ export function ProfileEditorProvider({
     reject: (err: any) => void;
   }[]>([]);
   const isUserInitiatedChangeRef = React.useRef<boolean>(false);
-  const saveProfileRef = React.useRef<((override?: Partial<ProfileData>) => Promise<SaveProfileResult>) | null>(null);
+  const saveProfileRef = React.useRef<((override?: Partial<ProfileData>, options?: { keepalive?: boolean }) => Promise<SaveProfileResult>) | null>(null);
 
   // ── Theme ─────────────────────────────────────────────────────────────────
   const [activeTheme, setActiveTheme] = useState<ProfileTheme>(
@@ -975,6 +975,11 @@ export function ProfileEditorProvider({
 
   // ── Switch Profile Persona ────────────────────────────────────────────────
   const handleSwitchToProfile = useCallback((newProf: ProfileData) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    lastSavedProfileRef.current = newProf;
     setProfile(newProf);
     setActiveTheme(newProf.theme === 'default' ? 'editorial' : (newProf.theme || 'editorial'));
 
@@ -1026,7 +1031,10 @@ export function ProfileEditorProvider({
   }, []);
 
   // ── Centralized Save Profile with Sequence Counter & Concurrency Guard ──
-  const saveProfile = useCallback(async (overrideData?: Partial<ProfileData>): Promise<SaveProfileResult> => {
+  const saveProfile = useCallback(async (
+    overrideData?: Partial<ProfileData>,
+    options?: { keepalive?: boolean }
+  ): Promise<SaveProfileResult> => {
     // 1. Guard against concurrent in-flight saves: coalesce into one trailing save and return deferred Promise
     if (isSavingInProgressRef.current) {
       hasPendingTrailingSaveRef.current = true;
@@ -1056,8 +1064,9 @@ export function ProfileEditorProvider({
       ...(overrideData || {}),
     };
 
-    // 2. Deep normalized dirty-check: no-op if nothing changed
-    if (!isProfileDirty(dataToSave, lastSavedProfileRef.current)) {
+    // 2. Deep normalized diff against last-saved baseline: no-op if nothing changed
+    const diff = diffProfile(lastSavedProfileRef.current, dataToSave);
+    if (!diff.hasChanges) {
       isUserInitiatedChangeRef.current = false;
       setAutosaveStatus('saved');
       setAutosaveStatusText('Saved');
@@ -1103,12 +1112,15 @@ export function ProfileEditorProvider({
       const res = await fetch('/api/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        keepalive: Boolean(options?.keepalive),
         body: JSON.stringify({
           profileId: profileIdentifier,
           profileSlug: profileIdentifier,
           slug: profileIdentifier,
           id: reliableProfileId,
           userId: dataToSave.userId || profile.userId || initialProfile.userId,
+          patch: diff.patch,
+          clearFields: diff.clearFields,
           updatedData: {
             ...dataToSave,
             id: reliableProfileId,
@@ -1238,33 +1250,40 @@ export function ProfileEditorProvider({
   }, [saveProfile]);
 
   // Flush pending autosave immediately
-  const flushAutosave = useCallback(async (currentDraftOverride?: Partial<ProfileData>): Promise<SaveProfileResult> => {
+  const flushAutosave = useCallback(async (
+    currentDraftOverride?: Partial<ProfileData>,
+    options?: { keepalive?: boolean }
+  ): Promise<SaveProfileResult> => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
-    return await saveProfile(currentDraftOverride);
+    return await saveProfile(currentDraftOverride, options);
   }, [saveProfile]);
 
   const retryAutosave = useCallback(async (): Promise<SaveProfileResult> => {
     return await saveProfile();
   }, [saveProfile]);
 
-  // ── Autosave Debounce Effect (Triggers ONLY on real user-initiated changes) ─
+  const liveProfileRef = React.useRef<ProfileData>(liveProfile);
+  useEffect(() => {
+    liveProfileRef.current = liveProfile;
+  }, [liveProfile]);
+
+  // ── Autosave Debounce Effect (Triggers on derived dirtiness against baseline) ─
   useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
       lastSavedProfileRef.current = initialProfile;
       lastSavedSnapshotRef.current = getProfileSnapshot(initialProfile);
-      isUserInitiatedChangeRef.current = false;
       return;
     }
 
-    if (!isUserInitiatedChangeRef.current) return;
     if (isUploadingAvatar || isUploadingCover) return;
     if (liveProfile.avatar?.startsWith('blob:') || liveProfile.coverImage?.startsWith('blob:')) return;
 
-    if (!isProfileDirty(liveProfile, lastSavedProfileRef.current)) {
+    const diff = diffProfile(lastSavedProfileRef.current, liveProfile);
+    if (!diff.hasChanges) {
       return;
     }
 
@@ -1277,7 +1296,7 @@ export function ProfileEditorProvider({
 
     debounceTimerRef.current = setTimeout(async () => {
       debounceTimerRef.current = null;
-      if (isUserInitiatedChangeRef.current && isProfileDirty(liveProfile, lastSavedProfileRef.current)) {
+      if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
         await saveProfile();
       }
     }, 1000);
@@ -1289,21 +1308,53 @@ export function ProfileEditorProvider({
     };
   }, [liveProfile, isUploadingAvatar, isUploadingCover, saveProfile, initialProfile]);
 
-  // Flush on field blur and before leaving
+  // Flush on field blur, tab hidden, pagehide, and before leaving
   useEffect(() => {
+    const handleFlush = (keepalive = false) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
+        saveProfile(undefined, { keepalive });
+      }
+    };
+
     const handleWindowBlur = () => {
-      flushAutosave();
+      handleFlush(false);
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        handleFlush(true);
+      }
+    };
+    const handlePageHide = () => {
+      handleFlush(true);
     };
     const handleBeforeUnload = () => {
-      flushAutosave();
+      handleFlush(true);
     };
+
     window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      // On unmount: flush if changes exist
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+        if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
+          saveProfile(undefined, { keepalive: true });
+        }
+      }
     };
-  }, [flushAutosave]);
+  }, [saveProfile]);
 
   // Alias handleSaveChanges directly to saveProfile for 100% unified save behavior across desktop and mobile
   const handleSaveChanges = useCallback(async () => {

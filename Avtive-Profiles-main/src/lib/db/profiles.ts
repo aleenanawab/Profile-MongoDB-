@@ -286,10 +286,11 @@ export async function getAllProfiles(): Promise<ProfileData[]> {
 
 export async function updateProfile(
   profileId: string,
-  updatedData: Partial<ProfileData>,
+  updatedData: Record<string, any>,
   sessionUserId: string,
-  _sessionUserEmail?: string
-): Promise<{ success: boolean; profile?: ProfileData; error?: string; status: number }> {
+  _sessionUserEmail?: string,
+  options?: { clearFields?: string[]; isPatch?: boolean }
+): Promise<{ success: boolean; profile?: ProfileData; appliedKeys?: string[]; error?: string; status: number }> {
   if (!sessionUserId) {
     return { success: false, error: 'Unauthorized: Session required.', status: 401 };
   }
@@ -329,53 +330,63 @@ export async function updateProfile(
   }
 
   const now = new Date().toISOString();
-  const safeUpdates = { ...updatedData, updatedAt: now };
-  delete (safeUpdates as any)._id;
-  delete (safeUpdates as any).id;
-  delete (safeUpdates as any).userId; // Prevent transferring ownership via update
-
-  // Never save a blob: URL under any circumstances
-  if (typeof safeUpdates.avatar === 'string' && safeUpdates.avatar.startsWith('blob:')) {
-    delete safeUpdates.avatar;
-  }
-  if (typeof safeUpdates.coverImage === 'string' && safeUpdates.coverImage.startsWith('blob:')) {
-    delete safeUpdates.coverImage;
-  }
-
-  // An unrelated profile edit (where avatar/coverImage are undefined) must never erase existing images
-  if (safeUpdates.avatar === undefined && (existing.avatar || (existing as any).logoUrl)) {
-    safeUpdates.avatar = existing.avatar || (existing as any).logoUrl;
-  }
-  if (safeUpdates.coverImage === undefined && (existing.coverImage || (existing as any).coverUrl)) {
-    safeUpdates.coverImage = existing.coverImage || (existing as any).coverUrl;
-  }
+  const $set: Record<string, any> = { updatedAt: now };
+  const clearFieldsSet = new Set<string>(options?.clearFields || []);
 
   // Track old Cloudinary public IDs for safe post-save cleanup
-  const oldAvatarPublicId = (
-    safeUpdates.avatar !== undefined &&
-    safeUpdates.avatar !== existing.avatar &&
-    (existing as any).avatarPublicId
-  ) ? (existing as any).avatarPublicId : null;
+  let oldAvatarPublicId: string | null = null;
+  let oldCoverPublicId: string | null = null;
 
-  const oldCoverPublicId = (
-    safeUpdates.coverImage !== undefined &&
-    safeUpdates.coverImage !== existing.coverImage &&
-    (existing as any).coverImagePublicId
-  ) ? (existing as any).coverImagePublicId : null;
+  for (const [key, value] of Object.entries(updatedData)) {
+    // 1. Guard immutable fields
+    if (key === '_id' || key === 'id' || key === 'userId' || key === 'createdAt' || key === 'role') {
+      continue;
+    }
 
-  // If explicitly cleared/removed, also clear the publicId
-  if (safeUpdates.avatar === '' || safeUpdates.avatar === null) {
-    safeUpdates.avatar = '';
-    (safeUpdates as any).avatarPublicId = '';
-  }
-  if (safeUpdates.coverImage === '' || safeUpdates.coverImage === null) {
-    safeUpdates.coverImage = '';
-    (safeUpdates as any).coverImagePublicId = '';
+    // 2. Reject blob: or data: URLs in avatar/coverImage
+    if ((key === 'avatar' || key === 'coverImage') && typeof value === 'string') {
+      if (value.startsWith('blob:') || value.startsWith('data:')) {
+        continue;
+      }
+    }
+
+    // 3. Accidental wipe guard for arrays and objects:
+    // If setting to empty array or empty string, ensure explicit intent via clearFields
+    const topLevelKey = key.split('.')[0];
+    const existingVal = (existing as any)[topLevelKey];
+    const isWipingArray = Array.isArray(existingVal) && existingVal.length > 0 && Array.isArray(value) && value.length === 0;
+    const isWipingString = typeof existingVal === 'string' && existingVal.trim().length > 0 && value === '';
+
+    if ((isWipingArray || isWipingString) && !clearFieldsSet.has(topLevelKey) && !clearFieldsSet.has(key)) {
+      console.warn(`[updateProfile] Rejected unintended wipe of non-empty field: "${key}" (not in clearFields)`);
+      continue;
+    }
+
+    // 4. Image cleanup tracking
+    if (key === 'avatar') {
+      if (value && value !== existing.avatar && (existing as any).avatarPublicId) {
+        oldAvatarPublicId = (existing as any).avatarPublicId;
+      }
+      if (value === '' && (existing as any).avatarPublicId) {
+        $set['avatarPublicId'] = '';
+      }
+    }
+    if (key === 'coverImage') {
+      if (value && value !== existing.coverImage && (existing as any).coverImagePublicId) {
+        oldCoverPublicId = (existing as any).coverImagePublicId;
+      }
+      if (value === '' && (existing as any).coverImagePublicId) {
+        $set['coverImagePublicId'] = '';
+      }
+    }
+
+    // 5. Add to $set
+    $set[key] = value;
   }
 
   const res = await profilesCol.findOneAndUpdate(
     { _id: existing.id as any },
-    { $set: safeUpdates },
+    { $set },
     { returnDocument: 'after' }
   );
 
@@ -391,7 +402,12 @@ export async function updateProfile(
     deleteFromCloudinary(oldCoverPublicId).catch((err) => console.warn('Failed to delete old cover:', err));
   }
 
-  return { success: true, profile: mapDocToProfileData(res), status: 200 };
+  return {
+    success: true,
+    profile: mapDocToProfileData(res),
+    appliedKeys: Object.keys($set).filter((k) => k !== 'updatedAt'),
+    status: 200
+  };
 }
 
 export async function duplicateProfile(

@@ -27,7 +27,7 @@ import { Edit3, Save, X, Loader2, LayoutGrid, Sun, Moon, LogOut } from 'lucide-r
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
-import { isProfileDirty } from '@/lib/profileDiff';
+import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
 
 export interface PublicProfileClientProps {
   initialProfile: ProfileData;
@@ -86,6 +86,24 @@ function PublicProfileClientInner({
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<UserSession | null>(session);
+
+  const {
+    liveProfile,
+    activeSection,
+    setActiveSection,
+    isSaving,
+    saveProfile,
+    handleSwitchToProfile,
+    flushAutosave,
+    isUploadingAvatar,
+    isUploadingCover
+  } = useProfileEditor();
+
+  const [currentDraft, setCurrentDraft] = useState<ProfileData>(profile);
+
+  useEffect(() => {
+    setCurrentDraft(profile);
+  }, [profile]);
 
   const activeThemeConfig = getThemeConfig(activeTheme);
 
@@ -573,26 +591,12 @@ function PublicProfileClientInner({
         return;
       }
 
-      const res = await fetch('/api/profile/update', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          profileId: profile.id,
-          updatedData: payload
-        })
-      });
-
-      const isJson = res.headers.get('content-type')?.includes('application/json');
-      const data = isJson ? await res.json().catch(() => ({})) : null;
-
-      if (!res.ok) {
-        if (res.status === 413) {
-          throw new Error('Profile payload is too large. Please select a photo under 4.5MB.');
-        }
-        throw new Error(data?.error || `Failed to save changes (${res.status}).`);
+      const result = await saveProfile(payload);
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to save changes.');
       }
 
-      const savedProfile = data?.profile || payload;
+      const savedProfile = result.profile || payload;
       setProfile(savedProfile);
       setCurrentDraft(savedProfile);
       setIsEditing(false);
@@ -700,24 +704,6 @@ function PublicProfileClientInner({
     }
   };
 
-  const {
-    liveProfile,
-    activeSection,
-    setActiveSection,
-    isSaving,
-    saveProfile,
-    handleSwitchToProfile,
-    flushAutosave,
-    isUploadingAvatar,
-    isUploadingCover
-  } = useProfileEditor();
-
-  const [currentDraft, setCurrentDraft] = useState<ProfileData>(profile);
-
-  useEffect(() => {
-    setCurrentDraft(profile);
-  }, [profile]);
-
   const handleDraftChange = (draft: ProfileData) => {
     setCurrentDraft(draft);
   };
@@ -757,7 +743,7 @@ function PublicProfileClientInner({
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && isEditing) {
         if (isProfileDirty(currentDraft, profile)) {
-          saveProfile(currentDraft).catch(() => {});
+          saveProfile(currentDraft, { keepalive: true }).catch(() => {});
         }
       }
     };

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { ObjectId } from 'mongodb';
 import { UserRecord, ProfileData, ProfileType, ProfileTheme, normalizeProfileType } from '@/types/profile';
 import { getMongoDb, COLLECTIONS } from './client';
 import { lazyEnsureIndexes } from './indexes';
@@ -39,9 +40,15 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
 
   await lazyEnsureIndexes();
   const db = await getMongoDb();
-  const doc = await db.collection(COLLECTIONS.USERS).findOne({
-    $or: [{ _id: id as any }, { id: id }]
-  });
+  const orConditions: any[] = [
+    { _id: id as any },
+    { id: id }
+  ];
+  if (ObjectId.isValid(id)) {
+    orConditions.push({ _id: new ObjectId(id) });
+  }
+
+  const doc = await db.collection(COLLECTIONS.USERS).findOne({ $or: orConditions });
   if (!doc) return null;
   return mapDocToUserRecord(doc);
 }
@@ -52,14 +59,17 @@ export async function getUserByEmailOrUsername(identifier: string): Promise<User
 
   await lazyEnsureIndexes();
   const db = await getMongoDb();
-  const doc = await db.collection(COLLECTIONS.USERS).findOne({
-    $or: [
-      { email: normalized },
-      { username: normalized },
-      { id: identifier },
-      { _id: identifier as any }
-    ]
-  });
+  const orConditions: any[] = [
+    { email: normalized },
+    { username: normalized },
+    { id: identifier },
+    { _id: identifier as any }
+  ];
+  if (ObjectId.isValid(identifier)) {
+    orConditions.push({ _id: new ObjectId(identifier) });
+  }
+
+  const doc = await db.collection(COLLECTIONS.USERS).findOne({ $or: orConditions });
   if (!doc) return null;
   return mapDocToUserRecord(doc);
 }
@@ -79,8 +89,16 @@ export async function linkUserGoogleSub(userId: string, googleSub: string): Prom
 
   await lazyEnsureIndexes();
   const db = await getMongoDb();
+  const orConditions: any[] = [
+    { _id: userId as any },
+    { id: userId }
+  ];
+  if (ObjectId.isValid(userId)) {
+    orConditions.push({ _id: new ObjectId(userId) });
+  }
+
   const res = await db.collection(COLLECTIONS.USERS).updateOne(
-    { $or: [{ _id: userId as any }, { id: userId }] },
+    { $or: orConditions },
     { $set: { googleSub: googleSub.trim(), updatedAt: new Date().toISOString() } }
   );
   return res.modifiedCount > 0;

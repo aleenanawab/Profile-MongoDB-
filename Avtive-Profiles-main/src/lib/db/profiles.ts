@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { ObjectId } from 'mongodb';
 import {
   ProfileData,
   ProfileType,
@@ -18,17 +19,27 @@ export function mapDocToProfileData(doc: any): ProfileData {
   const id = String(doc._id || doc.id);
   const slug = String(doc.slug || id);
 
+  const socials = Array.isArray(doc.socials) ? doc.socials : (Array.isArray(doc.socialLinks) ? doc.socialLinks : []);
+  const experiences = Array.isArray(doc.experiences) ? doc.experiences : (Array.isArray(doc.experience) ? doc.experience : []);
+
   return {
     ...doc,
     id,
     _id: id,
     slug,
-    userId: String(doc.userId || ''),
+    userId: String(doc.userId || doc.user_id || ''),
     name: doc.name || 'Professional',
     email: doc.email || '',
     designation: doc.designation || 'Professional',
     company: doc.company || '',
     location: doc.location || '',
+    phone: doc.phone || '',
+    whatsapp: doc.whatsapp || '',
+    website: doc.website || '',
+    country: doc.country || '',
+    officeAddress: doc.officeAddress || '',
+    customContacts: Array.isArray(doc.customContacts) ? doc.customContacts : [],
+    contactOrder: Array.isArray(doc.contactOrder) ? doc.contactOrder : [],
     avatar: doc.avatar || doc.logoUrl || '',
     coverImage: doc.coverImage || doc.coverUrl || undefined,
     shortBio: doc.shortBio || doc.bio || '',
@@ -39,10 +50,12 @@ export function mapDocToProfileData(doc: any): ProfileData {
     type: normalizeProfileType(doc.type),
     theme: doc.theme || 'editorial',
     skills: Array.isArray(doc.skills) ? doc.skills : [],
-    socials: Array.isArray(doc.socials) ? doc.socials : [],
+    socials,
+    socialLinks: socials,
     services: Array.isArray(doc.services) ? doc.services : [],
     projects: Array.isArray(doc.projects) ? doc.projects : [],
-    experiences: Array.isArray(doc.experiences) ? doc.experiences : (Array.isArray(doc.experience) ? doc.experience : []),
+    experiences,
+    experience: experiences,
     education: Array.isArray(doc.education) ? doc.education : [],
     certifications: Array.isArray(doc.certifications) ? doc.certifications : [],
     recommendations: Array.isArray(doc.recommendations) ? doc.recommendations : [],
@@ -204,6 +217,9 @@ export async function createProfileForUser(
   }
 
   const now = new Date().toISOString();
+  const rawSocials = data.socials || data.socialLinks || [];
+  const rawExperiences = data.experiences || data.experience || [];
+
   const newProfileDoc: any = {
     ...data,
     _id: profileId,
@@ -215,17 +231,28 @@ export async function createProfileForUser(
     designation: data.designation?.trim() || '',
     company: data.company?.trim() || '',
     location: data.location?.trim() || '',
+    phone: data.phone?.trim() || '',
+    whatsapp: data.whatsapp?.trim() || '',
+    website: data.website?.trim() || '',
+    country: data.country?.trim() || '',
+    officeAddress: data.officeAddress?.trim() || '',
+    customContacts: Array.isArray(data.customContacts) ? data.customContacts : [],
+    contactOrder: Array.isArray(data.contactOrder) ? data.contactOrder : [],
     avatar: data.avatar || '',
     coverImage: data.coverImage || undefined,
     shortBio: data.shortBio?.trim() || data.bio?.trim() || '',
     fullBio: data.fullBio?.trim() || data.about?.trim() || '',
+    bio: data.bio?.trim() || data.shortBio?.trim() || '',
+    about: data.about?.trim() || data.fullBio?.trim() || '',
     type: normalizeProfileType(data.type),
     theme: data.theme || 'editorial',
     skills: data.skills || [],
-    socials: data.socials || [],
+    socials: rawSocials,
+    socialLinks: rawSocials,
     services: data.services || [],
     projects: data.projects || [],
-    experiences: data.experiences || data.experience || [],
+    experiences: rawExperiences,
+    experience: rawExperiences,
     education: data.education || [],
     certifications: data.certifications || [],
     recommendations: data.recommendations || [],
@@ -247,14 +274,16 @@ export async function getProfileByIdOrSlug(idOrSlug: string): Promise<ProfileDat
 
   await lazyEnsureIndexes();
   const db = await getMongoDb();
-  const doc = await db.collection(COLLECTIONS.PROFILES).findOne({
-    $or: [
-      { _id: idOrSlug as any },
-      { id: idOrSlug },
-      { slug: idOrSlug }
-    ]
-  });
+  const orConditions: any[] = [
+    { id: idOrSlug },
+    { slug: idOrSlug },
+    { _id: idOrSlug as any }
+  ];
+  if (ObjectId.isValid(idOrSlug)) {
+    orConditions.push({ _id: new ObjectId(idOrSlug) });
+  }
 
+  const doc = await db.collection(COLLECTIONS.PROFILES).findOne({ $or: orConditions });
   if (!doc) return null;
   return mapDocToProfileData(doc);
 }
@@ -267,11 +296,23 @@ export async function getProfileByUserId(
 
   await lazyEnsureIndexes();
   const db = await getMongoDb();
+  const userOrConditions: any[] = [
+    { userId },
+    { user_id: userId }
+  ];
+  if (ObjectId.isValid(userId)) {
+    userOrConditions.push({ userId: new ObjectId(userId) });
+    userOrConditions.push({ user_id: new ObjectId(userId) });
+  }
+
   if (preferredType) {
-    const doc = await db.collection(COLLECTIONS.PROFILES).findOne({ userId, type: preferredType });
+    const doc = await db.collection(COLLECTIONS.PROFILES).findOne({
+      $or: userOrConditions,
+      type: preferredType
+    });
     if (doc) return mapDocToProfileData(doc);
   }
-  const doc = await db.collection(COLLECTIONS.PROFILES).findOne({ userId });
+  const doc = await db.collection(COLLECTIONS.PROFILES).findOne({ $or: userOrConditions });
   if (!doc) return null;
   return mapDocToProfileData(doc);
 }
@@ -281,7 +322,16 @@ export async function getProfilesByUserId(userId: string): Promise<ProfileData[]
 
   await lazyEnsureIndexes();
   const db = await getMongoDb();
-  const docs = await db.collection(COLLECTIONS.PROFILES).find({ userId }).toArray();
+  const userOrConditions: any[] = [
+    { userId },
+    { user_id: userId }
+  ];
+  if (ObjectId.isValid(userId)) {
+    userOrConditions.push({ userId: new ObjectId(userId) });
+    userOrConditions.push({ user_id: new ObjectId(userId) });
+  }
+
+  const docs = await db.collection(COLLECTIONS.PROFILES).find({ $or: userOrConditions }).toArray();
   return docs.map(mapDocToProfileData);
 }
 
@@ -309,7 +359,12 @@ export async function updateProfile(
   }
 
   // Authorization enforcement: User must be profile owner or company admin/owner
-  if (existing.userId !== sessionUserId) {
+  const isDirectOwner =
+    existing.userId === sessionUserId ||
+    (existing as any).user_id === sessionUserId ||
+    (ObjectId.isValid(sessionUserId) && (String(existing.userId) === sessionUserId || String((existing as any).user_id) === sessionUserId));
+
+  if (!isDirectOwner) {
     let allowed = false;
     if (existing.companyId) {
       const { getCompanyMemberByUser } = await import('./members');
@@ -344,6 +399,15 @@ export async function updateProfile(
   // Track old Cloudinary public IDs for safe post-save cleanup
   let oldAvatarPublicId: string | null = null;
   let oldCoverPublicId: string | null = null;
+
+  const NESTED_PLAIN_KEYS = new Set([
+    'companyInfo',
+    'sectionVisibility',
+    'sharingSettings',
+    'customThemeColors',
+    'customCta',
+    'nfcCard'
+  ]);
 
   for (const [key, value] of Object.entries(updatedData)) {
     // 1. Guard immutable fields
@@ -388,12 +452,37 @@ export async function updateProfile(
       }
     }
 
-    // 5. Add to $set
+    // 5. Expand nested plain objects to preserve sibling keys in MongoDB
+    if (NESTED_PLAIN_KEYS.has(key) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      for (const [subK, subV] of Object.entries(value)) {
+        $set[`${key}.${subK}`] = subV;
+      }
+      continue;
+    }
+
+    // 6. Add to $set and handle legacy aliases
     $set[key] = value;
+    if (key === 'experiences') $set['experience'] = value;
+    if (key === 'experience') $set['experiences'] = value;
+    if (key === 'socials') $set['socialLinks'] = value;
+    if (key === 'socialLinks') $set['socials'] = value;
+    if (key === 'bio') $set['shortBio'] = value;
+    if (key === 'shortBio') $set['bio'] = value;
+    if (key === 'about') $set['fullBio'] = value;
+    if (key === 'fullBio') $set['about'] = value;
+  }
+
+  const matchCriteria: any[] = [
+    { id: existing.id },
+    { slug: existing.slug },
+    { _id: existing.id as any }
+  ];
+  if (ObjectId.isValid(existing.id)) {
+    matchCriteria.push({ _id: new ObjectId(existing.id) });
   }
 
   const res = await profilesCol.findOneAndUpdate(
-    { _id: existing.id as any },
+    { $or: matchCriteria },
     { $set },
     { returnDocument: 'after' }
   );
@@ -464,7 +553,16 @@ export async function deleteProfile(
   }
 
   const db = await getMongoDb();
-  await db.collection(COLLECTIONS.PROFILES).deleteOne({ _id: existing.id as any });
+  const matchCriteria: any[] = [
+    { id: existing.id },
+    { slug: existing.slug },
+    { _id: existing.id as any }
+  ];
+  if (ObjectId.isValid(existing.id)) {
+    matchCriteria.push({ _id: new ObjectId(existing.id) });
+  }
+
+  await db.collection(COLLECTIONS.PROFILES).deleteOne({ $or: matchCriteria });
 
   return { success: true, status: 200 };
 }

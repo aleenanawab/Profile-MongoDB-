@@ -740,4 +740,18 @@ html:not(.dark) .pdf-chip-tag:hover {
   }
 }
 
+/* Smooth scrolling container with touch momentum & reduced motion respect */
+.smooth-scroll-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smooth-scroll-container,
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
 

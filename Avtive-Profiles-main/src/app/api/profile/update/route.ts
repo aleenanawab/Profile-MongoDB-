@@ -39,7 +39,7 @@ async function handleProfileUpdate(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
     const profileId = body.profileId || body.id || body.slug || body.profileSlug;
-    const clearFields: string[] = Array.isArray(body.clearFields) ? body.clearFields : [];
+    const clearFields: string[] = Array.isArray(body.clearFields) ? [...body.clearFields] : [];
 
     let rawData: Record<string, any>;
     const isPatch = Boolean(body.patch);
@@ -57,18 +57,23 @@ async function handleProfileUpdate(request: NextRequest) {
       delete rawData.updatedData;
     }
 
-    // 2. Validate field keys against whitelist and reject immutable/unknown fields
-    const attemptedKeys = Object.keys(rawData);
-    const forbidden = attemptedKeys.filter(
-      (k) => IMMUTABLE_FIELDS.has(k) || IMMUTABLE_FIELDS.has(k.split('.')[0])
-    );
-    if (forbidden.length > 0) {
-      return NextResponse.json(
-        { error: `Cannot modify immutable field(s): ${forbidden.join(', ')}` },
-        { status: 400 }
-      );
+    // 2. Strip immutable server fields so payloads containing existing profile fields are safely accepted
+    for (const imm of IMMUTABLE_FIELDS) {
+      delete rawData[imm];
+    }
+    delete rawData.id;
+    delete rawData.__v;
+
+    // Auto-detect cleared fields for intentional user clear operations
+    for (const [k, v] of Object.entries(rawData)) {
+      if (v === '' || (Array.isArray(v) && v.length === 0)) {
+        if (!clearFields.includes(k)) {
+          clearFields.push(k);
+        }
+      }
     }
 
+    const attemptedKeys = Object.keys(rawData);
     const unknown = attemptedKeys.filter((k) => {
       const topKey = k.split('.')[0];
       return !VALID_TOP_KEYS.has(topKey);

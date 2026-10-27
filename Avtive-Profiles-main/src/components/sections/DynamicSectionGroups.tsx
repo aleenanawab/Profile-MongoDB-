@@ -125,6 +125,8 @@ export const ALL_PROFILE_SECTIONS: ProfileSectionMeta[] = [
   }
 ];
 
+import { useLongPressDrag } from '@/hooks/useLongPressDrag';
+
 interface SectionCardProps {
   section: ProfileSectionMeta;
   index: number;
@@ -146,6 +148,11 @@ function SectionReorderCard({
 }: SectionCardProps) {
   const dragControls = useDragControls();
   const Icon = section.icon;
+  const { isPressing, isArmed, dragHandleProps } = useLongPressDrag({
+    dragControls,
+    delayMs: 200,
+    moveThreshold: 6
+  });
 
   return (
     <Reorder.Item
@@ -154,18 +161,26 @@ function SectionReorderCard({
       dragListener={false}
       dragControls={dragControls}
       className={`p-3 sm:p-3.5 rounded-2xl border transition-all duration-150 flex items-center gap-2.5 sm:gap-3 select-none ${
-        isVisibleGroup
+        isArmed
+          ? 'bg-cyan-50/80 dark:bg-cyan-950/40 border-cyan-400 dark:border-cyan-500 shadow-md scale-[1.01]'
+          : isVisibleGroup
           ? 'bg-white dark:bg-[#181B24] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-xs'
           : 'bg-slate-50/70 dark:bg-white/[0.03] border-slate-200/60 dark:border-white/5 opacity-75 hover:opacity-100'
       }`}
     >
-      {/* Drag Handle */}
+      {/* Drag Handle with 200ms Long-Press & Move Threshold Protection */}
       <button
         type="button"
-        onPointerDown={(e) => dragControls.start(e)}
-        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-grab active:cursor-grabbing shrink-0 transition-colors"
-        title="Drag to reorder"
-        aria-label={`Drag to reorder ${section.label}`}
+        {...dragHandleProps}
+        className={`p-1.5 rounded-lg shrink-0 transition-all cursor-grab active:cursor-grabbing ${
+          isArmed
+            ? 'text-cyan-600 dark:text-cyan-400 bg-cyan-100/80 dark:bg-cyan-900/40 scale-105'
+            : isPressing
+            ? 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-white/10'
+            : 'text-slate-400 hover:text-slate-700 dark:hover:text-white'
+        }`}
+        title="Press and hold (200ms) to drag and reorder"
+        aria-label={`Press and hold to drag and reorder ${section.label}`}
       >
         <GripVertical className="w-4 h-4" />
       </button>

@@ -96,7 +96,8 @@ function PublicProfileClientInner({
     handleSwitchToProfile,
     flushAutosave,
     isUploadingAvatar,
-    isUploadingCover
+    isUploadingCover,
+    updateProfilePartial
   } = useProfileEditor();
 
   const [currentDraft, setCurrentDraft] = useState<ProfileData>(profile);
@@ -706,6 +707,7 @@ function PublicProfileClientInner({
 
   const handleDraftChange = (draft: ProfileData) => {
     setCurrentDraft(draft);
+    updateProfilePartial(draft);
   };
 
   const handleOpenEditMode = () => {
@@ -796,13 +798,17 @@ function PublicProfileClientInner({
     router.refresh();
   };
 
-  const cardProfile = useMemo(() => ({
-    ...profile,
-    sectionVisibility: liveProfile.sectionVisibility || profile.sectionVisibility,
-    sharingSettings: liveProfile.sharingSettings || profile.sharingSettings,
-    type: profileType,
-    theme: activeTheme
-  }), [profile, liveProfile.sectionVisibility, liveProfile.sharingSettings, profileType, activeTheme]);
+  const cardProfile = useMemo(() => {
+    const base = isEditing && currentDraft ? currentDraft : profile;
+    return {
+      ...base,
+      sectionVisibility: liveProfile.sectionVisibility || base.sectionVisibility,
+      sharingSettings: liveProfile.sharingSettings || base.sharingSettings,
+      sectionOrder: liveProfile.sectionOrder || base.sectionOrder,
+      type: profileType,
+      theme: activeTheme
+    };
+  }, [profile, currentDraft, isEditing, liveProfile.sectionVisibility, liveProfile.sharingSettings, liveProfile.sectionOrder, profileType, activeTheme]);
 
   const desktopView = (
     <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 overflow-hidden relative">
@@ -915,7 +921,7 @@ function PublicProfileClientInner({
             if (mobileOpen) handleCloseMobile();
             if (isSidebarOpen) handleCloseSidebar();
           }}
-          className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1"
+          className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
           <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} shadow-none sm:shadow-xl overflow-hidden relative`}>
             <AvtiveDigitalCard
@@ -1009,7 +1015,7 @@ function PublicProfileClientInner({
             if (mobileOpen) handleCloseMobile();
             if (isSidebarOpen) handleCloseSidebar();
           }}
-          className="h-full min-h-0 overflow-y-auto overscroll-contain transition-all duration-300 w-full flex-1"
+          className="h-full min-h-0 overflow-y-auto overscroll-contain transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
           <AvtiveDigitalCard
             profile={cardProfile}

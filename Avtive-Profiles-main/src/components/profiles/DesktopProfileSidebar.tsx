@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Reorder } from 'framer-motion';
+import { Reorder, useDragControls } from 'framer-motion';
 import { 
   User, 
   FileText, 
@@ -31,11 +31,14 @@ import {
   Tag,
   Layers,
   CheckCircle2,
-  MessageSquare
+  MessageSquare,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
 import { AvtiveLogoIcon } from '@/components/DesktopWindowPreview';
 import { ProfileSwitcher } from '@/components/profiles/ProfileSwitcher';
+import { useLongPressDrag } from '@/hooks/useLongPressDrag';
 
 export interface SidebarSectionItem {
   key: string;
@@ -72,6 +75,155 @@ export const DESKTOP_SIDEBAR_SECTIONS: SidebarSectionItem[] = [
   { key: 'security', label: 'Security', icon: ShieldCheck, category: 'system' },
   { key: 'settings', label: 'Settings', icon: Settings, category: 'system' }
 ];
+
+interface DesktopSidebarItemProps {
+  sec: SidebarSectionItem;
+  isActive: boolean;
+  isVisible: boolean;
+  isPublicView: boolean;
+  badge?: string | number;
+  onSelect: () => void;
+  onToggleVisibility: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+}
+
+function DesktopSidebarReorderItem({
+  sec,
+  isActive,
+  isVisible,
+  isPublicView,
+  badge,
+  onSelect,
+  onToggleVisibility,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast
+}: DesktopSidebarItemProps) {
+  const dragControls = useDragControls();
+  const Icon = sec.icon;
+  const { isPressing, isArmed, dragHandleProps } = useLongPressDrag({
+    dragControls,
+    delayMs: 200,
+    moveThreshold: 6
+  });
+
+  return (
+    <Reorder.Item
+      key={sec.key}
+      value={sec}
+      dragListener={false}
+      dragControls={dragControls}
+      className={`w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-semibold transition-all relative select-none group ${
+        isArmed
+          ? 'bg-cyan-100/70 dark:bg-cyan-950/60 border border-cyan-400 dark:border-cyan-500 shadow-md'
+          : isActive
+          ? 'bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-400/50 dark:border-cyan-500/40 text-cyan-950 dark:text-white font-bold shadow-2xs'
+          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent'
+      }`}
+    >
+      {isActive && (
+        <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-sm shadow-cyan-400/80" />
+      )}
+
+      {/* Drag Handle with 200ms Long-Press */}
+      {!isPublicView && (
+        <button
+          type="button"
+          {...dragHandleProps}
+          title="Press and hold (200ms) to drag and reorder"
+          aria-label={`Press and hold to drag and reorder ${sec.label}`}
+          className={`p-1 rounded shrink-0 transition-colors cursor-grab active:cursor-grabbing ${
+            isArmed
+              ? 'text-cyan-600 dark:text-cyan-400 bg-cyan-200/50 dark:bg-cyan-900/50'
+              : isPressing
+              ? 'text-slate-800 dark:text-slate-200 bg-slate-200/60 dark:bg-white/10'
+              : 'text-slate-400 hover:text-cyan-600 dark:text-slate-600 dark:hover:text-cyan-400'
+          }`}
+        >
+          <GripVertical className="w-3.5 h-3.5" />
+        </button>
+      )}
+
+      {/* Accessible Step Up / Down Controls */}
+      {!isPublicView && onMoveUp && onMoveDown && (
+        <div className="flex flex-col gap-0.5 shrink-0 mr-1">
+          <button
+            type="button"
+            onClick={onMoveUp}
+            disabled={isFirst}
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-white disabled:opacity-20 transition-colors cursor-pointer disabled:cursor-not-allowed"
+            title="Move Up"
+            aria-label={`Move ${sec.label} up`}
+          >
+            <ArrowUp className="w-2.5 h-2.5" />
+          </button>
+          <button
+            type="button"
+            onClick={onMoveDown}
+            disabled={isLast}
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-white disabled:opacity-20 transition-colors cursor-pointer disabled:cursor-not-allowed"
+            title="Move Down"
+            aria-label={`Move ${sec.label} down`}
+          >
+            <ArrowDown className="w-2.5 h-2.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Section Label & Click Target */}
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex-1 flex items-center gap-2 min-w-0 px-1 py-0.5 text-left cursor-pointer"
+      >
+        <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+          isActive ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-slate-200'
+        }`} />
+        <span className={`truncate text-xs ${!isVisible ? 'line-through text-slate-400 dark:text-slate-600' : ''}`}>
+          {sec.label}
+        </span>
+      </button>
+
+      {/* Badge & Visibility Toggle */}
+      <div className="flex items-center gap-1.5 shrink-0">
+        {badge !== undefined && (
+          <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
+            isActive 
+              ? 'bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-500/30 dark:text-cyan-200 dark:border-cyan-400/30' 
+              : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10'
+          }`}>
+            {badge}
+          </span>
+        )}
+
+        {/* Show / Hide Eye Icon */}
+        {!isPublicView && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleVisibility();
+            }}
+            title={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
+            aria-label={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
+            aria-pressed={isVisible}
+            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            {isVisible ? (
+              <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300" />
+            ) : (
+              <EyeOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400" />
+            )}
+          </button>
+        )}
+      </div>
+    </Reorder.Item>
+  );
+}
 
 export interface DesktopProfileSidebarProps {
   onClose?: () => void;
@@ -187,6 +339,22 @@ export function DesktopProfileSidebar({
     setSectionOrder(mergedOrder);
   };
 
+  const handleMoveUp = (index: number) => {
+    if (index <= 0) return;
+    const copy = [...orderedCoreSections];
+    const [moved] = copy.splice(index, 1);
+    copy.splice(index - 1, 0, moved);
+    handleReorderCore(copy);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index >= orderedCoreSections.length - 1) return;
+    const copy = [...orderedCoreSections];
+    const [moved] = copy.splice(index, 1);
+    copy.splice(index + 1, 0, moved);
+    handleReorderCore(copy);
+  };
+
   return (
     <aside className="w-[min(320px,100%)] max-w-full sm:w-[300px] xl:w-[330px] shrink-0 h-full min-h-0 bg-white dark:bg-[#080D1A] border-r border-slate-200 dark:border-white/10 flex flex-col select-none relative z-30 shadow-2xl transition-colors overflow-hidden">
       
@@ -268,7 +436,7 @@ export function DesktopProfileSidebar({
       </div>
 
       {/* 3. Section Navigation List with Drag-and-Drop & Visibility Toggles */}
-      <div className="flex-1 overflow-y-auto py-2.5 px-2.5 space-y-2 scrollbar-thin scrollbar-thumb-white/10">
+      <div className="flex-1 overflow-y-auto py-2.5 px-2.5 space-y-2 scrollbar-thin scrollbar-thumb-white/10 smooth-scroll-container">
         
         {/* Group 1: Core Profile Sections with Drag & Drop Reordering */}
         <div>
@@ -283,89 +451,30 @@ export function DesktopProfileSidebar({
             onReorder={handleReorderCore} 
             className="space-y-1"
           >
-            {orderedCoreSections.map((sec) => {
-              const Icon = sec.icon;
+            {orderedCoreSections.map((sec, index) => {
               const isActive = activeSection === sec.key;
               const isVisible = isSectionVisible ? isSectionVisible(sec.key) : (sectionVisibility[sec.key] !== false);
               if (isPublicView && !isVisible) return null;
               const badge = getSectionBadge(sec.key);
 
               return (
-                <Reorder.Item
+                <DesktopSidebarReorderItem
                   key={sec.key}
-                  value={sec}
-                  className={`w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-semibold transition-all relative select-none group ${
-                    isActive
-                      ? 'bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-400/50 dark:border-cyan-500/40 text-cyan-950 dark:text-white font-bold shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent'
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-sm shadow-cyan-400/80" />
-                  )}
-                  
-                  {/* Drag Handle */}
-                  {!isPublicView && (
-                    <div 
-                      title="Drag to reorder"
-                      aria-label={`Drag to reorder ${sec.label}`}
-                      className="p-1 text-slate-400 hover:text-cyan-600 dark:text-slate-600 dark:hover:text-cyan-400 cursor-grab active:cursor-grabbing shrink-0 transition-colors"
-                    >
-                      <GripVertical className="w-3.5 h-3.5" />
-                    </div>
-                  )}
-
-                  {/* Section Label & Click Target */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSection(sec.key);
-                      onSelectSection?.(sec.key);
-                    }}
-                    className="flex-1 flex items-center gap-2 min-w-0 px-1 py-0.5 text-left cursor-pointer"
-                  >
-                    <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      isActive ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-slate-200'
-                    }`} />
-                    <span className={`truncate text-xs ${!isVisible ? 'line-through text-slate-400 dark:text-slate-600' : ''}`}>
-                      {sec.label}
-                    </span>
-                  </button>
-
-                  {/* Badge & Visibility Toggle */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {badge !== undefined && (
-                      <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
-                        isActive 
-                          ? 'bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-500/30 dark:text-cyan-200 dark:border-cyan-400/30' 
-                          : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10'
-                      }`}>
-                        {badge}
-                      </span>
-                    )}
-
-                    {/* Show / Hide Eye Icon */}
-                    {!isPublicView && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleSectionVisibility(sec.key);
-                        }}
-                        title={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
-                        aria-label={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
-                        aria-pressed={isVisible}
-                        className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                      >
-                        {isVisible ? (
-                          <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300" />
-                        ) : (
-                          <EyeOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </Reorder.Item>
+                  sec={sec}
+                  isActive={isActive}
+                  isVisible={isVisible}
+                  isPublicView={isPublicView}
+                  badge={badge}
+                  onSelect={() => {
+                    setActiveSection(sec.key);
+                    onSelectSection?.(sec.key);
+                  }}
+                  onToggleVisibility={() => handleToggleSectionVisibility(sec.key)}
+                  onMoveUp={() => handleMoveUp(index)}
+                  onMoveDown={() => handleMoveDown(index)}
+                  isFirst={index === 0}
+                  isLast={index === orderedCoreSections.length - 1}
+                />
               );
             })}
           </Reorder.Group>

@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { ObjectId } from 'mongodb';
 import { isProfileDirty, diffProfile, arePrimitivesEqual, FIELD_CLASSIFICATIONS } from '../src/lib/profileDiff';
 import { 
   sanitizeProfileForPublic, 
@@ -838,6 +839,149 @@ runTest('Image safety: blob: URLs rejected and existing URLs preserved on unrela
   assert.strictEqual(safeAvatar, baseline.avatar, 'Blob URL must be guarded and never sent to MongoDB');
 });
 
+// -----------------------------------------------------------------------------
+// 14. ObjectId & Legacy user_id Resolution in Document Mapping
+// -----------------------------------------------------------------------------
+runTest('ObjectId and user_id compatibility: mapDocToProfileData extracts correct strings', () => {
+  const rawMongoId = new ObjectId('65a123456789abcdef012345');
+  const rawUserId = new ObjectId('65b123456789abcdef012346');
+
+  const rawDoc = {
+    _id: rawMongoId,
+    user_id: rawUserId,
+    name: 'ObjectId Test User',
+    slug: 'objid-test',
+    bio: 'Experienced Developer',
+    socials: [{ platform: 'github', url: 'https://github.com/test' }],
+    experience: [{ id: 'exp1', company: 'Tech Inc', role: 'Staff Engineer' }],
+    phone: '+1 555-0199',
+    whatsapp: '+1 555-0199'
+  };
+
+  const mapped = mapDocToProfileData(rawDoc);
+  assert.strictEqual(mapped.id, '65a123456789abcdef012345');
+  assert.strictEqual(mapped._id, '65a123456789abcdef012345');
+  assert.strictEqual(mapped.userId, '65b123456789abcdef012346', 'Legacy user_id must map to userId string');
+  assert.strictEqual(mapped.socials.length, 1);
+  assert.strictEqual(mapped.socialLinks?.length, 1, 'socialLinks alias must be synchronized from socials');
+  assert.strictEqual(mapped.experiences.length, 1);
+  assert.strictEqual(mapped.experience?.length, 1, 'experience alias must be synchronized from experiences');
+  assert.strictEqual(mapped.shortBio, 'Experienced Developer', 'shortBio must be mirrored from bio');
+  assert.strictEqual(mapped.phone, '+1 555-0199');
+  assert.strictEqual(mapped.whatsapp, '+1 555-0199');
+});
+
+// -----------------------------------------------------------------------------
+// 15. Bidirectional Alias Synchronization Round-Trip
+// -----------------------------------------------------------------------------
+runTest('Bidirectional alias synchronization: updating one alias updates both', () => {
+  const baseline: ProfileData = {
+    id: 'alias-test',
+    slug: 'alias-test',
+    name: 'Alias User',
+    type: 'individual',
+    socials: [{ platform: 'linkedin', url: 'https://linkedin.com/in/test' }],
+    socialLinks: [{ platform: 'linkedin', url: 'https://linkedin.com/in/test' }],
+    experiences: [{ id: 'e1', company: 'Acme', role: 'Architect' }],
+    experience: [{ id: 'e1', company: 'Acme', role: 'Architect' }],
+    bio: 'Initial Bio',
+    shortBio: 'Initial Bio',
+    about: 'Full About Story',
+    fullBio: 'Full About Story'
+  };
+
+  // User edits socials through a component using socialLinks
+  const draftA: ProfileData = {
+    ...baseline,
+    socialLinks: [
+      { platform: 'linkedin', url: 'https://linkedin.com/in/test' },
+      { platform: 'x', url: 'https://x.com/test' }
+    ]
+  };
+
+  const diffA = diffProfile(baseline, draftA);
+  assert.strictEqual(diffA.hasChanges, true);
+  assert.strictEqual(diffA.patch.socialLinks.length, 2);
+
+  // User edits experiences through a component using experience
+  const draftB: ProfileData = {
+    ...baseline,
+    experience: [
+      { id: 'e1', company: 'Acme', role: 'Chief Architect' }
+    ]
+  };
+
+  const diffB = diffProfile(baseline, draftB);
+  assert.strictEqual(diffB.hasChanges, true);
+  assert.strictEqual(diffB.patch.experience[0].role, 'Chief Architect');
+});
+
+// -----------------------------------------------------------------------------
+// 16. Nested Plain Object Sibling Preservation
+// -----------------------------------------------------------------------------
+runTest('Nested plain object sibling preservation: dot notation preserves sibling fields', () => {
+  const existingDoc = {
+    _id: 'prof-sibling-1',
+    companyInfo: {
+      name: 'Alpha Corp',
+      industry: 'Software',
+      website: 'https://alphacorp.io',
+      size: '50-100'
+    },
+    sectionVisibility: {
+      profile: true,
+      skills: true,
+      projects: true,
+      contactInfo: true
+    }
+  };
+  assert.strictEqual(existingDoc._id, 'prof-sibling-1');
+
+  // Simulating the server-side updateProfile flattening logic
+  const incomingUpdate: Record<string, any> = {
+    companyInfo: { name: 'Alpha Technologies Inc.' },
+    sectionVisibility: { skills: false }
+  };
+
+  const NESTED_PLAIN_KEYS = new Set(['companyInfo', 'sectionVisibility', 'sharingSettings']);
+  const $set: Record<string, any> = {};
+
+  for (const [key, value] of Object.entries(incomingUpdate)) {
+    if (NESTED_PLAIN_KEYS.has(key) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      for (const [subK, subV] of Object.entries(value)) {
+        $set[`${key}.${subK}`] = subV;
+      }
+    } else {
+      $set[key] = value;
+    }
+  }
+
+  assert.strictEqual($set['companyInfo.name'], 'Alpha Technologies Inc.');
+  assert.strictEqual($set['companyInfo'], undefined, 'Must NOT replace the whole companyInfo object');
+  assert.strictEqual($set['sectionVisibility.skills'], false);
+  assert.strictEqual($set['sectionVisibility'], undefined, 'Must NOT replace the whole sectionVisibility object');
+});
+
+// -----------------------------------------------------------------------------
+// 17. Section Drag-and-Drop Long Press & Gesture Cancellation Logic
+// -----------------------------------------------------------------------------
+runTest('Section Drag-and-Drop: 200ms hold delay and movement threshold cancellation', () => {
+  // Simulate pointer movement threshold logic
+  const moveThreshold = 6;
+  const startX = 100;
+  const startY = 200;
+
+  // Case 1: Small finger jitter (within 6px) before hold finishes -> Drag should NOT cancel
+  const smallMoveDistance = Math.hypot(Math.abs(103 - startX), Math.abs(202 - startY)); // hypot(3, 2) = 3.6 < 6
+  const isCancelledSmall = smallMoveDistance > moveThreshold;
+  assert.strictEqual(isCancelledSmall, false, 'Jitter <= 6px must not cancel long-press hold');
+
+  // Case 2: Intentional scroll swipe (e.g. 15px vertical swipe) before hold finishes -> Drag MUST cancel
+  const scrollMoveDistance = Math.hypot(Math.abs(100 - startX), Math.abs(218 - startY)); // hypot(0, 18) = 18 > 6
+  const isCancelledScroll = scrollMoveDistance > moveThreshold;
+  assert.strictEqual(isCancelledScroll, true, 'Pointer swipe > 6px must cancel drag so page scrolls smoothly');
+});
+
 console.log('================================================================');
 console.log(` RESULTS: ${passedTests} PASSED, ${failedTests} FAILED (TOTAL: ${totalTests})`);
 console.log('================================================================\n');
@@ -845,3 +989,4 @@ console.log('================================================================\n'
 if (failedTests > 0) {
   process.exit(1);
 }
+

@@ -12,7 +12,7 @@ import { getMongoDb, COLLECTIONS } from './client';
 import { lazyEnsureIndexes } from './indexes';
 import { slugify } from '../validation';
 import { deleteFromCloudinary } from '@/lib/storage';
-import { isCanonicalSectionVisible } from '@/lib/sections';
+import { isCanonicalSectionVisible, isFieldShared } from '@/lib/sections';
 
 export function mapDocToProfileData(doc: any): ProfileData {
   const id = String(doc._id || doc.id);
@@ -92,7 +92,8 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
 
   const settings = profile.sharingSettings || DEFAULT_SHARING_SETTINGS;
   const visibility = profile.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
-  const sanitized: ProfileData = { ...profile };
+  // Deep clone to ensure purity so caller's object is never mutated in-place
+  const sanitized: ProfileData = JSON.parse(JSON.stringify(profile));
 
   if (settings.photo === false || !isCanonicalSectionVisible(visibility, settings, 'profile') || visibility['photo'] === false) {
     sanitized.avatar = '';
@@ -113,13 +114,20 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
   }
 
   const isContactVisible = isCanonicalSectionVisible(visibility, settings, 'contactInfo');
-  if (!isContactVisible || settings.phone === false) {
+  if (!isContactVisible || !isFieldShared(profile, 'phone')) {
     sanitized.phone = '';
     sanitized.whatsapp = '';
   }
 
-  if (!isContactVisible || settings.email === false) {
+  if (!isContactVisible || !isFieldShared(profile, 'email')) {
     sanitized.email = '';
+  }
+
+  if (!isContactVisible) {
+    sanitized.website = '';
+    sanitized.officeAddress = '';
+    sanitized.googleMapsUrl = '';
+    sanitized.customContacts = [];
   }
 
   if (!isCanonicalSectionVisible(visibility, settings, 'socialLinks')) {

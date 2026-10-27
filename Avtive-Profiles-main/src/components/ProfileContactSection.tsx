@@ -7,6 +7,7 @@ import { ThemeConfig, getThemeConfig } from './themeStyles';
 import { FormLabel, FormInput, SectionSaveBar } from './ui/formControls';
 import { SearchableCombobox } from './forms/SearchableCombobox';
 import { COUNTRIES } from '@/data/countriesDataset';
+import { isFieldShared } from '@/lib/sections';
 
 interface ProfileContactSectionProps {
   profile: ProfileData;
@@ -245,7 +246,7 @@ export function ProfileContactSection({
         </div>
       ) : hasContactInfo ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-          {profile.email && sharing.email !== false && (
+          {profile.email && isFieldShared(profile, 'email') && (
             <a
               href={`mailto:${profile.email}`}
               className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
@@ -264,7 +265,7 @@ export function ProfileContactSection({
             </a>
           )}
 
-          {profile.phone && sharing.phone !== false && (
+          {profile.phone && isFieldShared(profile, 'phone') && (
             <a
               href={`tel:${profile.phone.replace(/[^0-9+]/g, '')}`}
               className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
@@ -283,7 +284,7 @@ export function ProfileContactSection({
             </a>
           )}
 
-          {profile.whatsapp && sharing.phone !== false && (
+          {profile.whatsapp && isFieldShared(profile, 'whatsapp') && (
             <a
               href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(profile.name)}`}
               target="_blank"

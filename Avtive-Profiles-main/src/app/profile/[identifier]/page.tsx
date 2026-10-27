@@ -7,6 +7,8 @@ import { getSession } from '@/lib/auth';
 import { PublicProfileClient } from './PublicProfileClient';
 import { ProfileNotFoundFallback } from './ProfileNotFoundFallback';
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ identifier: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;

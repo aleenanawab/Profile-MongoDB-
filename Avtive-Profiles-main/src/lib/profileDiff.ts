@@ -201,12 +201,33 @@ export function diffProfile(
   const base: Partial<ProfileData> = baseline || {};
   const cur: Partial<ProfileData> = draft || {};
 
+  const SERVER_METADATA_IGNORE = new Set([
+    '_id',
+    '__v',
+    'createdAt',
+    'updatedAt',
+    'userId',
+    'companyId',
+    'companyName',
+    'role'
+  ]);
+
   const allKeys = Array.from(
-    new Set([...Object.keys(FIELD_CLASSIFICationsClean(base)), ...Object.keys(FIELD_CLASSIFICationsClean(cur))])
-  ) as (keyof ProfileData)[];
+    new Set([...Object.keys(base), ...Object.keys(cur)])
+  ).filter((k) => !SERVER_METADATA_IGNORE.has(k)) as (keyof ProfileData)[];
 
   for (const key of allKeys) {
-    const kind = FIELD_CLASSIFICATIONS[key] || 'primitive';
+    let kind: FieldKind = (FIELD_CLASSIFICATIONS as any)[key];
+    if (!kind) {
+      const val = (cur as any)[key] !== undefined ? (cur as any)[key] : (base as any)[key];
+      if (Array.isArray(val)) {
+        kind = 'array';
+      } else if (val && typeof val === 'object' && !(val instanceof Date)) {
+        kind = 'nested_object';
+      } else {
+        kind = 'primitive';
+      }
+    }
 
     if (kind === 'server_only') {
       continue;
@@ -231,27 +252,44 @@ export function diffProfile(
       const objBase = (base as any)[key] || {};
       const objDraft = (cur as any)[key] || {};
 
-      const subKeys = Array.from(new Set([...Object.keys(objBase), ...Object.keys(objDraft)]));
-      for (const subKey of subKeys) {
-        if (subKey === '_id' || subKey === '__v' || subKey === 'createdAt' || subKey === 'updatedAt') continue;
+      const diffNested = (prefix: string, bObj: Record<string, any>, dObj: Record<string, any>) => {
+        const subKeys = Array.from(new Set([...Object.keys(bObj || {}), ...Object.keys(dObj || {})]));
+        for (const subKey of subKeys) {
+          if (SERVER_METADATA_IGNORE.has(subKey)) continue;
 
-        const valBase = objBase[subKey];
-        let valDraft = objDraft[subKey];
+          const valBase = bObj ? bObj[subKey] : undefined;
+          let valDraft = dObj ? dObj[subKey] : undefined;
 
-        // Normalization for sectionVisibility and sharingSettings
-        if (key === 'sectionVisibility') {
-          const canonicalKey = normalizeSectionKey(subKey);
-          if (canonicalKey !== subKey && typeof objDraft[canonicalKey] === 'boolean') {
-            valDraft = objDraft[canonicalKey];
+          // Normalization for sectionVisibility
+          if (prefix === 'sectionVisibility') {
+            const canonicalKey = normalizeSectionKey(subKey);
+            if (canonicalKey !== subKey && typeof dObj[canonicalKey] === 'boolean') {
+              valDraft = dObj[canonicalKey];
+            }
+          }
+
+          const dotPath = `${prefix}.${subKey}`;
+
+          if (valDraft && typeof valDraft === 'object' && !Array.isArray(valDraft) && !(valDraft instanceof Date)) {
+            diffNested(dotPath, valBase || {}, valDraft);
+          } else if (Array.isArray(valDraft) || Array.isArray(valBase)) {
+            if (!areArraysEqual(valBase, valDraft)) {
+              patch[dotPath] = Array.isArray(valDraft) ? valDraft : [];
+              changedKeys.push(dotPath);
+            }
+          } else {
+            if (!arePrimitivesEqual(valBase, valDraft)) {
+              patch[dotPath] = valDraft !== undefined ? valDraft : '';
+              changedKeys.push(dotPath);
+              if (normStr(valBase) !== '' && normStr(valDraft) === '') {
+                clearFields.push(dotPath);
+              }
+            }
           }
         }
+      };
 
-        if (!arePrimitivesEqual(valBase, valDraft)) {
-          const dotPath = `${key}.${subKey}`;
-          patch[dotPath] = valDraft;
-          changedKeys.push(dotPath);
-        }
-      }
+      diffNested(key, objBase, objDraft);
       continue;
     }
 

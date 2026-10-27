@@ -263,3 +263,29 @@ export function getCanonicalSectionOrder(
 
   return result;
 }
+
+/**
+ * Single canonical sharing helper for contact and profile fields.
+ * Used across the editor toggle, owner preview, public Contact component, and sanitizeProfileForPublic.
+ * - Explicit false strictly marks the field private.
+ * - Unset (undefined/null) defaults to true for email and phone (matching DEFAULT_SHARING_SETTINGS).
+ * - Honors overall contact section visibility.
+ */
+export function isFieldShared(
+  profile?: { sharingSettings?: any; sectionVisibility?: Record<string, boolean> } | null,
+  field: 'phone' | 'email' | 'whatsapp' | 'website' | 'location' | 'officeAddress' | string = 'phone'
+): boolean {
+  if (!profile) return true;
+  const isContactVisible = isCanonicalSectionVisible(profile.sectionVisibility, profile.sharingSettings, 'contactInfo');
+  if (!isContactVisible) return false;
+
+  const sharing = profile.sharingSettings || {};
+  if (field === 'phone' || field === 'whatsapp') {
+    return sharing.phone !== false;
+  }
+  if (field === 'email') {
+    return sharing.email !== false;
+  }
+  return true;
+}
+

@@ -29,6 +29,7 @@ import {
   ExperienceItem,
   EducationItem,
   SharingSettings,
+  DEFAULT_SHARING_SETTINGS,
   CustomFieldItem,
   DynamicSection,
   DEFAULT_SECTION_ORDER,
@@ -44,7 +45,7 @@ import {
   reconcileSectionVisibility,
   toggleCanonicalSectionVisibility,
 } from '@/lib/sections';
-import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
+import { isProfileDirty, diffProfile, arePrimitivesEqual, areArraysEqual } from '@/lib/profileDiff';
 
 
 // ─── DraggableLinkItem ────────────────────────────────────────────────────────
@@ -124,6 +125,23 @@ export interface ProfileEditorContextValue {
   setAvatar: (v: string) => void;
   coverImage: string;
   setCoverImage: (v: string) => void;
+
+  phone: string;
+  setPhone: (v: string) => void;
+  whatsapp: string;
+  setWhatsapp: (v: string) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  website: string;
+  setWebsite: (v: string) => void;
+  country: string;
+  setCountry: (v: string) => void;
+  officeAddress: string;
+  setOfficeAddress: (v: string) => void;
+  customContacts: any[];
+  setCustomContacts: React.Dispatch<React.SetStateAction<any[]>>;
+  contactOrder: string[];
+  setContactOrder: React.Dispatch<React.SetStateAction<string[]>>;
 
   skills: string[];
   setSkills: React.Dispatch<React.SetStateAction<string[]>>;
@@ -269,6 +287,22 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   flushAutosave: async () => ({ ok: true }),
   retryAutosave: async () => ({ ok: false, error: 'Context uninitialized' }),
   canonicalSectionOrder: [],
+  phone: '',
+  setPhone: () => {},
+  whatsapp: '',
+  setWhatsapp: () => {},
+  email: '',
+  setEmail: () => {},
+  website: '',
+  setWebsite: () => {},
+  country: '',
+  setCountry: () => {},
+  officeAddress: '',
+  setOfficeAddress: () => {},
+  customContacts: [],
+  setCustomContacts: () => {},
+  contactOrder: [],
+  setContactOrder: () => {},
   username: '',
   setUsername: () => {},
   fullName: '',
@@ -424,6 +458,7 @@ export function ProfileEditorProvider({
   const isMountedRef = React.useRef<boolean>(false);
   const lastSavedSnapshotRef = React.useRef<string>('');
   const lastSavedProfileRef = React.useRef<ProfileData>(initialProfile);
+  const liveProfileRef = React.useRef<ProfileData>(initialProfile);
   const isSavingInProgressRef = React.useRef<boolean>(false);
   const pendingTrailingSaveOverrideRef = React.useRef<Partial<ProfileData> | null>(null);
   const hasPendingTrailingSaveRef = React.useRef<boolean>(false);
@@ -468,6 +503,16 @@ export function ProfileEditorProvider({
   // ── Images ────────────────────────────────────────────────────────────────
   const [avatar, setAvatar] = useState(initialProfile.avatar || '');
   const [coverImage, setCoverImage] = useState(initialProfile.coverImage || '');
+
+  // ── Contact Info ──────────────────────────────────────────────────────────
+  const [phone, setPhone] = useState(initialProfile.phone || '');
+  const [whatsapp, setWhatsapp] = useState(initialProfile.whatsapp || '');
+  const [email, setEmail] = useState(initialProfile.email || '');
+  const [website, setWebsite] = useState(initialProfile.website || '');
+  const [country, setCountry] = useState(initialProfile.country || '');
+  const [officeAddress, setOfficeAddress] = useState(initialProfile.officeAddress || '');
+  const [customContacts, setCustomContacts] = useState(initialProfile.customContacts || []);
+  const [contactOrder, setContactOrder] = useState<string[]>(initialProfile.contactOrder || []);
 
   // ── Skills / About ────────────────────────────────────────────────────────
   const [skills, setSkills] = useState<string[]>(extractSkills(initialProfile));
@@ -520,18 +565,7 @@ export function ProfileEditorProvider({
     reconcileSectionVisibility(initialProfile.sectionVisibility, initialProfile.sharingSettings)
   );
   const [sharingSettings, setSharingSettings] = useState<SharingSettings>(
-    initialProfile.sharingSettings || {
-      photo: true,
-      nameAndTitle: true,
-      bio: true,
-      skills: true,
-      projects: true,
-      experience: true,
-      education: true,
-      socialLinks: true,
-      email: false,
-      phone: false,
-    }
+    initialProfile.sharingSettings || DEFAULT_SHARING_SETTINGS
   );
 
   // ── UI / Status ───────────────────────────────────────────────────────────
@@ -574,9 +608,14 @@ export function ProfileEditorProvider({
       tagline: tagline !== undefined ? tagline : (profile.tagline || ''),
       company: company !== undefined ? company : (profile.company || ''),
       location: location !== undefined ? location : (profile.location || ''),
-      email: profile.email || '',
-      phone: profile.phone || '',
-      whatsapp: profile.whatsapp || '',
+      email: email !== undefined ? email : (profile.email || ''),
+      phone: phone !== undefined ? phone : (profile.phone || ''),
+      whatsapp: whatsapp !== undefined ? whatsapp : (profile.whatsapp || ''),
+      website: website !== undefined ? website : (profile.website || ''),
+      country: country !== undefined ? country : (profile.country || ''),
+      officeAddress: officeAddress !== undefined ? officeAddress : (profile.officeAddress || ''),
+      customContacts: customContacts || profile.customContacts || [],
+      contactOrder: contactOrder || profile.contactOrder || [],
       theme: activeTheme || profile.theme,
       avatar: avatar || profile.avatar || '',
       coverImage: coverImage || profile.coverImage || '',
@@ -599,6 +638,7 @@ export function ProfileEditorProvider({
       profile,
       username, fullName, firstName, secondName,
       professionalTitle, bio, about, tagline, company, location,
+      email, phone, whatsapp, website, country, officeAddress, customContacts, contactOrder,
       activeTheme, avatar, coverImage,
       skills, projects, experiences, education,
       activeSocialsPayload, customFields, dynamicSections,
@@ -606,6 +646,10 @@ export function ProfileEditorProvider({
       initialProfile.slug, initialProfile.id,
     ]
   );
+
+  useEffect(() => {
+    liveProfileRef.current = liveProfile;
+  }, [liveProfile]);
 
   // ── Public URL ────────────────────────────────────────────────────────────
   const currentActiveIdentifier =
@@ -695,6 +739,14 @@ export function ProfileEditorProvider({
     if (key === 'location' && typeof val === 'string') setLocation(val);
     if (key === 'avatar' && typeof val === 'string') setAvatar(val);
     if (key === 'coverImage' && typeof val === 'string') setCoverImage(val);
+    if (key === 'phone' && typeof val === 'string') setPhone(val);
+    if (key === 'whatsapp' && typeof val === 'string') setWhatsapp(val);
+    if (key === 'email' && typeof val === 'string') setEmail(val);
+    if (key === 'website' && typeof val === 'string') setWebsite(val);
+    if (key === 'country' && typeof val === 'string') setCountry(val);
+    if (key === 'officeAddress' && typeof val === 'string') setOfficeAddress(val);
+    if (key === 'customContacts' && Array.isArray(val)) setCustomContacts(val as any[]);
+    if (key === 'contactOrder' && Array.isArray(val)) setContactOrder(val as string[]);
     if (key === 'skills' && Array.isArray(val)) setSkills((val as (string | { name: string })[]).map(s => typeof s === 'string' ? s : s.name));
     if (key === 'projects' && Array.isArray(val)) setProjects(val as ProjectItem[]);
     if (key === 'experiences' && Array.isArray(val)) setExperiences(val as ExperienceItem[]);
@@ -919,6 +971,7 @@ export function ProfileEditorProvider({
   // ── Profile Section Editor callbacks (used by SlidingEditorPanel inline editor) ──
   const handleProfileSectionLiveUpdate = useCallback(
     (updatedFields: Partial<ProfileData>) => {
+      isUserInitiatedChangeRef.current = true;
       if (updatedFields.firstName !== undefined) setFirstName(updatedFields.firstName);
       if (updatedFields.secondName !== undefined) setSecondName(updatedFields.secondName);
       if (updatedFields.username !== undefined) setUsername(updatedFields.username);
@@ -931,6 +984,19 @@ export function ProfileEditorProvider({
       if (updatedFields.theme !== undefined) setActiveTheme(updatedFields.theme);
       if (updatedFields.avatar !== undefined) setAvatar(updatedFields.avatar);
       if (updatedFields.coverImage !== undefined) setCoverImage(updatedFields.coverImage);
+      if (updatedFields.phone !== undefined) setPhone(updatedFields.phone);
+      if (updatedFields.whatsapp !== undefined) setWhatsapp(updatedFields.whatsapp);
+      if (updatedFields.email !== undefined) setEmail(updatedFields.email);
+      if (updatedFields.website !== undefined) setWebsite(updatedFields.website);
+      if (updatedFields.country !== undefined) setCountry(updatedFields.country);
+      if (updatedFields.officeAddress !== undefined) setOfficeAddress(updatedFields.officeAddress);
+      if (updatedFields.customContacts !== undefined) setCustomContacts(updatedFields.customContacts);
+      if (updatedFields.contactOrder !== undefined) setContactOrder(updatedFields.contactOrder);
+
+      setProfile((prev) => ({
+        ...prev,
+        ...updatedFields
+      }));
     },
     []
   );
@@ -954,6 +1020,14 @@ export function ProfileEditorProvider({
       if (savedProfile.company) setCompany(savedProfile.company);
       if (savedProfile.location) setLocation(savedProfile.location);
       if (savedProfile.avatar) setAvatar(savedProfile.avatar);
+      if (savedProfile.phone !== undefined) setPhone(savedProfile.phone);
+      if (savedProfile.whatsapp !== undefined) setWhatsapp(savedProfile.whatsapp);
+      if (savedProfile.email !== undefined) setEmail(savedProfile.email);
+      if (savedProfile.website !== undefined) setWebsite(savedProfile.website);
+      if (savedProfile.country !== undefined) setCountry(savedProfile.country);
+      if (savedProfile.officeAddress !== undefined) setOfficeAddress(savedProfile.officeAddress);
+      if (savedProfile.customContacts !== undefined) setCustomContacts(savedProfile.customContacts);
+      if (savedProfile.contactOrder !== undefined) setContactOrder(savedProfile.contactOrder);
       try {
         if (savedProfile.slug) localStorage.setItem(`avtive_profile_${savedProfile.slug}`, JSON.stringify(savedProfile));
         if (savedProfile.id) localStorage.setItem(`avtive_profile_${savedProfile.id}`, JSON.stringify(savedProfile));
@@ -998,6 +1072,14 @@ export function ProfileEditorProvider({
     setLocation(newProf.location || '');
     setAvatar(newProf.avatar || '');
     setCoverImage(newProf.coverImage || '');
+    setPhone(newProf.phone || '');
+    setWhatsapp(newProf.whatsapp || '');
+    setEmail(newProf.email || '');
+    setWebsite(newProf.website || '');
+    setCountry(newProf.country || '');
+    setOfficeAddress(newProf.officeAddress || '');
+    setCustomContacts(Array.isArray(newProf.customContacts) ? newProf.customContacts : []);
+    setContactOrder(Array.isArray(newProf.contactOrder) ? newProf.contactOrder : []);
     setSkills(extractSkills(newProf));
     setAbout(newProf.about || newProf.fullBio || '');
     setProjects(Array.isArray(newProf.projects) ? newProf.projects : []);
@@ -1162,12 +1244,37 @@ export function ProfileEditorProvider({
       const finalProfile: ProfileData =
         data.updatedProfile || data.profile || { ...dataToSave, slug: savedSlug };
 
-      setProfile(finalProfile);
+      // Update baseline with confirmed server document
       lastSavedProfileRef.current = finalProfile;
       lastSavedSnapshotRef.current = getProfileSnapshot(finalProfile);
-      isUserInitiatedChangeRef.current = false;
-      setAutosaveStatus('saved');
-      setAutosaveStatusText('Saved');
+
+      // Merge server values only into fields the user has not edited while request was in-flight
+      setProfile((currentDraft) => {
+        const next: ProfileData = { ...currentDraft };
+        for (const [k, v] of Object.entries(finalProfile)) {
+          const wasModifiedInFlight = !arePrimitivesEqual((currentDraft as any)[k], (dataToSave as any)[k]) &&
+            !areArraysEqual((currentDraft as any)[k], (dataToSave as any)[k]);
+          if (!wasModifiedInFlight) {
+            (next as any)[k] = v;
+          }
+        }
+        return next;
+      });
+
+      // Sync atom states for non-in-flight-edited contact channels
+      if (finalProfile.phone !== undefined && arePrimitivesEqual(phone, dataToSave.phone)) setPhone(finalProfile.phone);
+      if (finalProfile.whatsapp !== undefined && arePrimitivesEqual(whatsapp, dataToSave.whatsapp)) setWhatsapp(finalProfile.whatsapp);
+      if (finalProfile.email !== undefined && arePrimitivesEqual(email, dataToSave.email)) setEmail(finalProfile.email);
+      if (finalProfile.website !== undefined && arePrimitivesEqual(website, dataToSave.website)) setWebsite(finalProfile.website);
+      if (finalProfile.country !== undefined && arePrimitivesEqual(country, dataToSave.country)) setCountry(finalProfile.country);
+      if (finalProfile.officeAddress !== undefined && arePrimitivesEqual(officeAddress, dataToSave.officeAddress)) setOfficeAddress(finalProfile.officeAddress);
+
+      const isStillDirty = diffProfile(finalProfile, liveProfileRef.current).hasChanges;
+      if (!isStillDirty) {
+        isUserInitiatedChangeRef.current = false;
+        setAutosaveStatus('saved');
+        setAutosaveStatusText('Saved');
+      }
 
       // Cache locally and dispatch update event
       try {
@@ -1264,11 +1371,6 @@ export function ProfileEditorProvider({
   const retryAutosave = useCallback(async (): Promise<SaveProfileResult> => {
     return await saveProfile();
   }, [saveProfile]);
-
-  const liveProfileRef = React.useRef<ProfileData>(liveProfile);
-  useEffect(() => {
-    liveProfileRef.current = liveProfile;
-  }, [liveProfile]);
 
   // ── Autosave Debounce Effect (Triggers on derived dirtiness against baseline) ─
   useEffect(() => {
@@ -1404,6 +1506,14 @@ export function ProfileEditorProvider({
       location, setLocation,
       avatar, setAvatar,
       coverImage, setCoverImage,
+      phone, setPhone,
+      whatsapp, setWhatsapp,
+      email, setEmail,
+      website, setWebsite,
+      country, setCountry,
+      officeAddress, setOfficeAddress,
+      customContacts, setCustomContacts,
+      contactOrder, setContactOrder,
       skills, setSkills,
       about, setAbout,
       projects, setProjects,

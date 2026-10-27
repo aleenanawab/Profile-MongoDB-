@@ -17,6 +17,7 @@ import {
 import { ProfileData, SocialLink } from '../types/profile';
 import { LinkedInIcon, TwitterXIcon, GithubIcon, InstagramIcon, FacebookIcon, BehanceIcon } from './BrandIcons';
 import { ThemeConfig, getThemeConfig } from './themeStyles';
+import { isFieldShared } from '@/lib/sections';
 
 interface DirectContactSectionProps {
   profile: ProfileData;
@@ -136,7 +137,7 @@ export function DirectContactSection({
     iconColor: string;
     icon: React.ReactNode;
   } | null> = {
-    whatsapp: profile.whatsapp ? {
+    whatsapp: (profile.whatsapp && isFieldShared(profile, 'whatsapp')) ? {
       label: 'WhatsApp',
       value: profile.whatsapp,
       href: `https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(profile.name)}`,
@@ -146,7 +147,7 @@ export function DirectContactSection({
       icon: <MessageSquare className={`w-4 h-4 ${theme.accentText}`} />
     } : null,
 
-    phone: profile.phone ? {
+    phone: (profile.phone && isFieldShared(profile, 'phone')) ? {
       label: 'Mobile',
       value: profile.phone,
       href: `tel:${profile.phone.replace(/[^0-9+]/g, '')}`,
@@ -155,7 +156,7 @@ export function DirectContactSection({
       icon: <Phone className={`w-4 h-4 ${theme.accentText}`} />
     } : null,
 
-    email: profile.email ? {
+    email: (profile.email && isFieldShared(profile, 'email')) ? {
       label: 'Email',
       value: profile.email,
       href: `mailto:${profile.email}`,

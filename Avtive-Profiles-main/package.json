@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx tests/oauth-and-stabilization.test.ts && tsx tests/profile-diff-and-patch.test.ts && tsx tests/reproduce-persistence-gaps.test.ts && tsx tests/profile-dirty.test.ts && tsx tests/mobile-save-and-visibility.test.ts && tsx tests/avatar-persistence.test.ts && tsx tests/section-visibility.test.ts",
+    "test": "tsx tests/oauth-and-stabilization.test.ts && tsx tests/profile-diff-and-patch.test.ts && tsx tests/reproduce-persistence-gaps.test.ts && tsx tests/profile-dirty.test.ts && tsx tests/mobile-save-and-visibility.test.ts && tsx tests/avatar-persistence.test.ts && tsx tests/section-visibility.test.ts && tsx tests/contact-and-revert-persistence.test.ts",
     "migrate:json-to-mongo": "tsx legacy/migrate-json-to-mongo.ts"
   },
   "dependencies": {

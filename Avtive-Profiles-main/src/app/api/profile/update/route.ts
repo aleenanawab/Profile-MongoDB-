@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/auth';
 import { 
   updateProfile, 
@@ -214,6 +215,18 @@ async function handleProfileUpdate(request: NextRequest) {
       } catch (syncErr) {
         console.error('Error synchronizing company record on profile update:', syncErr);
       }
+    }
+
+    // Revalidate public profile paths so ISR/CDN caches never serve stale data
+    try {
+      if (result.profile.slug) {
+        revalidatePath(`/profile/${result.profile.slug}`);
+      }
+      if (result.profile.id && result.profile.id !== result.profile.slug) {
+        revalidatePath(`/profile/${result.profile.id}`);
+      }
+    } catch (revalidateErr) {
+      console.warn('Profile cache revalidation notice:', revalidateErr);
     }
 
     const response = NextResponse.json({

@@ -15,12 +15,57 @@ import { slugify } from '../validation';
 import { deleteFromCloudinary } from '@/lib/storage';
 import { isCanonicalSectionVisible, isFieldShared } from '@/lib/sections';
 
+export function syncProfileAliases(data: Record<string, any>): Record<string, any> {
+  const synced = { ...data };
+
+  // bio <-> shortBio
+  if ('bio' in synced && !('shortBio' in synced)) synced.shortBio = synced.bio;
+  else if ('shortBio' in synced && !('bio' in synced)) synced.bio = synced.shortBio;
+  else if ('bio' in synced && 'shortBio' in synced) synced.shortBio = synced.bio;
+
+  // about <-> fullBio
+  if ('about' in synced && !('fullBio' in synced)) synced.fullBio = synced.about;
+  else if ('fullBio' in synced && !('about' in synced)) synced.about = synced.fullBio;
+  else if ('about' in synced && 'fullBio' in synced) synced.fullBio = synced.about;
+
+  // professionalTitle <-> designation <-> profession
+  const hasTitle = 'professionalTitle' in synced || 'designation' in synced || 'profession' in synced;
+  if (hasTitle) {
+    const titleVal = synced.professionalTitle !== undefined ? synced.professionalTitle : (synced.designation !== undefined ? synced.designation : synced.profession);
+    synced.professionalTitle = titleVal;
+    synced.designation = titleVal;
+    synced.profession = titleVal;
+  }
+
+  // secondName <-> lastName
+  const hasSecond = 'secondName' in synced || 'lastName' in synced;
+  if (hasSecond) {
+    const secondVal = synced.secondName !== undefined ? synced.secondName : synced.lastName;
+    synced.secondName = secondVal;
+    synced.lastName = secondVal;
+  }
+
+  // socials <-> socialLinks
+  if ('socials' in synced && !('socialLinks' in synced)) synced.socialLinks = synced.socials;
+  else if ('socialLinks' in synced && !('socials' in synced)) synced.socials = synced.socialLinks;
+  else if ('socials' in synced && 'socialLinks' in synced) synced.socialLinks = synced.socials;
+
+  // experiences <-> experience
+  if ('experiences' in synced && !('experience' in synced)) synced.experience = synced.experiences;
+  else if ('experience' in synced && !('experiences' in synced)) synced.experiences = synced.experience;
+  else if ('experiences' in synced && 'experience' in synced) synced.experience = synced.experiences;
+
+  return synced;
+}
+
 export function mapDocToProfileData(doc: any): ProfileData {
   const id = String(doc._id || doc.id);
   const slug = String(doc.slug || id);
 
   const socials = Array.isArray(doc.socials) ? doc.socials : (Array.isArray(doc.socialLinks) ? doc.socialLinks : []);
   const experiences = Array.isArray(doc.experiences) ? doc.experiences : (Array.isArray(doc.experience) ? doc.experience : []);
+  const titleVal = doc.professionalTitle ?? doc.designation ?? doc.profession ?? '';
+  const secondVal = doc.secondName ?? doc.lastName ?? '';
 
   return {
     ...doc,
@@ -28,25 +73,30 @@ export function mapDocToProfileData(doc: any): ProfileData {
     _id: id,
     slug,
     userId: String(doc.userId || doc.user_id || ''),
-    name: doc.name || 'Professional',
-    email: doc.email || '',
-    designation: doc.designation || 'Professional',
-    company: doc.company || '',
-    location: doc.location || '',
-    phone: doc.phone || '',
-    whatsapp: doc.whatsapp || '',
-    website: doc.website || '',
-    country: doc.country || '',
-    officeAddress: doc.officeAddress || '',
+    name: doc.name ?? '',
+    firstName: doc.firstName ?? '',
+    secondName: secondVal,
+    lastName: secondVal,
+    email: doc.email ?? '',
+    designation: titleVal,
+    professionalTitle: titleVal,
+    profession: titleVal,
+    company: doc.company ?? '',
+    location: doc.location ?? '',
+    phone: doc.phone ?? '',
+    whatsapp: doc.whatsapp ?? '',
+    website: doc.website ?? '',
+    country: doc.country ?? '',
+    officeAddress: doc.officeAddress ?? '',
     customContacts: Array.isArray(doc.customContacts) ? doc.customContacts : [],
     contactOrder: Array.isArray(doc.contactOrder) ? doc.contactOrder : [],
-    avatar: doc.avatar || doc.logoUrl || '',
-    coverImage: doc.coverImage || doc.coverUrl || undefined,
-    shortBio: doc.shortBio || doc.bio || '',
-    fullBio: doc.fullBio || doc.about || '',
-    bio: doc.bio || doc.shortBio || '',
-    about: doc.about || doc.fullBio || '',
-    tagline: doc.tagline || '',
+    avatar: doc.avatar ?? doc.logoUrl ?? '',
+    coverImage: doc.coverImage ?? doc.coverUrl ?? undefined,
+    shortBio: doc.shortBio ?? doc.bio ?? '',
+    fullBio: doc.fullBio ?? doc.about ?? '',
+    bio: doc.bio ?? doc.shortBio ?? '',
+    about: doc.about ?? doc.fullBio ?? '',
+    tagline: doc.tagline ?? '',
     type: normalizeProfileType(doc.type),
     theme: doc.theme || 'editorial',
     skills: Array.isArray(doc.skills) ? doc.skills : [],
@@ -124,6 +174,14 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
     sanitized.about = '';
     sanitized.shortBio = '';
     sanitized.fullBio = '';
+  }
+
+  // Pronouns and birthday default to private for non-owners unless explicitly opted in
+  if (settings.pronouns !== true) {
+    sanitized.pronouns = undefined;
+  }
+  if (settings.birthday !== true) {
+    sanitized.birthday = undefined;
   }
 
   const isContactVisible = isCanonicalSectionVisible(visibility, settings, 'contactInfo');
@@ -348,7 +406,7 @@ export async function updateProfile(
   sessionUserId: string,
   _sessionUserEmail?: string,
   options?: { clearFields?: string[]; isPatch?: boolean }
-): Promise<{ success: boolean; profile?: ProfileData; appliedKeys?: string[]; error?: string; status: number }> {
+): Promise<{ success: boolean; profile?: ProfileData; appliedKeys?: string[]; skippedKeys?: string[]; error?: string; status: number }> {
   if (!sessionUserId) {
     return { success: false, error: 'Unauthorized: Session required.', status: 401 };
   }
@@ -395,6 +453,34 @@ export async function updateProfile(
   const now = new Date().toISOString();
   const $set: Record<string, any> = { updatedAt: now };
   const clearFieldsSet = new Set<string>(options?.clearFields || []);
+  const skippedKeys: string[] = [];
+
+  // Expand clearFieldsSet with aliases
+  if (clearFieldsSet.has('professionalTitle') || clearFieldsSet.has('designation') || clearFieldsSet.has('profession')) {
+    clearFieldsSet.add('professionalTitle');
+    clearFieldsSet.add('designation');
+    clearFieldsSet.add('profession');
+  }
+  if (clearFieldsSet.has('secondName') || clearFieldsSet.has('lastName')) {
+    clearFieldsSet.add('secondName');
+    clearFieldsSet.add('lastName');
+  }
+  if (clearFieldsSet.has('bio') || clearFieldsSet.has('shortBio')) {
+    clearFieldsSet.add('bio');
+    clearFieldsSet.add('shortBio');
+  }
+  if (clearFieldsSet.has('about') || clearFieldsSet.has('fullBio')) {
+    clearFieldsSet.add('about');
+    clearFieldsSet.add('fullBio');
+  }
+  if (clearFieldsSet.has('socials') || clearFieldsSet.has('socialLinks')) {
+    clearFieldsSet.add('socials');
+    clearFieldsSet.add('socialLinks');
+  }
+  if (clearFieldsSet.has('experiences') || clearFieldsSet.has('experience')) {
+    clearFieldsSet.add('experiences');
+    clearFieldsSet.add('experience');
+  }
 
   // Track old Cloudinary public IDs for safe post-save cleanup
   let oldAvatarPublicId: string | null = null;
@@ -409,7 +495,9 @@ export async function updateProfile(
     'nfcCard'
   ]);
 
-  for (const [key, value] of Object.entries(updatedData)) {
+  const normalizedInput = syncProfileAliases(updatedData);
+
+  for (const [key, value] of Object.entries(normalizedInput)) {
     // 1. Guard immutable fields
     if (key === '_id' || key === 'id' || key === 'userId' || key === 'createdAt' || key === 'role') {
       continue;
@@ -418,6 +506,7 @@ export async function updateProfile(
     // 2. Reject blob: or data: URLs in avatar/coverImage
     if ((key === 'avatar' || key === 'coverImage') && typeof value === 'string') {
       if (value.startsWith('blob:') || value.startsWith('data:')) {
+        skippedKeys.push(key);
         continue;
       }
     }
@@ -431,6 +520,7 @@ export async function updateProfile(
 
     if ((isWipingArray || isWipingString) && !clearFieldsSet.has(topLevelKey) && !clearFieldsSet.has(key)) {
       console.warn(`[updateProfile] Rejected unintended wipe of non-empty field: "${key}" (not in clearFields)`);
+      skippedKeys.push(key);
       continue;
     }
 
@@ -460,17 +550,25 @@ export async function updateProfile(
       continue;
     }
 
-    // 6. Add to $set and handle legacy aliases
+    // 6. Add to $set
     $set[key] = value;
-    if (key === 'experiences') $set['experience'] = value;
-    if (key === 'experience') $set['experiences'] = value;
-    if (key === 'socials') $set['socialLinks'] = value;
-    if (key === 'socialLinks') $set['socials'] = value;
-    if (key === 'bio') $set['shortBio'] = value;
-    if (key === 'shortBio') $set['bio'] = value;
-    if (key === 'about') $set['fullBio'] = value;
-    if (key === 'fullBio') $set['about'] = value;
   }
+
+  // Ensure explicit clearFields are populated in $set
+  for (const clearKey of clearFieldsSet) {
+    if (!(clearKey in $set)) {
+      const existingVal = (existing as any)[clearKey];
+      if (Array.isArray(existingVal)) {
+        $set[clearKey] = [];
+      } else {
+        $set[clearKey] = '';
+      }
+    }
+  }
+
+  // Synchronize all aliases across $set
+  const syncedSet = syncProfileAliases($set);
+  Object.assign($set, syncedSet);
 
   const matchCriteria: any[] = [
     { id: existing.id },
@@ -503,6 +601,7 @@ export async function updateProfile(
     success: true,
     profile: mapDocToProfileData(res),
     appliedKeys: Object.keys($set).filter((k) => k !== 'updatedAt'),
+    skippedKeys,
     status: 200
   };
 }

@@ -1057,14 +1057,28 @@ export function DesktopProfileContent({
                 </label>
                 <input
                   type="text"
-                  value={profile.shortBio || profile.bio || profile.tagline || ''}
+                  value={profile.shortBio ?? profile.bio ?? ''}
                   onChange={(e) => {
                     updateField('shortBio', e.target.value);
                     updateField('bio', e.target.value);
-                    updateField('tagline', e.target.value);
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
                   placeholder={isCompany ? "e.g. The Digital Identity Standard for Enterprise Teams" : "Brief 1-line headline"}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Tagline
+                </label>
+                <input
+                  type="text"
+                  value={profile.tagline ?? ''}
+                  onChange={(e) => {
+                    updateField('tagline', e.target.value);
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
+                  placeholder="e.g. Innovator & Open Source Contributor"
                 />
               </div>
 

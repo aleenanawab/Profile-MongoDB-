@@ -64,25 +64,17 @@ async function handleProfileUpdate(request: NextRequest) {
     delete rawData.id;
     delete rawData.__v;
 
-    // Auto-detect cleared fields for intentional user clear operations
-    for (const [k, v] of Object.entries(rawData)) {
-      if (v === '' || (Array.isArray(v) && v.length === 0)) {
-        if (!clearFields.includes(k)) {
-          clearFields.push(k);
-        }
-      }
-    }
-
+    // Only keys in an explicit clearFields may be emptied
     const attemptedKeys = Object.keys(rawData);
     const unknown = attemptedKeys.filter((k) => {
       const topKey = k.split('.')[0];
       return !VALID_TOP_KEYS.has(topKey);
     });
     if (unknown.length > 0) {
-      return NextResponse.json(
-        { error: `Invalid profile field(s): ${unknown.join(', ')}` },
-        { status: 400 }
-      );
+      console.warn(`[route.ts] Stripping unknown profile field(s): ${unknown.join(', ')}`);
+      for (const unk of unknown) {
+        delete rawData[unk];
+      }
     }
 
     let identifier = profileId || body.profileSlug || body.slug;
@@ -171,7 +163,7 @@ async function handleProfileUpdate(request: NextRequest) {
     }
 
     // 3. Perform update with automatic upsert fallback for serverless persistence
-    const effectiveSlug = body.profileSlug || body.slug || rawData.slug;
+    const effectiveSlug = rawData.slug || body.slug || body.profileSlug;
     const result = await updateProfile(
       identifier || `prof-${Date.now()}`,
       {
@@ -240,7 +232,9 @@ async function handleProfileUpdate(request: NextRequest) {
       message: 'Profile updated successfully.',
       profile: result.profile,
       updatedProfile: result.profile,
-      appliedKeys: result.appliedKeys || []
+      appliedKeys: result.appliedKeys || [],
+      rejectedKeys: unknown,
+      skippedKeys: (result as any).skippedKeys || []
     }, { status: 200 });
 
     // 4. Set cookie for serverless cross-lambda persistence (chunked)

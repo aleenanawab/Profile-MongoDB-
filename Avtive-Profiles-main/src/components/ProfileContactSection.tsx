@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mail, Phone, MessageSquare, MapPin, Globe, Pencil, Building2 } from 'lucide-react';
+import { Mail, Phone, MessageSquare, MapPin, Globe, Pencil, Building2, Calendar } from 'lucide-react';
 import { ProfileData } from '../types/profile';
 import { ThemeConfig, getThemeConfig } from './themeStyles';
 import { FormLabel, FormInput, SectionSaveBar } from './ui/formControls';
@@ -356,6 +356,22 @@ export function ProfileContactSection({
                 </span>
               </div>
             </a>
+          )}
+
+          {profile.birthday && isFieldShared(profile, 'birthday') && (
+            <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
+              <div className="w-7 h-7 rounded-lg bg-pink-500/10 flex items-center justify-center shrink-0">
+                <Calendar className="w-3.5 h-3.5 text-pink-500" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
+                  Birthday
+                </span>
+                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                  {profile.birthday}
+                </span>
+              </div>
+            </div>
           )}
         </div>
       ) : (

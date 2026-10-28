@@ -442,28 +442,35 @@ function PublicProfileClientInner({
     return () => window.removeEventListener('popstate', syncFromUrl);
   }, [isOwner]);
 
-  // Hydrate updated profile from localStorage on mount & listen to real-time updates
+  // Hydrate updated profile from localStorage ONLY for owner when cache is strictly newer than server
   useEffect(() => {
-    try {
-      const cached =
-        localStorage.getItem(`avtive_profile_${initialProfile.slug}`) ||
-        localStorage.getItem(`avtive_profile_${initialProfile.id}`) ||
-        localStorage.getItem('avtive_last_saved_profile');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed && (parsed.id === initialProfile.id || parsed.slug === initialProfile.slug)) {
-          setProfile((prev) => ({ ...prev, ...parsed }));
-          if (parsed.theme) setActiveTheme(parsed.theme);
+    if (isOwner) {
+      try {
+        const cached =
+          localStorage.getItem(`avtive_profile_${initialProfile.slug}`) ||
+          localStorage.getItem(`avtive_profile_${initialProfile.id}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (
+            parsed &&
+            (parsed.id === initialProfile.id || parsed.slug === initialProfile.slug) &&
+            parsed.updatedAt &&
+            initialProfile.updatedAt &&
+            new Date(parsed.updatedAt).getTime() > new Date(initialProfile.updatedAt).getTime()
+          ) {
+            setProfile(parsed);
+            if (parsed.theme) setActiveTheme(parsed.theme);
+          }
         }
-      }
-    } catch {}
+      } catch {}
+    }
 
     const handleProfileUpdate = (e: Event) => {
       const customEvent = e as CustomEvent<ProfileData>;
       if (customEvent.detail) {
         const updated = customEvent.detail;
         if (updated.id === initialProfile.id || updated.slug === initialProfile.slug) {
-          setProfile((prev) => ({ ...prev, ...updated }));
+          setProfile(updated);
           if (updated.theme) setActiveTheme(updated.theme);
         }
       }
@@ -474,7 +481,7 @@ function PublicProfileClientInner({
         try {
           const updated = JSON.parse(e.newValue);
           if (updated && (updated.id === initialProfile.id || updated.slug === initialProfile.slug)) {
-            setProfile((prev) => ({ ...prev, ...updated }));
+            setProfile(updated);
             if (updated.theme) setActiveTheme(updated.theme);
           }
         } catch {}
@@ -488,7 +495,7 @@ function PublicProfileClientInner({
       window.removeEventListener('avtive_profile_updated', handleProfileUpdate);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [initialProfile.id, initialProfile.slug]);
+  }, [initialProfile.id, initialProfile.slug, initialProfile.updatedAt, isOwner]);
 
   // Fetch / verify session dynamically so header auth status is accurate
   useEffect(() => {
@@ -744,9 +751,7 @@ function PublicProfileClientInner({
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && isEditing) {
-        if (isProfileDirty(currentDraft, profile)) {
-          saveProfile(currentDraft, { keepalive: true }).catch(() => {});
-        }
+        flushAutosave(undefined, { keepalive: true }).catch(() => {});
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -755,7 +760,7 @@ function PublicProfileClientInner({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', handleVisibilityChange);
     };
-  }, [isEditing, currentDraft, profile, saveProfile]);
+  }, [isEditing, flushAutosave]);
 
   const handleSaveAndExit = async () => {
     try {
@@ -764,14 +769,14 @@ function PublicProfileClientInner({
         return;
       }
 
-      // Use the single authoritative save pipeline with the exact latest card draft
-      const result = await saveProfile(currentDraft);
+      // Flush autosave with NO override object
+      const result = await flushAutosave();
       if (!result.ok) {
         showToast(result.error || 'Failed to save changes. Please try again.');
         return; // Stay in edit mode, keep all unsaved changes
       }
 
-      const freshProfile = result.profile || currentDraft;
+      const freshProfile = result.profile || liveProfile;
       setProfile(freshProfile);
       setCurrentDraft(freshProfile);
       setIsEditing(false);
@@ -799,7 +804,7 @@ function PublicProfileClientInner({
   };
 
   const cardProfile = useMemo(() => {
-    const base = isEditing && currentDraft ? currentDraft : profile;
+    const base = isEditing ? liveProfile : profile;
     return {
       ...base,
       sectionVisibility: liveProfile.sectionVisibility || base.sectionVisibility,
@@ -808,7 +813,7 @@ function PublicProfileClientInner({
       type: profileType,
       theme: activeTheme
     };
-  }, [profile, currentDraft, isEditing, liveProfile.sectionVisibility, liveProfile.sharingSettings, liveProfile.sectionOrder, profileType, activeTheme]);
+  }, [profile, isEditing, liveProfile, profileType, activeTheme]);
 
   const desktopView = (
     <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 overflow-hidden relative">

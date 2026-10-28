@@ -58,6 +58,48 @@ export interface DraggableLinkItem {
   visible: boolean;
 }
 
+export const LIVE_PROFILE_ATOM_KEYS: (keyof ProfileData)[] = [
+  'username',
+  'slug',
+  'name',
+  'firstName',
+  'secondName',
+  'lastName',
+  'professionalTitle',
+  'designation',
+  'profession',
+  'bio',
+  'shortBio',
+  'about',
+  'fullBio',
+  'tagline',
+  'company',
+  'location',
+  'email',
+  'phone',
+  'whatsapp',
+  'website',
+  'country',
+  'officeAddress',
+  'customContacts',
+  'contactOrder',
+  'theme',
+  'avatar',
+  'coverImage',
+  'skills',
+  'projects',
+  'experience',
+  'experiences',
+  'education',
+  'socials',
+  'socialLinks',
+  'customFields',
+  'dynamicSections',
+  'sectionOrder',
+  'sectionVisibility',
+  'sharingSettings'
+];
+
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
 export function buildSocialLinksFromProfile(p: ProfileData): DraggableLinkItem[] {
@@ -69,12 +111,12 @@ export function buildSocialLinksFromProfile(p: ProfileData): DraggableLinkItem[]
       : null;
 
   if (safeSocials && safeSocials.length > 0) {
-    return safeSocials.map((s: { platform?: string; label?: string; url?: string; visible?: boolean }, idx: number) => {
+    return safeSocials.map((s: { id?: string; platform?: string; label?: string; title?: string; url?: string; visible?: boolean }, idx: number) => {
       const platform = (s.platform || 'website') as DraggableLinkItem['platform'];
       return {
-        id: `link-${platform}-${idx}`,
+        id: s.id || `link-${platform}-${idx}`,
         platform,
-        title: s.label || (platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Link'),
+        title: s.label || s.title || (platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Link'),
         url: s.url || '',
         visible: s.visible !== false,
       };
@@ -579,28 +621,34 @@ export function ProfileEditorProvider({
   // ── Derived values ────────────────────────────────────────────────────────
   const fullName = (firstName.trim() || secondName.trim()) 
     ? `${firstName.trim()} ${secondName.trim()}`.trim() 
-    : (profile.name || '').trim();
+    : (firstName === '' && secondName === '' ? '' : (profile.name || '').trim());
 
   const activeSocialsPayload = useMemo<SocialLink[]>(
     () =>
-      socialLinks
-        .filter((s) => s.visible && s.url.trim())
-        .map((s) => ({ platform: s.platform as SocialLink['platform'], url: s.url, label: s.title })),
+      socialLinks.map((s) => ({
+        platform: s.platform as SocialLink['platform'],
+        url: s.url || '',
+        label: s.title || (s.platform ? s.platform.charAt(0).toUpperCase() + s.platform.slice(1) : 'Link'),
+        visible: s.visible !== false,
+      })),
     [socialLinks]
   );
+
+  const cleanUsername = (username || '').trim().replace(/^@/, '');
+  const cleanSlug = cleanUsername || (profile.slug || initialProfile.slug || initialProfile.id || '').trim().replace(/^@/, '');
 
   const liveProfile = useMemo<ProfileData>(
     () => ({
       ...profile,
-      username: (username || profile.username || profile.slug || '').trim().replace(/^@/, ''),
-      slug: (username || profile.slug || initialProfile.slug || initialProfile.id || '').trim().replace(/^@/, ''),
+      username: cleanUsername,
+      slug: cleanSlug,
       name: fullName,
-      firstName: firstName.trim() || profile.firstName || '',
-      secondName: secondName.trim() || profile.secondName || profile.lastName || '',
-      lastName: secondName.trim() || profile.lastName || profile.secondName || '',
-      professionalTitle: professionalTitle || profile.professionalTitle || profile.designation || '',
-      designation: professionalTitle || profile.designation || profile.professionalTitle || '',
-      profession: professionalTitle || profile.profession || profile.professionalTitle || '',
+      firstName: firstName,
+      secondName: secondName,
+      lastName: secondName,
+      professionalTitle: professionalTitle,
+      designation: professionalTitle,
+      profession: professionalTitle,
       bio: bio !== undefined ? bio : (profile.bio || ''),
       shortBio: bio !== undefined ? bio : (profile.shortBio || ''),
       about: about !== undefined ? about : (profile.about || ''),
@@ -617,8 +665,8 @@ export function ProfileEditorProvider({
       customContacts: customContacts || profile.customContacts || [],
       contactOrder: contactOrder || profile.contactOrder || [],
       theme: activeTheme || profile.theme,
-      avatar: avatar || profile.avatar || '',
-      coverImage: coverImage || profile.coverImage || '',
+      avatar: avatar,
+      coverImage: coverImage,
       skills: skills,
       projects: projects,
       experience: experiences,
@@ -636,14 +684,13 @@ export function ProfileEditorProvider({
     }),
     [
       profile,
-      username, fullName, firstName, secondName,
+      cleanUsername, cleanSlug, fullName, firstName, secondName,
       professionalTitle, bio, about, tagline, company, location,
       email, phone, whatsapp, website, country, officeAddress, customContacts, contactOrder,
       activeTheme, avatar, coverImage,
       skills, projects, experiences, education,
       activeSocialsPayload, customFields, dynamicSections,
       canonicalSectionOrder, sectionVisibility, sharingSettings,
-      initialProfile.slug, initialProfile.id,
     ]
   );
 
@@ -713,27 +760,62 @@ export function ProfileEditorProvider({
   // Update a single field in state
   const updateField = useCallback(<K extends keyof ProfileData>(key: K, val: ProfileData[K]) => {
     isUserInitiatedChangeRef.current = true;
-    setProfile((prev) => ({
-      ...prev,
-      [key]: val,
-    }));
+    setProfile((prev) => {
+      const next = { ...prev, [key]: val };
+      if (key === 'name' && typeof val === 'string') {
+        const parts = val.trim() ? val.trim().split(/\s+/) : [];
+        const f = parts[0] || '';
+        const l = parts.slice(1).join(' ');
+        next.firstName = f;
+        next.secondName = l;
+        next.lastName = l;
+      }
+      if (key === 'professionalTitle' || key === 'designation' || key === 'profession') {
+        next.professionalTitle = val as string;
+        next.designation = val as string;
+        next.profession = val as string;
+      }
+      if (key === 'username' || key === 'slug') {
+        const clean = typeof val === 'string' ? val.trim().replace(/^@/, '') : '';
+        next.username = clean;
+        next.slug = clean;
+      }
+      if (key === 'bio' || key === 'shortBio') {
+        next.bio = val as string;
+        next.shortBio = val as string;
+      }
+      if (key === 'about' || key === 'fullBio') {
+        next.about = val as string;
+        next.fullBio = val as string;
+      }
+      if (key === 'secondName' || key === 'lastName') {
+        next.secondName = val as string;
+        next.lastName = val as string;
+      }
+      if (key === 'experiences' || key === 'experience') {
+        next.experiences = val as any;
+        next.experience = val as any;
+      }
+      if (key === 'socials' || key === 'socialLinks') {
+        next.socials = val as any;
+        next.socialLinks = val as any;
+      }
+      return next;
+    });
+
     // Also sync corresponding atoms
     if (key === 'name' && typeof val === 'string') {
-      const parts = val.trim().split(' ');
+      const parts = val.trim() ? val.trim().split(/\s+/) : [];
       setFirstName(parts[0] || '');
       setSecondName(parts.slice(1).join(' '));
     }
     if (key === 'theme' && typeof val === 'string') setActiveTheme(val as ProfileTheme);
     if (key === 'firstName' && typeof val === 'string') setFirstName(val);
-    if (key === 'secondName' && typeof val === 'string') setSecondName(val);
-    if (key === 'username' && typeof val === 'string') setUsername(val);
-    if (key === 'professionalTitle' && typeof val === 'string') setProfessionalTitle(val);
-    if (key === 'designation' && typeof val === 'string') setProfessionalTitle(val);
-    if (key === 'profession' && typeof val === 'string') setProfessionalTitle(val);
-    if (key === 'bio' && typeof val === 'string') setBio(val);
-    if (key === 'shortBio' && typeof val === 'string') setBio(val);
-    if (key === 'about' && typeof val === 'string') setAbout(val);
-    if (key === 'fullBio' && typeof val === 'string') setAbout(val);
+    if ((key === 'secondName' || key === 'lastName') && typeof val === 'string') setSecondName(val);
+    if ((key === 'username' || key === 'slug') && typeof val === 'string') setUsername(val.trim().replace(/^@/, ''));
+    if ((key === 'professionalTitle' || key === 'designation' || key === 'profession') && typeof val === 'string') setProfessionalTitle(val);
+    if ((key === 'bio' || key === 'shortBio') && typeof val === 'string') setBio(val);
+    if ((key === 'about' || key === 'fullBio') && typeof val === 'string') setAbout(val);
     if (key === 'tagline' && typeof val === 'string') setTagline(val);
     if (key === 'company' && typeof val === 'string') setCompany(val);
     if (key === 'location' && typeof val === 'string') setLocation(val);
@@ -749,8 +831,21 @@ export function ProfileEditorProvider({
     if (key === 'contactOrder' && Array.isArray(val)) setContactOrder(val as string[]);
     if (key === 'skills' && Array.isArray(val)) setSkills((val as (string | { name: string })[]).map(s => typeof s === 'string' ? s : s.name));
     if (key === 'projects' && Array.isArray(val)) setProjects(val as ProjectItem[]);
-    if (key === 'experiences' && Array.isArray(val)) setExperiences(val as ExperienceItem[]);
+    if ((key === 'experiences' || key === 'experience') && Array.isArray(val)) setExperiences(val as ExperienceItem[]);
     if (key === 'education' && Array.isArray(val)) setEducation(val as EducationItem[]);
+    if ((key === 'socialLinks' || key === 'socials') && Array.isArray(val)) {
+      const items: DraggableLinkItem[] = (val as any[]).map((s: any, idx: number) => {
+        const platform = (s.platform || 'website') as DraggableLinkItem['platform'];
+        return {
+          id: s.id || `link-${platform}-${idx}`,
+          platform,
+          title: s.label || s.title || (platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Link'),
+          url: s.url || '',
+          visible: s.visible !== false,
+        };
+      });
+      setSocialLinks(items);
+    }
     if (key === 'customFields' && Array.isArray(val)) setCustomFields(val as CustomFieldItem[]);
     if (key === 'dynamicSections' && Array.isArray(val)) setDynamicSections(val as DynamicSection[]);
     if (key === 'sectionOrder' && Array.isArray(val)) setSectionOrder(val as string[]);
@@ -856,7 +951,7 @@ export function ProfileEditorProvider({
         platform === 'other'
           ? 'Custom Link'
           : platform.charAt(0).toUpperCase() + platform.slice(1),
-      url: 'https://',
+      url: '',
       visible: true,
     };
     setSocialLinks((prev) => [...prev, newLink]);
@@ -972,33 +1067,11 @@ export function ProfileEditorProvider({
   const handleProfileSectionLiveUpdate = useCallback(
     (updatedFields: Partial<ProfileData>) => {
       isUserInitiatedChangeRef.current = true;
-      if (updatedFields.firstName !== undefined) setFirstName(updatedFields.firstName);
-      if (updatedFields.secondName !== undefined) setSecondName(updatedFields.secondName);
-      if (updatedFields.username !== undefined) setUsername(updatedFields.username);
-      if (updatedFields.profession !== undefined) setProfessionalTitle(updatedFields.profession);
-      if (updatedFields.shortBio !== undefined) setBio(updatedFields.shortBio);
-      if (updatedFields.fullBio !== undefined) setAbout(updatedFields.fullBio);
-      if (updatedFields.tagline !== undefined) setTagline(updatedFields.tagline);
-      if (updatedFields.company !== undefined) setCompany(updatedFields.company);
-      if (updatedFields.location !== undefined) setLocation(updatedFields.location);
-      if (updatedFields.theme !== undefined) setActiveTheme(updatedFields.theme);
-      if (updatedFields.avatar !== undefined) setAvatar(updatedFields.avatar);
-      if (updatedFields.coverImage !== undefined) setCoverImage(updatedFields.coverImage);
-      if (updatedFields.phone !== undefined) setPhone(updatedFields.phone);
-      if (updatedFields.whatsapp !== undefined) setWhatsapp(updatedFields.whatsapp);
-      if (updatedFields.email !== undefined) setEmail(updatedFields.email);
-      if (updatedFields.website !== undefined) setWebsite(updatedFields.website);
-      if (updatedFields.country !== undefined) setCountry(updatedFields.country);
-      if (updatedFields.officeAddress !== undefined) setOfficeAddress(updatedFields.officeAddress);
-      if (updatedFields.customContacts !== undefined) setCustomContacts(updatedFields.customContacts);
-      if (updatedFields.contactOrder !== undefined) setContactOrder(updatedFields.contactOrder);
-
-      setProfile((prev) => ({
-        ...prev,
-        ...updatedFields
-      }));
+      Object.entries(updatedFields).forEach(([k, v]) => {
+        updateField(k as keyof ProfileData, v);
+      });
     },
-    []
+    [updateField]
   );
 
   const handleProfileSectionSaveSuccess = useCallback(
@@ -1165,14 +1238,6 @@ export function ProfileEditorProvider({
     let executionResult: SaveProfileResult = { ok: false, error: 'Save failed' };
 
     try {
-      // Guard: Never erase existing permanent images if override or state has empty string
-      if (!dataToSave.avatar && profile.avatar) {
-        dataToSave.avatar = profile.avatar;
-      }
-      if (!dataToSave.coverImage && profile.coverImage) {
-        dataToSave.coverImage = profile.coverImage;
-      }
-
       // Guard: Do not send local blob URLs to API
       if (typeof dataToSave.avatar === 'string' && dataToSave.avatar.startsWith('blob:')) {
         dataToSave.avatar = profile.avatar || '';
@@ -1181,32 +1246,26 @@ export function ProfileEditorProvider({
         dataToSave.coverImage = profile.coverImage || '';
       }
 
-      const profileIdentifier =
-        dataToSave.slug ||
-        dataToSave.id ||
-        profile.slug ||
-        profile.id ||
-        initialProfile.slug ||
-        initialProfile.id;
-
       const reliableProfileId = dataToSave.id || profile.id || initialProfile.id;
+      const lookupIdentifier =
+        reliableProfileId ||
+        lastSavedProfileRef.current?.slug ||
+        initialProfile.slug ||
+        profile.slug ||
+        dataToSave.slug;
 
       const res = await fetch('/api/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         keepalive: Boolean(options?.keepalive),
         body: JSON.stringify({
-          profileId: profileIdentifier,
-          profileSlug: profileIdentifier,
-          slug: profileIdentifier,
+          profileId: lookupIdentifier,
           id: reliableProfileId,
+          profileSlug: lookupIdentifier,
+          slug: dataToSave.slug || cleanSlug,
           userId: dataToSave.userId || profile.userId || initialProfile.userId,
           patch: diff.patch,
           clearFields: diff.clearFields,
-          updatedData: {
-            ...dataToSave,
-            id: reliableProfileId,
-          },
         }),
       });
 
@@ -1231,6 +1290,17 @@ export function ProfileEditorProvider({
         setIsSaving(false);
         executionResult = { ok: false, error: errorMsg };
         return executionResult;
+      }
+
+      if (data?.rejectedKeys && data.rejectedKeys.length > 0) {
+        console.warn('[saveProfile] Unknown keys stripped by server:', data.rejectedKeys);
+      }
+      if (data?.skippedKeys && data.skippedKeys.length > 0) {
+        console.warn('[saveProfile] Wipe guard protected keys:', data.skippedKeys);
+        const warnMsg = `Field(s) ${data.skippedKeys.join(', ')} were not cleared.`;
+        setAutosaveStatus('error');
+        setAutosaveStatusText(warnMsg);
+        showToast(warnMsg);
       }
 
       const savedSlug =
@@ -1260,14 +1330,6 @@ export function ProfileEditorProvider({
         }
         return next;
       });
-
-      // Sync atom states for non-in-flight-edited contact channels
-      if (finalProfile.phone !== undefined && arePrimitivesEqual(phone, dataToSave.phone)) setPhone(finalProfile.phone);
-      if (finalProfile.whatsapp !== undefined && arePrimitivesEqual(whatsapp, dataToSave.whatsapp)) setWhatsapp(finalProfile.whatsapp);
-      if (finalProfile.email !== undefined && arePrimitivesEqual(email, dataToSave.email)) setEmail(finalProfile.email);
-      if (finalProfile.website !== undefined && arePrimitivesEqual(website, dataToSave.website)) setWebsite(finalProfile.website);
-      if (finalProfile.country !== undefined && arePrimitivesEqual(country, dataToSave.country)) setCountry(finalProfile.country);
-      if (finalProfile.officeAddress !== undefined && arePrimitivesEqual(officeAddress, dataToSave.officeAddress)) setOfficeAddress(finalProfile.officeAddress);
 
       const isStillDirty = diffProfile(finalProfile, liveProfileRef.current).hasChanges;
       if (!isStillDirty) {
@@ -1351,7 +1413,7 @@ export function ProfileEditorProvider({
     }
   }, [profile, liveProfile, initialProfile, showToast, onSaveSuccess, isUploadingAvatar, isUploadingCover]);
 
-  // Keep saveProfileRef updated for image uploads
+  // Keep saveProfileRef updated for image uploads and unmount flushes
   useEffect(() => {
     saveProfileRef.current = saveProfile;
   }, [saveProfile]);
@@ -1376,8 +1438,8 @@ export function ProfileEditorProvider({
   useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
-      lastSavedProfileRef.current = initialProfile;
-      lastSavedSnapshotRef.current = getProfileSnapshot(initialProfile);
+      lastSavedProfileRef.current = liveProfile;
+      lastSavedSnapshotRef.current = getProfileSnapshot(liveProfile);
       return;
     }
 
@@ -1399,7 +1461,7 @@ export function ProfileEditorProvider({
     debounceTimerRef.current = setTimeout(async () => {
       debounceTimerRef.current = null;
       if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
-        await saveProfile();
+        await saveProfileRef.current?.();
       }
     }, 1000);
 
@@ -1408,9 +1470,9 @@ export function ProfileEditorProvider({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [liveProfile, isUploadingAvatar, isUploadingCover, saveProfile, initialProfile]);
+  }, [liveProfile, isUploadingAvatar, isUploadingCover]);
 
-  // Flush on field blur, tab hidden, pagehide, and before leaving
+  // Flush on field blur, tab hidden, pagehide, and before leaving (registered ONCE)
   useEffect(() => {
     const handleFlush = (keepalive = false) => {
       if (debounceTimerRef.current) {
@@ -1418,7 +1480,7 @@ export function ProfileEditorProvider({
         debounceTimerRef.current = null;
       }
       if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
-        saveProfile(undefined, { keepalive });
+        saveProfileRef.current?.(undefined, { keepalive });
       }
     };
 
@@ -1447,16 +1509,21 @@ export function ProfileEditorProvider({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      // On unmount: flush if changes exist
+    };
+  }, []);
+
+  // Flush on true unmount of provider
+  useEffect(() => {
+    return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
-        if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
-          saveProfile(undefined, { keepalive: true });
-        }
+      }
+      if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
+        saveProfileRef.current?.(undefined, { keepalive: true });
       }
     };
-  }, [saveProfile]);
+  }, []);
 
   // Alias handleSaveChanges directly to saveProfile for 100% unified save behavior across desktop and mobile
   const handleSaveChanges = useCallback(async () => {

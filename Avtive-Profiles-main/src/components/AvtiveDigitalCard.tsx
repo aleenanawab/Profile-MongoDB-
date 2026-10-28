@@ -42,6 +42,8 @@ import { SocialLinksSection } from './SocialLinksSection';
 import { CustomFieldsSection } from './CustomFieldsSection';
 import { getThemeConfig, PROFILE_THEMES, ThemeConfig } from './themeStyles';
 
+import { useProfileEditor } from '@/context/ProfileEditorContext';
+
 export { getThemeConfig };
 
 export function getProfileThemeClasses(theme: ProfileTheme = 'elegant') {
@@ -98,7 +100,7 @@ export function AvtiveDigitalCard({
   canEdit = false,
   isEditing = false,
   isConnected = false,
-  onDraftChange,
+  onDraftChange: _onDraftChange,
   onSelectSection,
   onToggleSections,
   onSectionsMouseEnter,
@@ -130,19 +132,11 @@ export function AvtiveDigitalCard({
   onToggleDesktopSections,
   isDesktopSectionsOpen = false
 }: AvtiveDigitalCardProps) {
-  const [draftProfile, setDraftProfile] = useState<ProfileData>(profile);
+  const { updateField, updateProfilePartial } = useProfileEditor();
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Sync draft with external profile when not actively editing
-  useEffect(() => {
-    if (!isEditing) {
-      setDraftProfile(profile);
-      setErrorMessage(null);
-    }
-  }, [profile, isEditing]);
-
-  const activeProfile = isEditing ? draftProfile : profile;
+  const activeProfile = profile;
   const activeThemeKey = activeProfile.theme || 'elegant';
   const theme = getThemeConfig(activeThemeKey);
 
@@ -150,29 +144,16 @@ export function AvtiveDigitalCard({
   const companyName = activeProfile.company || activeProfile.companyInfo?.name || 'Avtive';
 
   const handleFieldUpdate = (field: keyof ProfileData, value: any) => {
-    setDraftProfile((prev) => {
-      const next = {
-        ...prev,
-        [field]: value
-      };
-      if (onDraftChange) {
-        onDraftChange(next);
-      }
-      return next;
-    });
+    updateField(field, value);
     if (errorMessage) setErrorMessage(null);
   };
 
   const handleSavePartial = async (partialData: Partial<ProfileData>): Promise<ProfileData> => {
-    setDraftProfile((prev) => {
-      const next = { ...prev, ...partialData };
-      if (onDraftChange) onDraftChange(next);
-      return next;
-    });
+    updateProfilePartial(partialData);
     if (onSavePartial) {
       return await onSavePartial(partialData);
     }
-    const next = { ...draftProfile, ...partialData };
+    const next = { ...profile, ...partialData };
     if (onSaveEdits) {
       await onSaveEdits(next);
     }
@@ -187,7 +168,7 @@ export function AvtiveDigitalCard({
   };
 
   const handleSave = async () => {
-    if (!draftProfile.name || !draftProfile.name.trim()) {
+    if (!profile.name || !profile.name.trim()) {
       setErrorMessage('Full Name is required.');
       return;
     }
@@ -196,7 +177,7 @@ export function AvtiveDigitalCard({
     setErrorMessage(null);
     try {
       if (onSaveEdits) {
-        await onSaveEdits(draftProfile);
+        await onSaveEdits(profile);
       }
     } catch (err: any) {
       console.error('Error saving profile:', err);
@@ -207,7 +188,6 @@ export function AvtiveDigitalCard({
   };
 
   const handleCancel = () => {
-    setDraftProfile(profile);
     setErrorMessage(null);
     if (onCancelEdit) {
       onCancelEdit();

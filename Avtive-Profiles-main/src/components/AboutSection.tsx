@@ -6,6 +6,8 @@ import { ProfileData } from '../types/profile';
 import { ThemeConfig, getThemeConfig } from './themeStyles';
 import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from './ui/formControls';
 
+import { getAbout } from '@/lib/profileGetters';
+
 interface AboutSectionProps {
   profile: ProfileData;
   canEdit?: boolean;
@@ -27,7 +29,7 @@ export function AboutSection({
 }: AboutSectionProps) {
   // Local state for editing fields
   const [taglineDraft, setTaglineDraft] = useState(profile.tagline || '');
-  const [aboutDraft, setAboutDraft] = useState(profile.about || profile.fullBio || profile.shortBio || '');
+  const [aboutDraft, setAboutDraft] = useState(getAbout(profile));
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -35,15 +37,15 @@ export function AboutSection({
   // Sync draft when external profile changes or edit mode toggles
   useEffect(() => {
     setTaglineDraft(profile.tagline || '');
-    setAboutDraft(profile.about || profile.fullBio || profile.shortBio || '');
+    setAboutDraft(getAbout(profile));
     setSaveStatus('idle');
     setErrorMessage(null);
-  }, [profile.tagline, profile.about, profile.fullBio, profile.shortBio, isEditing]);
+  }, [profile.tagline, profile.about, profile.fullBio, isEditing]);
 
-  const hasBio = Boolean(profile.about || profile.fullBio || profile.shortBio || profile.tagline);
+  const hasBio = Boolean(getAbout(profile) || profile.tagline);
   const isDirty =
     taglineDraft !== (profile.tagline || '') ||
-    aboutDraft !== (profile.about || profile.fullBio || profile.shortBio || '');
+    aboutDraft !== getAbout(profile);
 
   if (!hasBio && !canEdit && !isEditing) {
     return null;
@@ -150,9 +152,9 @@ export function AboutSection({
               &ldquo;{profile.tagline}&rdquo;
             </p>
           )}
-          {(profile.about || profile.fullBio || profile.shortBio) && (
+          {getAbout(profile) && (
             <p className={`text-xs sm:text-sm ${theme.textSecondary} leading-relaxed font-normal whitespace-pre-line`}>
-              {profile.about || profile.fullBio || profile.shortBio}
+              {getAbout(profile)}
             </p>
           )}
         </div>

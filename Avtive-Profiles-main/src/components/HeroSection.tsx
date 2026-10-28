@@ -14,6 +14,7 @@ import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from './ui/formCon
 import { SearchableCombobox } from './forms/SearchableCombobox';
 import { COUNTRIES } from '@/data/countriesDataset';
 import { compressImageFile, uploadImageToStorage } from '@/lib/imageCompression';
+import { getTitle, getShortBio } from '@/lib/profileGetters';
 
 interface HeroSectionProps {
   profile: ProfileData;
@@ -76,12 +77,12 @@ export function HeroSection({
     name: profile.name || '',
     username: profile.username || profile.slug || '',
     slug: profile.slug || profile.username || '',
-    designation: profile.profession || profile.designation || '',
-    profession: profile.profession || profile.designation || '',
+    designation: getTitle(profile),
+    profession: getTitle(profile),
     tagline: profile.tagline || '',
     location: profile.location || '',
     country: profile.country || '',
-    shortBio: profile.shortBio || '',
+    shortBio: getShortBio(profile),
     avatar: profile.avatar || '',
     coverImage: profile.coverImage || '',
     companyInfo: (profile.companyInfo || {}) as Partial<CompanyInfo>,
@@ -206,12 +207,12 @@ export function HeroSection({
       name: profile.name || '',
       username: profile.username || profile.slug || '',
       slug: profile.slug || profile.username || '',
-      designation: profile.profession || profile.designation || '',
-      profession: profile.profession || profile.designation || '',
+      designation: getTitle(profile),
+      profession: getTitle(profile),
       tagline: profile.tagline || '',
       location: profile.location || '',
       country: profile.country || '',
-      shortBio: profile.shortBio || '',
+      shortBio: getShortBio(profile),
       avatar: profile.avatar || '',
       coverImage: profile.coverImage || '',
       companyInfo: (profile.companyInfo || {}) as Partial<CompanyInfo>,
@@ -799,9 +800,21 @@ export function HeroSection({
                   className={`space-y-0.5 ${canEdit ? 'cursor-pointer group/name hover:opacity-85 transition-opacity' : ''}`}
                   title={canEdit ? 'Click to edit name' : undefined}
                 >
-                  <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words`}>
-                    <span>{profile.name}</span>
-                  </h1>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words`}>
+                      <span>{profile.name}</span>
+                    </h1>
+                    {profile.pronouns && (
+                      <span className={`text-xs font-normal ${theme.textMuted} opacity-80`}>
+                        ({profile.pronouns})
+                      </span>
+                    )}
+                    {profile.statusBadge && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40">
+                        {profile.statusBadge}
+                      </span>
+                    )}
+                  </div>
                   {(profile.username || profile.slug) && (
                     <p className="text-xs font-mono text-cyan-600 dark:text-cyan-400 font-semibold">
                       @{profile.username || profile.slug}
@@ -814,7 +827,10 @@ export function HeroSection({
                   className={`text-sm sm:text-base md:text-lg font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                   title={canEdit ? 'Click to edit title' : undefined}
                 >
-                  {profile.profession || profile.designation || profile.profileName || (isCompany ? 'Organization' : 'Professional')}
+                  {[
+                    getTitle(profile) || profile.profileName || (isCompany ? 'Organization' : 'Professional'),
+                    !isCompany && profile.department
+                  ].filter(Boolean).join(' • ')}
                 </p>
 
                 {/* Corporate Metadata Strip */}
@@ -876,7 +892,7 @@ export function HeroSection({
                 )}
 
                 {/* Short Bio */}
-                {sharing.bio !== false && profile.shortBio && (
+                {sharing.bio !== false && getShortBio(profile) && (
                   <div
                     onClick={() => canEdit && onOpenEdit?.()}
                     className={`${
@@ -884,7 +900,7 @@ export function HeroSection({
                     }`}
                   >
                     <p className={`text-xs sm:text-sm md:text-base ${theme.textSecondary} leading-relaxed max-w-2xl break-words`}>
-                      {profile.shortBio}
+                      {getShortBio(profile)}
                     </p>
                   </div>
                 )}
@@ -1011,6 +1027,20 @@ export function HeroSection({
             )
           )}
         </div>
+
+        {/* Custom CTA Button if active and configured */}
+        {profile.customCta?.active && profile.customCta.label && profile.customCta.url && (
+          <div className="pt-2 max-w-md w-full min-w-0">
+            <a
+              href={profile.customCta.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`w-full py-2.5 px-4 rounded-xl font-bold text-center text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all ${theme.btnPrimary} flex items-center justify-center gap-2 select-none`}
+            >
+              <span>{profile.customCta.label}</span>
+            </a>
+          </div>
+        )}
 
         {/* Direct Social Icon Bar: Respects exact drag-and-drop order from socials (hidden in Edit Mode) */}
         {!isEditing && sharing.socialLinks !== false && (

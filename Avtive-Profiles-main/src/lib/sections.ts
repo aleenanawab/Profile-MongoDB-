@@ -286,6 +286,9 @@ export function isFieldShared(
   if (field === 'email') {
     return sharing.email !== false;
   }
+  if (field === 'birthday' || field === 'pronouns') {
+    return sharing[field] === true;
+  }
   return true;
 }
 

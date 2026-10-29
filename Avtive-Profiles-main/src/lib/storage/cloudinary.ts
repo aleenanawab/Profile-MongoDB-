@@ -148,10 +148,6 @@ export async function ensureCloudinaryAssetUrl(
   return imageSource;
 }
 
-// ─── BACKWARD COMPATIBILITY ALIASES ──────────────────────────────────────────
-export const uploadToSupabaseStorage = uploadToCloudinary;
-export const ensureSupabaseAssetUrl = ensureCloudinaryAssetUrl;
-
 /**
  * Remove an existing asset from Cloudinary by its public ID.
  * Returns true if destroyed or not found, false on failure.

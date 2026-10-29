@@ -45,8 +45,7 @@ export {
   duplicateProfile,
   deleteProfile,
   sanitizeProfileForPublic,
-  setProfileResponseCookies,
-  mapSupabaseProfileToProfileData
+  setProfileResponseCookies
 } from './profiles';
 
 export {

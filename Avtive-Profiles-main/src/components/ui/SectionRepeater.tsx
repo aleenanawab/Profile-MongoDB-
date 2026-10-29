@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown, Eye, EyeOff, Layers } from 'lucide-react';
-import { ThemeConfig, getThemeConfig } from '../themeStyles';
+import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 
 export interface SectionRepeaterProps<T extends { id?: string; visible?: boolean }> {
   title: string;

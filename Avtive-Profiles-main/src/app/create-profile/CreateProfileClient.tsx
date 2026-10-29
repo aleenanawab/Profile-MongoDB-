@@ -27,8 +27,8 @@ import {
 import { ProfileTheme, UserSession, ProfileType, ProfileData } from '@/types/profile';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
-import { PhonePreview } from '@/components/PhonePreview';
-import { AvtiveDigitalCard } from '@/components/AvtiveDigitalCard';
+import { PhonePreview } from '@/components/card/PhonePreview';
+import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
 
 interface CreateProfileClientProps {
   user: UserSession;

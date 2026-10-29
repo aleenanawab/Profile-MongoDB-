@@ -9,15 +9,15 @@ import {
   ProjectItem,
   ProfileType 
 } from '@/types/profile';
-import { HeaderNav } from '@/components/HeaderNav';
-import { AvtiveDigitalCard } from '@/components/AvtiveDigitalCard';
-import { PhonePreview } from '@/components/PhonePreview';
-import { getThemeConfig } from '@/components/themeStyles';
+import { HeaderNav } from '@/components/layout/HeaderNav';
+import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
+import { PhonePreview } from '@/components/card/PhonePreview';
+import { getThemeConfig } from '@/components/ui/themeStyles';
 import { ShareModal } from '@/components/share/ShareModal';
-import { ExchangeContactModal } from '@/components/ExchangeContactModal';
-import { QRFullscreenModal } from '@/components/QRFullscreenModal';
-import { ResumeViewerModal } from '@/components/ResumeViewerModal';
-import { ProjectDetailModal } from '@/components/ProjectDetailModal';
+import { ExchangeContactModal } from '@/components/modals/ExchangeContactModal';
+import { QRFullscreenModal } from '@/components/modals/QRFullscreenModal';
+import { ResumeViewerModal } from '@/components/modals/ResumeViewerModal';
+import { ProjectDetailModal } from '@/components/modals/ProjectDetailModal';
 import { ProfileEditorProvider, useProfileEditor } from '@/context/ProfileEditorContext';
 import { downloadVCard } from '@/lib/vcard';
 import { motion, AnimatePresence } from 'framer-motion';

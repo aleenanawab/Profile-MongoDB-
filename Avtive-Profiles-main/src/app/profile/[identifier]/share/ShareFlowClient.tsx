@@ -31,8 +31,8 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { ProfileData, SharingSettings } from '@/types/profile';
-import { GithubIcon, LinkedInIcon, TwitterXIcon } from '@/components/BrandIcons';
-import { ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
+import { GithubIcon, LinkedInIcon, TwitterXIcon } from '@/components/ui/BrandIcons';
+import { ALL_PROFILE_SECTIONS } from '@/components/profile-sections/DynamicSectionGroups';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 
 interface ShareFlowClientProps {

@@ -175,8 +175,6 @@ export async function sendPasswordResetEmail({
         text: `Hello,\n\nPlease click the following link to reset your password:\n${resetUrl}\n\nThis link is valid for 1 hour.`,
         html: generatePasswordResetHtml(resetUrl, name)
       });
-
-      console.log(`[SMTP SUCCESS] Password reset email sent, messageId: ${info.messageId}`);
       return {
         success: true,
         messageId: info.messageId,

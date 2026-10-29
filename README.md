@@ -71,34 +71,58 @@ Avtive reimagines traditional business cards into interactive, real-time digital
 ### Architectural Layout
 
 ```
-Profile(MongoDB)/
-├── package.json                   # Root package orchestration
+Profile-MongoDB-/
+├── package.json                   # Root package orchestration (--prefix Avtive-Profiles-main)
 ├── tsconfig.json                  # Root TypeScript configuration
+├── README.md                      # Comprehensive project documentation
 └── Avtive-Profiles-main/          # Primary Next.js Application
     ├── package.json               # Next.js scripts & dependencies
+    ├── package-lock.json          # Dependency lockfile
     ├── next.config.ts             # Next.js build & image domain config
     ├── eslint.config.mjs          # ESLint 9 flat configuration
-    ├── .env.example               # Safe environment variable template
-    ├── public/                    # Static assets, fonts, icons
-    ├── tests/                     # Automated test suites
-    │   └── oauth-and-stabilization.test.ts
-    ├── scripts/                   # Migration & utility scripts
+    ├── .env.example               # Environment variables template & legacy aliases
+    ├── public/                    # Static assets (favicons, logos)
+    ├── legacy/                    # Migration tooling (legacy db.json to mongo)
     │   └── migrate-json-to-mongo.ts
+    ├── tests/                     # Automated test suites
+    │   ├── run-all-tests.ts       # Test runner script
+    │   ├── e2e-persistence.test.tsx
+    │   ├── oauth-and-stabilization.test.ts
+    │   ├── contact-and-revert-persistence.test.ts
+    │   ├── mobile-save-and-visibility.test.ts
+    │   ├── profile-diff-and-patch.test.ts
+    │   ├── profile-dirty.test.ts
+    │   ├── reproduce-persistence-gaps.test.ts
+    │   ├── section-visibility.test.ts
+    │   └── avatar-persistence.test.ts
     └── src/
         ├── app/                   # App Router pages and API routes
-        │   ├── (auth)/            # Login, register, password resets
-        │   ├── api/               # Server-side API endpoints
+        │   ├── api/               # Server-side API endpoints (auth, profile, company, upload, health)
         │   ├── dashboard/         # User profile card dashboard
-        │   ├── profile/           # Public and private profile views
+        │   ├── profile/           # Public & editable profile views
+        │   ├── onboarding/        # Onboarding flows (role, theme, details)
+        │   ├── login/             # Login portal & OAuth callback
+        │   ├── register/          # User registration
+        │   ├── forgot-password/   # Password reset request
+        │   ├── reset-password/    # Password reset submission
         │   └── company/           # Team and company invite flows
-        ├── components/            # Reusable UI & section components
-        ├── context/               # React Context (Editor & Theme)
+        ├── components/            # Reusable UI component modules
+        │   ├── card/              # Digital card displays (AvtiveDigitalCard, NFCCardPreview, PhonePreview)
+        │   ├── forms/             # SearchableCombobox and form elements
+        │   ├── layout/            # AvtivePlatformHeader, DualScreenWorkspace, HeaderNav
+        │   ├── modals/            # ExchangeContactModal, ProjectDetailModal, QRFullscreenModal, ResumeViewerModal
+        │   ├── profile-sections/  # Profile identity & content sections (Hero, About, Experience, etc.)
+        │   ├── profiles/          # DesktopProfileSidebar, ProfileDashboard, ProfileSectionTabBar, ProfileSwitcher, StatsRow
+        │   ├── share/             # ShareModal
+        │   └── ui/                # BrandIcons, formControls, SectionRepeater, themeStyles
+        ├── context/               # React Context (ProfileEditorContext & ThemeContext)
         ├── data/                  # Static datasets (Countries, Skills, Languages)
         ├── lib/
-        │   ├── db/                # Modular MongoDB entities & queries
+        │   ├── db/                # Modular MongoDB models & queries (users, profiles, companies, connections)
         │   ├── auth/              # JWT, sessions, Google PKCE OAuth
         │   ├── storage/           # Cloudinary uploader & URL sanitizers
         │   ├── email.ts           # SMTP & Resend email delivery
+        │   ├── defaultImages.ts   # Default SVG data URIs for avatar & cover
         │   ├── cardPdfGenerator.ts# jsPDF business card generator
         │   └── vcard.ts           # RFC-compliant vCard builder
         └── types/                 # Shared TypeScript interfaces
@@ -159,6 +183,9 @@ npm run start
 
 # Run automated test suite
 npm test
+
+# Run legacy JSON-to-MongoDB migration (dry-run mode)
+npm run migrate:json-to-mongo
 ```
 
 ### Running from `Avtive-Profiles-main/`:
@@ -174,8 +201,14 @@ npm run lint
 # Run Next.js production build with Turbopack
 npm run build
 
-# Run test suite
+# Start Next.js production server
+npm run start
+
+# Run full automated test suite (9 suites)
 npm test
+
+# Run legacy JSON-to-MongoDB migration
+npm run migrate:json-to-mongo
 ```
 
 ---
@@ -222,7 +255,7 @@ The application uses native MongoDB connection pooling with zero ORM overhead.
    ```
 
 ### 2. Automatic Indexing
-Indexes are lazily and automatically created upon initial request via [`src/lib/db/indexes.ts`](file:///c:/Users/PMLS/Downloads/aleena/Profile%28MongoDB%29/Avtive-Profiles-main/src/lib/db/indexes.ts):
+Indexes are lazily and automatically created upon initial request via [`src/lib/db/indexes.ts`](Avtive-Profiles-main/src/lib/db/indexes.ts):
 - `users`: Unique index on `email`, index on `googleSub`.
 - `profiles`: Unique index on `slug`, index on `userId`.
 - `companies`: Unique index on `slug`, index on `ownerUserId`.
@@ -234,7 +267,7 @@ Indexes are lazily and automatically created upon initial request via [`src/lib/
 
 ## 7. Password-Reset Email Configuration
 
-Password reset delivery is implemented in [`src/lib/email.ts`](file:///c:/Users/PMLS/Downloads/aleena/Profile%28MongoDB%29/Avtive-Profiles-main/src/lib/email.ts) with dual provider support:
+Password reset delivery is implemented in [`src/lib/email.ts`](Avtive-Profiles-main/src/lib/email.ts) with dual provider support:
 
 ### Option A: Gmail SMTP with App Passwords (Recommended for Development)
 1. Go to your [Google Account Security Settings](https://myaccount.google.com/security).

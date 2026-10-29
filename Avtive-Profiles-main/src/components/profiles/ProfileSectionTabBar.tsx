@@ -32,7 +32,7 @@ import {
   Star
 } from 'lucide-react';
 import { ProfileData, normalizeProfileType } from '@/types/profile';
-import { ThemeConfig, getThemeConfig } from '@/components/themeStyles';
+import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { getCanonicalSectionOrder, normalizeSectionKey, isCanonicalSectionVisible } from '@/lib/sections';
 
 export interface ProfileSectionTabBarProps {

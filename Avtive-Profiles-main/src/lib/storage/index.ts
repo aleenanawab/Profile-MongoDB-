@@ -2,9 +2,7 @@ export {
   isCloudinaryConfigured,
   uploadToCloudinary,
   deleteFromCloudinary,
-  ensureCloudinaryAssetUrl,
-  uploadToSupabaseStorage,
-  ensureSupabaseAssetUrl
+  ensureCloudinaryAssetUrl
 } from './cloudinary';
 
 export type { CloudinaryUploadResult } from './cloudinary';

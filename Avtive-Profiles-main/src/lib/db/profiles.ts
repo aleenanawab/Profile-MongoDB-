@@ -209,21 +209,6 @@ export function mapDocToProfileData(doc: any): ProfileData {
   };
 }
 
-export function mapSupabaseProfileToProfileData(
-  item: any,
-  fallbackUserId?: string,
-  fallbackRole?: ProfileType
-): ProfileData {
-  return mapDocToProfileData({
-    ...item,
-    userId: item.user_id || fallbackUserId,
-    coverImage: item.cover_image || item.coverImage,
-    shortBio: item.short_bio || item.shortBio,
-    fullBio: item.full_bio || item.fullBio,
-    type: item.type || fallbackRole || 'individual'
-  });
-}
-
 export function setProfileResponseCookies(response: any, profile: ProfileData): void {
   // Safe helper kept for API response compatibility
   if (response && response.cookies && typeof response.cookies.set === 'function') {

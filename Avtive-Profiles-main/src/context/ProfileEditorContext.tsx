@@ -4,13 +4,12 @@
  * ProfileEditorContext
  * --------------------
  * Single source of truth for all profile-editing state.
- * Both EditProfileClient (preview side) and SlidingEditorPanel (editor side)
+ * Both DualScreenWorkspace (preview side) and profile section editors
  * consume this context — no duplicated atoms, no stale-prop re-sync bugs.
  *
  * Architecture:
  *   <ProfileEditorProvider initialProfile={...} userProfiles={...}>
- *     <EditProfileClient />   ← reads liveProfile, calls setters
- *     <SlidingEditorPanel />  ← reads same atoms, calls same setters
+ *     <DualScreenWorkspace /> ← reads liveProfile, synchronizes drafts, calls setters
  *   </ProfileEditorProvider>
  */
 
@@ -37,7 +36,7 @@ import {
   SocialLink,
   SkillItem,
 } from '@/types/profile';
-import { ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
+import { ALL_PROFILE_SECTIONS } from '@/components/profile-sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import {
   getCanonicalSectionOrder,

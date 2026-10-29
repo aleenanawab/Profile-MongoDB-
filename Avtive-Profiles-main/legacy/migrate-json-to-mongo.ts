@@ -1,5 +1,5 @@
 /**
- * Safe Migration Script: src/data/db.json -> MongoDB
+ * Safe Migration Script: legacy/db.json -> MongoDB
  * ----------------------------------------------------
  * Required Environment Variables (in .env.local):
  * - MONGODB_URI: Full MongoDB connection URI (e.g. mongodb+srv://... or mongodb://localhost:27017)

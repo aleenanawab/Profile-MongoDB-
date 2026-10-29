@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { ProfileData, SharingSettings, ProfileType } from '@/types/profile';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DynamicSectionGroups, ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
+import { DynamicSectionGroups, ALL_PROFILE_SECTIONS } from '@/components/profile-sections/DynamicSectionGroups';
 
 export interface ShareModalProps {
   isOpen: boolean;

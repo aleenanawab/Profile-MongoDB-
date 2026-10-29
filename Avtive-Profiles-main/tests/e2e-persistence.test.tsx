@@ -885,7 +885,7 @@ async function runPersistenceSuite() {
   // S18: Bug D - SocialLinksSection hides visible:false and empty/"https://" links
   // ──────────────────────────────────────────────────────────
   await testScenario('S18: Bug D - SocialLinksSection hides hidden and empty links at render time', async () => {
-    const { SocialLinksSection } = await import('../src/components/SocialLinksSection');
+    const { SocialLinksSection } = await import('../src/components/profile-sections/SocialLinksSection');
     const slug = 's18-social-hide';
     const profile = makeBaselineProfile(slug, {
       socials: [

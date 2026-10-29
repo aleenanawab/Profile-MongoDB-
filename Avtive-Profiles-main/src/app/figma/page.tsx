@@ -18,7 +18,7 @@ import {
   Lock,
   Download
 } from 'lucide-react';
-import { GithubIcon, LinkedInIcon, TwitterXIcon } from '@/components/BrandIcons';
+import { GithubIcon, LinkedInIcon, TwitterXIcon } from '@/components/ui/BrandIcons';
 
 export default function FigmaShowcasePage() {
   const [activeToggleIndex, setActiveToggleIndex] = useState<{ [key: string]: boolean }>({

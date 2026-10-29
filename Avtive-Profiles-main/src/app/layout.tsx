@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { AvtivePlatformHeader } from "@/components/AvtivePlatformHeader";
+import { AvtivePlatformHeader } from "@/components/layout/AvtivePlatformHeader";
 
 export const viewport: Viewport = {
   width: "device-width",

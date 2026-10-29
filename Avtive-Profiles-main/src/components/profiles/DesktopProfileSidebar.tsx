@@ -46,7 +46,7 @@ import {
   Star
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
-import { AvtiveLogoIcon } from '@/components/DesktopWindowPreview';
+import { AvtiveLogoIcon } from '@/components/BrandIcons';
 import { ProfileSwitcher } from '@/components/profiles/ProfileSwitcher';
 import { useLongPressDrag } from '@/hooks/useLongPressDrag';
 

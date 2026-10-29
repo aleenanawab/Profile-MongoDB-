@@ -135,4 +135,3 @@ export const WORLD_LANGUAGES: LanguageOption[] = RAW_WORLD_LANGUAGES.map((l) => 
   badge: l.code,
 }));
 
-export const LANGUAGE_NAMES: string[] = WORLD_LANGUAGES.map((l) => l.name);

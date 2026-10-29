@@ -233,4 +233,3 @@ export const COUNTRIES: CountryOption[] = uniqueCountries.map((c) => ({
   badge: c.code,
 }));
 
-export const COUNTRY_NAMES: string[] = COUNTRIES.map((c) => c.name);

@@ -53,16 +53,6 @@ import { getThemeConfig, PROFILE_THEMES, ThemeConfig } from './themeStyles';
 
 import { useProfileEditor } from '@/context/ProfileEditorContext';
 
-export { getThemeConfig };
-
-export function getProfileThemeClasses(theme: ProfileTheme = 'elegant') {
-  const config = getThemeConfig(theme);
-  return {
-    container: config.container,
-    badge: `${config.badgeBg} ${config.badgeText}`,
-    accent: config.accentText
-  };
-}
 
 interface AvtiveDigitalCardProps {
   profile: ProfileData;

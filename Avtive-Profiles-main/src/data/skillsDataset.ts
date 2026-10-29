@@ -391,4 +391,3 @@ export const POPULAR_SKILLS: SkillSuggestion[] = uniqueSkills.map((s) => ({
   sublabel: s.category,
 }));
 
-export const SKILL_NAMES: string[] = POPULAR_SKILLS.map((s) => s.name);

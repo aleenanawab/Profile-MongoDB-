@@ -359,28 +359,4 @@ export function getThemeConfig(theme?: ProfileTheme | string): ThemeConfig {
   return PROFILE_THEMES[theme as ProfileTheme] || PROFILE_THEMES.editorial;
 }
 
-export function getButtonRadiusClass(radius?: 'square' | 'rounded' | 'pill'): string {
-  switch (radius) {
-    case 'square':
-      return 'rounded-none';
-    case 'pill':
-      return 'rounded-full';
-    case 'rounded':
-    default:
-      return 'rounded-2xl';
-  }
-}
-
-export function getButtonStyleClass(style?: 'solid' | 'outline' | 'soft', theme?: ProfileTheme): string {
-  const t = getThemeConfig(theme);
-  switch (style) {
-    case 'outline':
-      return `bg-transparent border-2 ${t.cardBorder} ${t.textPrimary} hover:${t.badgeBg} shadow-xs`;
-    case 'soft':
-      return `${t.badgeBg} ${t.accentText} border ${t.subCardBorder} hover:opacity-90`;
-    case 'solid':
-    default:
-      return `${t.btnPrimary}`;
-  }
-}
 

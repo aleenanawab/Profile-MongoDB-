@@ -43,3 +43,18 @@ next-env.d.ts
 *.backup.json
 scratch/
 lab01-dsa/
+
+# workspace and agent metadata
+.agent/
+.agents/
+.gemini/
+.gsd/
+GSD-STYLE.md
+PROJECT_RULES.md
+VERSION
+adapters/
+model_capabilities.yaml
+scripts/
+
+# private legacy data
+legacy/db.json

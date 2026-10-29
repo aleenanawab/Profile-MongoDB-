@@ -53,3 +53,7 @@ lab01-dsa/
 /adapters/
 /model_capabilities.yaml
 /scripts/
+
+# private legacy data
+legacy/db.json
+Avtive-Profiles-main/legacy/db.json

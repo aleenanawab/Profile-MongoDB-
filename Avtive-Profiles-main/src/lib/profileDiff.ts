@@ -390,16 +390,6 @@ export function diffProfile(
   };
 }
 
-function FIELD_CLASSIFICationsClean(obj: any): Record<string, any> {
-  const res: Record<string, any> = {};
-  for (const k of Object.keys(obj)) {
-    if (k in FIELD_CLASSIFICATIONS && (FIELD_CLASSIFICATIONS as any)[k] !== 'server_only') {
-      res[k] = obj[k];
-    }
-  }
-  return res;
-}
-
 /**
  * Checks whether two profile objects have any meaningful differences.
  * Uses diffProfile as the single source of truth for dirtiness.

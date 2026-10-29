@@ -261,7 +261,6 @@ let currentContextValue: ProfileEditorContextValue | null = null;
 
 function ContextReader({ onContext }: { onContext?: (ctx: ProfileEditorContextValue) => void }) {
   const ctx = useProfileEditor();
-  // eslint-disable-next-line react-hooks/globals
   currentContextValue = ctx;
   React.useEffect(() => {
     currentContextValue = ctx;

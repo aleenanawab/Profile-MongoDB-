@@ -33,6 +33,15 @@ import { PortfolioSection } from './PortfolioSection';
 import { CertificationsSection } from './CertificationsSection';
 import { LanguagesSection } from './LanguagesSection';
 import { RecommendationsSection } from './RecommendationsSection';
+import { VolunteerSection } from './VolunteerSection';
+import { HonorsAwardsSection } from './HonorsAwardsSection';
+import { PublicationsSection } from './PublicationsSection';
+import { PatentsSection } from './PatentsSection';
+import { CoursesSection } from './CoursesSection';
+import { TestScoresSection } from './TestScoresSection';
+import { OrganizationsSection } from './OrganizationsSection';
+import { InterestsSection } from './InterestsSection';
+import { FeaturedSection } from './FeaturedSection';
 import { ProfileContactSection } from './ProfileContactSection';
 import { CompanyCard } from './CompanyCard';
 import { TeamSection } from './TeamSection';
@@ -265,7 +274,6 @@ export function AvtiveDigitalCard({
           const visibility = activeProfile.sectionVisibility || {};
 
           const isSectionVisible = (rawKey: string): boolean => {
-            if (rawKey === 'volunteer' || rawKey === 'recommendations') return false;
             if (isEditing) return true;
             // Check individual custom fields
             if (rawKey.startsWith('custom-field-')) {
@@ -458,8 +466,157 @@ export function AvtiveDigitalCard({
                   />
                 );
 
+              case 'featured':
+                if (isCompany || !isSectionVisible('featured')) return null;
+                return (
+                  <FeaturedSection 
+                    key="featured" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'volunteer':
+              case 'volunteerExperiences':
+                if (isCompany || (!isSectionVisible('volunteer') && !isSectionVisible('volunteerExperiences'))) return null;
+                return (
+                  <VolunteerSection 
+                    key="volunteer" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
               case 'recommendations':
-                return null;
+                if (isCompany || !isSectionVisible('recommendations')) return null;
+                return (
+                  <RecommendationsSection 
+                    key="recommendations" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'honorsAwards':
+              case 'honors':
+                if (isCompany || (!isSectionVisible('honorsAwards') && !isSectionVisible('honors'))) return null;
+                return (
+                  <HonorsAwardsSection 
+                    key="honorsAwards" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'publications':
+                if (isCompany || !isSectionVisible('publications')) return null;
+                return (
+                  <PublicationsSection 
+                    key="publications" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'patents':
+                if (isCompany || !isSectionVisible('patents')) return null;
+                return (
+                  <PatentsSection 
+                    key="patents" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'courses':
+                if (isCompany || !isSectionVisible('courses')) return null;
+                return (
+                  <CoursesSection 
+                    key="courses" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'testScores':
+                if (isCompany || !isSectionVisible('testScores')) return null;
+                return (
+                  <TestScoresSection 
+                    key="testScores" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'organizations':
+                if (isCompany || !isSectionVisible('organizations')) return null;
+                return (
+                  <OrganizationsSection 
+                    key="organizations" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
+
+              case 'interests':
+                if (isCompany || !isSectionVisible('interests')) return null;
+                return (
+                  <InterestsSection 
+                    key="interests" 
+                    profile={activeProfile} 
+                    theme={theme}
+                    canEdit={canEdit}
+                    isEditing={isEditing}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    onSelectSection={onSelectSection}
+                  />
+                );
 
               case 'socialLinks':
               case 'socials':

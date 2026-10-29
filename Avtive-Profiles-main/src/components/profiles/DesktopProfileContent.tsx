@@ -50,7 +50,17 @@ import {
   ArrowUp,
   ArrowDown,
   GripVertical,
-  AlertCircle
+  AlertCircle,
+  HeartHandshake,
+  Quote,
+  Trophy,
+  BookOpen,
+  Lightbulb,
+  BookMarked,
+  FileSpreadsheet,
+  Network,
+  Compass,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
@@ -69,7 +79,18 @@ import {
   CustomFieldItem,
   SocialLink
 } from '@/types/profile';
+import { getTitle } from '@/lib/profileGetters';
 import { LinkedInIcon, GithubIcon, TwitterIcon, WhatsAppIcon } from '@/components/BrandIcons';
+import { VolunteerSection } from '@/components/VolunteerSection';
+import { RecommendationsSection } from '@/components/RecommendationsSection';
+import { FeaturedSection } from '@/components/FeaturedSection';
+import { HonorsAwardsSection } from '@/components/HonorsAwardsSection';
+import { PublicationsSection } from '@/components/PublicationsSection';
+import { PatentsSection } from '@/components/PatentsSection';
+import { CoursesSection } from '@/components/CoursesSection';
+import { TestScoresSection } from '@/components/TestScoresSection';
+import { OrganizationsSection } from '@/components/OrganizationsSection';
+import { InterestsSection } from '@/components/InterestsSection';
 
 export interface DesktopProfileContentProps {
   hideRightPreview?: boolean;
@@ -1041,10 +1062,11 @@ export function DesktopProfileContent({
                 </label>
                 <input
                   type="text"
-                  value={profile.professionalTitle || profile.designation || ''}
+                  value={getTitle(profile)}
                   onChange={(e) => {
                     updateField('professionalTitle', e.target.value);
                     updateField('designation', e.target.value);
+                    updateField('profession', e.target.value);
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
                   placeholder={isCompany ? "e.g. Cloud Security & Enterprise Identity Systems" : "e.g. Botanist & Research Scientist"}
@@ -1053,7 +1075,7 @@ export function DesktopProfileContent({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {isCompany ? 'Company Tagline' : 'Short Bio / Headline'}
+                  {isCompany ? 'Company Tagline / Mission' : 'Short Bio / Headline'}
                 </label>
                 <input
                   type="text"
@@ -1064,6 +1086,132 @@ export function DesktopProfileContent({
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
                   placeholder={isCompany ? "e.g. The Digital Identity Standard for Enterprise Teams" : "Brief 1-line headline"}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Tagline
+                </label>
+                <input
+                  type="text"
+                  value={profile.tagline ?? ''}
+                  onChange={(e) => {
+                    updateField('tagline', e.target.value);
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
+                  placeholder="e.g. Innovator & Open Source Contributor"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Headline
+                </label>
+                <input
+                  type="text"
+                  value={profile.headline ?? ''}
+                  onChange={(e) => {
+                    updateField('headline', e.target.value);
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
+                  placeholder="e.g. Senior Staff Engineer @ TechCorp | Distributed Systems Specialist"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Industry
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.industry ?? ''}
+                    onChange={(e) => {
+                      updateField('industry', e.target.value);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="e.g. Technology, Information & Internet"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Pronouns
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.pronouns ?? ''}
+                    onChange={(e) => {
+                      updateField('pronouns', e.target.value);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="e.g. He/Him, She/Her, They/Them"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Department
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.department ?? ''}
+                    onChange={(e) => {
+                      updateField('department', e.target.value);
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
+                    placeholder="e.g. Engineering"
+                  />
+                </div>
+              </div>
+
+              {/* Open to Work Switch & Roles */}
+              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#080D1A] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">Open to Work Badge</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Display open to work badge on profile</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={profile.openToWork?.enabled ?? false}
+                    onChange={(e) => {
+                      const enabled = e.target.checked;
+                      const currentRoles = profile.openToWork?.roles || [];
+                      updateField('openToWork', { enabled, roles: currentRoles });
+                    }}
+                    className="w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                  />
+                </div>
+                {profile.openToWork?.enabled && (
+                  <div>
+                    <label className="block text-[11px] text-slate-600 dark:text-slate-400 mb-1">Target Roles (comma-separated)</label>
+                    <input
+                      type="text"
+                      value={(profile.openToWork?.roles || []).join(', ')}
+                      onChange={(e) => {
+                        const roles = e.target.value.split(',').map(r => r.trim()).filter(Boolean);
+                        updateField('openToWork', { enabled: true, roles });
+                      }}
+                      placeholder="e.g. Senior Frontend Engineer, Tech Lead, Engineering Manager"
+                      className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#0E1526] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {isCompany ? 'Company Tagline' : 'Short Bio'}
+                </label>
+                <input
+                  type="text"
+                  value={profile.shortBio ?? profile.bio ?? ''}
+                  onChange={(e) => {
+                    updateField('shortBio', e.target.value);
+                    updateField('bio', e.target.value);
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080D1A] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-cyan-500 transition-colors"
+                  placeholder={isCompany ? "e.g. The Digital Identity Standard for Enterprise Teams" : "Brief 1-line bio"}
                 />
               </div>
 
@@ -2045,6 +2193,166 @@ export function DesktopProfileContent({
               </div>
             </div>
           )),
+          volunteer: renderSectionCard(
+            'volunteer',
+            'Volunteer Experience',
+            HeartHandshake,
+            'Community service, causes, and volunteer initiatives',
+            (profile.volunteerExperiences?.length || profile.volunteer?.length) ? `${profile.volunteerExperiences?.length || profile.volunteer?.length} records` : 'Empty · Click to add',
+            true,
+            (
+              <VolunteerSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          recommendations: renderSectionCard(
+            'recommendations',
+            'Recommendations',
+            Quote,
+            'Curated recommendations received from colleagues, managers, and clients',
+            profile.recommendations?.length ? `${profile.recommendations.length} recommendations` : 'Empty · Click to add',
+            true,
+            (
+              <RecommendationsSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          featured: renderSectionCard(
+            'featured',
+            'Featured',
+            Star,
+            'Highlighted posts, articles, media, and external links',
+            profile.featured?.length ? `${profile.featured.length} items` : 'Empty · Click to add',
+            true,
+            (
+              <FeaturedSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          honorsAwards: renderSectionCard(
+            'honorsAwards',
+            'Honors & Awards',
+            Trophy,
+            'Distinctions, competitions, and professional recognition',
+            profile.honorsAwards?.length ? `${profile.honorsAwards.length} awards` : 'Empty · Click to add',
+            true,
+            (
+              <HonorsAwardsSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          publications: renderSectionCard(
+            'publications',
+            'Publications',
+            BookOpen,
+            'Books, research papers, journals, and articles',
+            profile.publications?.length ? `${profile.publications.length} publications` : 'Empty · Click to add',
+            true,
+            (
+              <PublicationsSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          patents: renderSectionCard(
+            'patents',
+            'Patents',
+            Lightbulb,
+            'Inventions, pending or issued patent filings',
+            profile.patents?.length ? `${profile.patents.length} patents` : 'Empty · Click to add',
+            true,
+            (
+              <PatentsSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          courses: renderSectionCard(
+            'courses',
+            'Courses',
+            BookMarked,
+            'Coursework, accredited programs, and continuing education',
+            profile.courses?.length ? `${profile.courses.length} courses` : 'Empty · Click to add',
+            true,
+            (
+              <CoursesSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          testScores: renderSectionCard(
+            'testScores',
+            'Test Scores',
+            FileSpreadsheet,
+            'Standardized tests, exams, and certifications scores',
+            profile.testScores?.length ? `${profile.testScores.length} scores` : 'Empty · Click to add',
+            true,
+            (
+              <TestScoresSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          organizations: renderSectionCard(
+            'organizations',
+            'Organizations',
+            Network,
+            'Memberships, societies, and professional associations',
+            profile.organizations?.length ? `${profile.organizations.length} organizations` : 'Empty · Click to add',
+            true,
+            (
+              <OrganizationsSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
+          interests: renderSectionCard(
+            'interests',
+            'Interests',
+            Compass,
+            'Topics, influencers, companies, and causes you follow',
+            profile.interests?.length ? `${profile.interests.length} interests` : 'Empty · Click to add',
+            true,
+            (
+              <InterestsSection
+                profile={profile}
+                canEdit={true}
+                isEditing={true}
+                onUpdateField={updateField}
+              />
+            )
+          ),
         };
 
         return canonicalSectionOrder.map((secKey) => {

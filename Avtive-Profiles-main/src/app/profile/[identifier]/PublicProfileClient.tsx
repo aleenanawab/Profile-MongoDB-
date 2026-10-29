@@ -89,6 +89,7 @@ function PublicProfileClientInner({
 
   const {
     liveProfile,
+    savedBaseline,
     activeSection,
     setActiveSection,
     isSaving,
@@ -101,6 +102,13 @@ function PublicProfileClientInner({
   } = useProfileEditor();
 
   const [currentDraft, setCurrentDraft] = useState<ProfileData>(profile);
+
+  // Sync profile state when savedBaseline updates after autosave or manual save
+  useEffect(() => {
+    if (savedBaseline && (savedBaseline.id === profile.id || savedBaseline.slug === profile.slug)) {
+      setProfile(savedBaseline);
+    }
+  }, [savedBaseline, profile.id, profile.slug]);
 
   useEffect(() => {
     setCurrentDraft(profile);
@@ -626,7 +634,7 @@ function PublicProfileClientInner({
     }
   };
 
-  const handleSavePartial = async (partialData: Partial<ProfileData>): Promise<ProfileData> => {
+  const handleSavePartial = async (partialData: Partial<ProfileData>, explicitClearFields?: string[]): Promise<ProfileData> => {
     try {
       const sanitizedPartial = { ...partialData };
       if (sanitizedPartial.avatar && typeof sanitizedPartial.avatar === 'string' && sanitizedPartial.avatar.startsWith('data:')) {
@@ -666,12 +674,23 @@ function PublicProfileClientInner({
         }
       }
 
+      // Compute clearFields for any empty array or empty string so the wipe guard does not skip them
+      const autoClearFields: string[] = Array.isArray(explicitClearFields) ? [...explicitClearFields] : [];
+      for (const [key, val] of Object.entries(sanitizedPartial)) {
+        if (Array.isArray(val) && val.length === 0) {
+          if (!autoClearFields.includes(key)) autoClearFields.push(key);
+        } else if (typeof val === 'string' && val.trim() === '') {
+          if (!autoClearFields.includes(key)) autoClearFields.push(key);
+        }
+      }
+
       const res = await fetch('/api/profile/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           profileId: profile.id,
-          updatedData: sanitizedPartial
+          updatedData: sanitizedPartial,
+          clearFields: autoClearFields
         })
       });
 
@@ -683,6 +702,14 @@ function PublicProfileClientInner({
           throw new Error('Section update payload is too large.');
         }
         throw new Error(data?.error || `Failed to save changes (${res.status}).`);
+      }
+
+      // Check appliedKeys, skippedKeys, and rejectedKeys
+      if (data?.rejectedKeys && data.rejectedKeys.length > 0) {
+        throw new Error(`Failed to save: rejected keys [${data.rejectedKeys.join(', ')}]`);
+      }
+      if (data?.skippedKeys && data.skippedKeys.length > 0) {
+        throw new Error(`Failed to save: skipped keys [${data.skippedKeys.join(', ')}]`);
       }
 
       const updated = data?.profile || { ...profile, ...sanitizedPartial };
@@ -727,10 +754,12 @@ function PublicProfileClientInner({
   };
 
   const handleCancelEdit = () => {
-    setCurrentDraft(profile);
-    handleSwitchToProfile(profile);
+    const baseline = savedBaseline || profile;
+    setProfile(baseline);
+    setCurrentDraft(baseline);
+    handleSwitchToProfile(baseline);
     setIsEditing(false);
-    const slug = profile.slug || profile.id || initialProfile.slug || initialProfile.id;
+    const slug = baseline.slug || baseline.id || initialProfile.slug || initialProfile.id;
     if (slug && typeof window !== 'undefined') {
       window.history.pushState(null, '', `/profile/${encodeURIComponent(slug)}`);
     }

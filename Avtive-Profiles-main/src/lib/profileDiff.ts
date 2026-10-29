@@ -1,4 +1,4 @@
-import { ProfileData } from '@/types/profile';
+import { ProfileData, SkillItem } from '@/types/profile';
 import { normalizeSectionKey } from '@/lib/sections';
 
 export type FieldKind = 'primitive' | 'nested_object' | 'array' | 'server_only';
@@ -40,6 +40,7 @@ export const FIELD_CLASSIFICATIONS = {
   fullBio: 'primitive',
   statusBadge: 'primitive',
   phone: 'primitive',
+  phoneType: 'primitive',
   whatsapp: 'primitive',
   email: 'primitive',
   website: 'primitive',
@@ -57,6 +58,8 @@ export const FIELD_CLASSIFICATIONS = {
   buttonStyle: 'primitive',
   followersCount: 'primitive',
   connectionsCount: 'primitive',
+  industry: 'primitive',
+  headline: 'primitive',
 
   // Nested Plain Objects (diffed with dot-paths)
   customThemeColors: 'nested_object',
@@ -65,6 +68,7 @@ export const FIELD_CLASSIFICATIONS = {
   nfcCard: 'nested_object',
   sharingSettings: 'nested_object',
   sectionVisibility: 'nested_object',
+  openToWork: 'nested_object',
 
   // Arrays (diffed by normalized content)
   skills: 'array',
@@ -81,13 +85,24 @@ export const FIELD_CLASSIFICATIONS = {
   dynamicSections: 'array',
   sectionOrder: 'array',
   highlights: 'array',
+  volunteer: 'array',
   volunteerExperiences: 'array',
   recommendations: 'array',
   testimonials: 'array',
   teamMembers: 'array',
   links: 'array',
   contactOrder: 'array',
-  customContacts: 'array'
+  customContacts: 'array',
+  websites: 'array',
+  featured: 'array',
+  honors: 'array',
+  honorsAwards: 'array',
+  publications: 'array',
+  patents: 'array',
+  courses: 'array',
+  testScores: 'array',
+  organizations: 'array',
+  interests: 'array'
 } as const satisfies Record<keyof ProfileData, FieldKind>;
 
 /**
@@ -113,13 +128,28 @@ export function arePrimitivesEqual(a: any, b: any): boolean {
 }
 
 /**
- * Normalize skills into a uniform array of trimmed strings.
+ * Normalize skills into a uniform array of SkillItem objects.
  */
-export function normalizeSkills(skills: any): string[] {
+export function normalizeSkills(skills: any): SkillItem[] {
   if (!Array.isArray(skills)) return [];
   return skills
-    .map((s) => (typeof s === 'string' ? s.trim() : s?.name?.trim() || ''))
-    .filter(Boolean);
+    .map((s) => {
+      if (typeof s === 'string') {
+        const name = s.trim();
+        return name ? { name } : null;
+      }
+      if (s && typeof s === 'object') {
+        const name = (s.name || '').trim();
+        if (!name) return null;
+        const item: SkillItem = { name };
+        if (s.category && String(s.category).trim()) item.category = String(s.category).trim();
+        if (s.level && String(s.level).trim()) item.level = String(s.level).trim();
+        if (typeof s.pinned === 'boolean') item.pinned = s.pinned;
+        return item;
+      }
+      return null;
+    })
+    .filter(Boolean) as SkillItem[];
 }
 
 /**

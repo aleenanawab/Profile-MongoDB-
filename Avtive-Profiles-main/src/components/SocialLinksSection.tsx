@@ -29,9 +29,17 @@ const AVAILABLE_PLATFORMS: SocialLink['platform'][] = [
 ];
 
 const getInitialSocials = (profile: ProfileData): SocialLink[] => {
-  if (profile.socials && profile.socials.length > 0) return profile.socials;
-  if (profile.socialLinks && profile.socialLinks.length > 0) return profile.socialLinks as unknown as SocialLink[];
-  return [];
+  const raw = (Array.isArray(profile.socials) && profile.socials.length > 0)
+    ? profile.socials
+    : (Array.isArray(profile.socialLinks) && profile.socialLinks.length > 0
+    ? (profile.socialLinks as unknown as SocialLink[])
+    : []);
+  return raw.map((s: any) => ({
+    platform: s.platform || 'website',
+    url: s.url || '',
+    label: s.label || s.title || '',
+    visible: s.visible !== false
+  }));
 };
 
 export function SocialLinksSection({ 
@@ -110,8 +118,9 @@ export function SocialLinksSection({
   const handleAddLink = () => {
     const newLink: SocialLink = {
       platform: 'website',
-      url: 'https://',
-      label: 'Portfolio'
+      url: '',
+      label: 'Portfolio',
+      visible: true
     };
     setSocialsDraft((prev) => [...prev, newLink]);
   };
@@ -124,7 +133,15 @@ export function SocialLinksSection({
     setSocialsDraft((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  if (socialsDraft.length === 0 && !canEdit && !isEditing) {
+  const renderedLinks = isEditing
+    ? socialsDraft
+    : socialsDraft.filter((item) => {
+        if (item.visible === false) return false;
+        const u = (item.url || '').trim();
+        return u !== '' && u !== 'https://' && u !== 'http://';
+      });
+
+  if (renderedLinks.length === 0 && !canEdit && !isEditing) {
     return null;
   }
 
@@ -157,9 +174,9 @@ export function SocialLinksSection({
         )}
       </div>
 
-      {socialsDraft.length > 0 ? (
+      {renderedLinks.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {socialsDraft.map((item, idx) => {
+          {renderedLinks.map((item, idx) => {
             if (isEditing) {
               return (
                 <div

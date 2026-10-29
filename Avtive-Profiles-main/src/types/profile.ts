@@ -52,6 +52,14 @@ export interface SharingSettings {
   customFields?: boolean;
   pronouns?: boolean;
   birthday?: boolean;
+  featured?: boolean;
+  honorsAwards?: boolean;
+  publications?: boolean;
+  patents?: boolean;
+  courses?: boolean;
+  testScores?: boolean;
+  organizations?: boolean;
+  interests?: boolean;
 }
 
 export const DEFAULT_SHARING_SETTINGS: SharingSettings = {
@@ -74,7 +82,17 @@ export const DEFAULT_SHARING_SETTINGS: SharingSettings = {
   nfcCard: true,
   customFields: true,
   pronouns: false,
-  birthday: false
+  birthday: false,
+  featured: true,
+  honorsAwards: true,
+  publications: true,
+  patents: true,
+  courses: true,
+  testScores: true,
+  organizations: true,
+  interests: true,
+  volunteer: true,
+  recommendations: true
 };
 
 export const DEFAULT_SECTION_VISIBILITY: Record<string, boolean> = {
@@ -92,19 +110,39 @@ export const DEFAULT_SECTION_VISIBILITY: Record<string, boolean> = {
   socialLinks: true,
   socials: true,
   'virtual-card': true,
-  company: true
+  company: true,
+  featured: true,
+  volunteer: true,
+  honorsAwards: true,
+  publications: true,
+  patents: true,
+  courses: true,
+  testScores: true,
+  organizations: true,
+  recommendations: true,
+  interests: true
 };
 
 export const DEFAULT_SECTION_ORDER: string[] = [
   'personalDetails',
   'contactInfo',
+  'featured',
   'skills',
   'projects',
-  'customFields',
   'experience',
   'education',
   'certifications',
+  'volunteer',
+  'honorsAwards',
+  'publications',
+  'patents',
+  'courses',
+  'testScores',
+  'organizations',
   'languages',
+  'recommendations',
+  'interests',
+  'customFields',
   'socialLinks',
   'virtualCard'
 ];
@@ -176,9 +214,99 @@ export interface MetricHighlight {
 }
 
 export interface SkillItem {
+  id?: string;
   name: string;
   category?: string;
   level?: string;
+  pinned?: boolean;
+}
+
+export interface WebsiteItem {
+  url: string;
+  label: string;
+}
+
+export interface OpenToWork {
+  enabled: boolean;
+  roles: string[];
+}
+
+export interface FeaturedItem {
+  id: string;
+  type: 'link' | 'post' | 'media';
+  title: string;
+  url: string;
+  description?: string;
+  image?: string;
+  visible?: boolean;
+}
+
+export interface HonorsAwardItem {
+  id: string;
+  title: string;
+  issuer: string;
+  date?: string;
+  description?: string;
+  visible?: boolean;
+}
+
+export interface PublicationItem {
+  id: string;
+  title: string;
+  publisher: string;
+  date?: string;
+  url?: string;
+  description?: string;
+  visible?: boolean;
+}
+
+export interface PatentItem {
+  id: string;
+  title: string;
+  patentOffice?: string;
+  office?: string;
+  number: string;
+  status?: string;
+  date?: string;
+  url?: string;
+  description?: string;
+  visible?: boolean;
+}
+
+export interface CourseItem {
+  id: string;
+  name: string;
+  number?: string;
+  associatedWith?: string;
+  visible?: boolean;
+}
+
+export interface TestScoreItem {
+  id: string;
+  name: string;
+  score: string;
+  date?: string;
+  description?: string;
+  visible?: boolean;
+}
+
+export interface OrganizationItem {
+  id: string;
+  name: string;
+  position: string;
+  startDate?: string;
+  endDate?: string;
+  current?: boolean;
+  description?: string;
+  visible?: boolean;
+}
+
+export interface InterestItem {
+  id: string;
+  type: 'person' | 'company' | 'group' | 'topic';
+  name: string;
+  url?: string;
+  visible?: boolean;
 }
 
 export interface ServiceItem {
@@ -204,15 +332,25 @@ export interface ProjectItem {
   imageFit?: 'cover' | 'contain';
   client?: string;
   year?: string;
+  startDate?: string;
+  endDate?: string;
+  skills?: string[];
+  contributors?: string[] | string;
 }
 
 export interface EducationItem {
   id: string;
   degree: string;
   institution: string;
+  school?: string;
   year?: string;
   period?: string;
   description?: string;
+  fieldOfStudy?: string;
+  grade?: string;
+  activities?: string;
+  startYear?: string;
+  endYear?: string;
 }
 
 export interface ExperienceItem {
@@ -222,6 +360,12 @@ export interface ExperienceItem {
   period?: string;
   location?: string;
   description?: string;
+  employmentType?: string;
+  locationType?: string;
+  startDate?: string;
+  endDate?: string;
+  current?: boolean;
+  skills?: string[];
 }
 
 export interface CertificationItem {
@@ -232,14 +376,20 @@ export interface CertificationItem {
   expires?: string;
   credentialId?: string;
   url?: string;
+  noExpiry?: boolean;
 }
 
 export interface VolunteerItem {
   id: string;
   role: string;
   organization: string;
-  period: string;
+  period?: string;
   category?: string;
+  cause?: string;
+  startDate?: string;
+  endDate?: string;
+  current?: boolean;
+  description?: string;
 }
 
 export interface LanguageItem {
@@ -252,9 +402,13 @@ export interface RecommendationItem {
   author: string;
   designation?: string;
   company?: string;
-  summary: string;
+  relationship?: string;
+  text?: string;
+  summary?: string;
   fullText?: string;
+  date?: string;
   avatar?: string;
+  visible?: boolean;
 }
 
 export interface TestimonialItem {
@@ -297,7 +451,7 @@ export interface CompanyInfo {
 export interface CustomCta {
   label: string;
   url: string;
-  active: boolean;
+  active?: boolean;
 }
 
 export interface DirectContactItem {
@@ -411,12 +565,29 @@ export interface ProfileData {
   education?: EducationItem[];
   projects?: ProjectItem[];
   certifications?: CertificationItem[];
+  volunteer?: VolunteerItem[];
   volunteerExperiences?: VolunteerItem[];
   languages?: LanguageItem[];
   recommendations?: RecommendationItem[];
   testimonials?: TestimonialItem[];
   resumeUrl?: string;
   resumeFileName?: string;
+
+  // LinkedIn Parity Extended Sections
+  industry?: string;
+  headline?: string;
+  openToWork?: OpenToWork;
+  phoneType?: string;
+  websites?: WebsiteItem[];
+  featured?: FeaturedItem[];
+  honors?: HonorsAwardItem[];
+  honorsAwards?: HonorsAwardItem[];
+  publications?: PublicationItem[];
+  patents?: PatentItem[];
+  courses?: CourseItem[];
+  testScores?: TestScoreItem[];
+  organizations?: OrganizationItem[];
+  interests?: InterestItem[];
   
   // Dynamic Custom Fields (Unlimited & Flexible)
   customFields?: CustomFieldItem[];
@@ -513,8 +684,7 @@ export function ensureProfileLinks(profile?: Partial<ProfileData> | null): Profi
       }
     );
   }
-
   return derived;
 }
 
-
+export { getTitle, getShortBio } from '../lib/profileGetters';

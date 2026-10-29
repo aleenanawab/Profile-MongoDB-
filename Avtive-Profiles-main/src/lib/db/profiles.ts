@@ -55,6 +55,16 @@ export function syncProfileAliases(data: Record<string, any>): Record<string, an
   else if ('experience' in synced && !('experiences' in synced)) synced.experiences = synced.experience;
   else if ('experiences' in synced && 'experience' in synced) synced.experience = synced.experiences;
 
+  // volunteer <-> volunteerExperiences
+  if ('volunteer' in synced && !('volunteerExperiences' in synced)) synced.volunteerExperiences = synced.volunteer;
+  else if ('volunteerExperiences' in synced && !('volunteer' in synced)) synced.volunteer = synced.volunteerExperiences;
+  else if ('volunteer' in synced && 'volunteerExperiences' in synced) synced.volunteerExperiences = synced.volunteer;
+
+  // honors <-> honorsAwards
+  if ('honors' in synced && !('honorsAwards' in synced)) synced.honorsAwards = synced.honors;
+  else if ('honorsAwards' in synced && !('honors' in synced)) synced.honors = synced.honorsAwards;
+  else if ('honors' in synced && 'honorsAwards' in synced) synced.honorsAwards = synced.honors;
+
   return synced;
 }
 
@@ -63,7 +73,69 @@ export function mapDocToProfileData(doc: any): ProfileData {
   const slug = String(doc.slug || id);
 
   const socials = Array.isArray(doc.socials) ? doc.socials : (Array.isArray(doc.socialLinks) ? doc.socialLinks : []);
-  const experiences = Array.isArray(doc.experiences) ? doc.experiences : (Array.isArray(doc.experience) ? doc.experience : []);
+  const rawExperiences = Array.isArray(doc.experiences) ? doc.experiences : (Array.isArray(doc.experience) ? doc.experience : []);
+  const experiences = rawExperiences.map((exp: any) => {
+    let period = exp.period || '';
+    if (!period && (exp.startDate || exp.endDate || exp.current)) {
+      const start = exp.startDate || '';
+      const end = exp.current ? 'Present' : (exp.endDate || '');
+      period = start && end ? `${start} - ${end}` : (start || end);
+    }
+    return {
+      ...exp,
+      role: exp.role || exp.title || '',
+      company: exp.company || '',
+      period,
+      location: exp.location || '',
+      description: exp.description || '',
+      employmentType: exp.employmentType || '',
+      locationType: exp.locationType || '',
+      startDate: exp.startDate || '',
+      endDate: exp.endDate || '',
+      current: !!exp.current,
+      skills: Array.isArray(exp.skills) ? exp.skills : []
+    };
+  });
+
+  const rawVolunteer = Array.isArray(doc.volunteerExperiences)
+    ? doc.volunteerExperiences
+    : (Array.isArray(doc.volunteer) ? doc.volunteer : []);
+  const volunteer = rawVolunteer.map((v: any) => {
+    let period = v.period || '';
+    if (!period && (v.startDate || v.endDate || v.current)) {
+      const start = v.startDate || '';
+      const end = v.current ? 'Present' : (v.endDate || '');
+      period = start && end ? `${start} - ${end}` : (start || end);
+    }
+    return {
+      ...v,
+      role: v.role || v.title || '',
+      organization: v.organization || v.company || '',
+      cause: v.cause || '',
+      startDate: v.startDate || '',
+      endDate: v.endDate || '',
+      current: !!v.current,
+      period,
+      description: v.description || ''
+    };
+  });
+
+  const rawSkills = Array.isArray(doc.skills) ? doc.skills : [];
+  const skills = rawSkills.map((s: any) => {
+    if (typeof s === 'string') {
+      return { name: s, category: 'Technical Skills', level: 'Intermediate', pinned: false };
+    }
+    if (s && typeof s === 'object') {
+      return {
+        name: s.name || '',
+        category: s.category || 'Technical Skills',
+        level: s.level || 'Intermediate',
+        pinned: !!s.pinned
+      };
+    }
+    return { name: String(s || ''), category: 'Technical Skills', level: 'Intermediate', pinned: false };
+  }).filter((s: any) => s.name.trim().length > 0);
+
   const titleVal = doc.professionalTitle ?? doc.designation ?? doc.profession ?? '';
   const secondVal = doc.secondName ?? doc.lastName ?? '';
 
@@ -99,7 +171,7 @@ export function mapDocToProfileData(doc: any): ProfileData {
     tagline: doc.tagline ?? '',
     type: normalizeProfileType(doc.type),
     theme: doc.theme || 'editorial',
-    skills: Array.isArray(doc.skills) ? doc.skills : [],
+    skills,
     socials,
     socialLinks: socials,
     services: Array.isArray(doc.services) ? doc.services : [],
@@ -108,9 +180,27 @@ export function mapDocToProfileData(doc: any): ProfileData {
     experience: experiences,
     education: Array.isArray(doc.education) ? doc.education : [],
     certifications: Array.isArray(doc.certifications) ? doc.certifications : [],
-    recommendations: Array.isArray(doc.recommendations) ? doc.recommendations : [],
+    recommendations: Array.isArray(doc.recommendations) ? doc.recommendations : (Array.isArray(doc.testimonials) ? doc.testimonials : []),
     languages: Array.isArray(doc.languages) ? doc.languages : [],
     customFields: Array.isArray(doc.customFields) ? doc.customFields : [],
+    industry: doc.industry ?? '',
+    headline: doc.headline ?? '',
+    openToWork: doc.openToWork ? {
+      enabled: !!doc.openToWork.enabled,
+      roles: Array.isArray(doc.openToWork.roles) ? doc.openToWork.roles : []
+    } : { enabled: false, roles: [] },
+    phoneType: doc.phoneType ?? '',
+    websites: Array.isArray(doc.websites) ? doc.websites : [],
+    featured: Array.isArray(doc.featured) ? doc.featured : [],
+    honorsAwards: Array.isArray(doc.honorsAwards) ? doc.honorsAwards : (Array.isArray(doc.honors) ? doc.honors : []),
+    publications: Array.isArray(doc.publications) ? doc.publications : [],
+    patents: Array.isArray(doc.patents) ? doc.patents : [],
+    courses: Array.isArray(doc.courses) ? doc.courses : [],
+    testScores: Array.isArray(doc.testScores) ? doc.testScores : [],
+    organizations: Array.isArray(doc.organizations) ? doc.organizations : [],
+    interests: Array.isArray(doc.interests) ? doc.interests : [],
+    volunteerExperiences: volunteer,
+    volunteer,
     sharingSettings: doc.sharingSettings || { ...DEFAULT_SHARING_SETTINGS },
     sectionVisibility: doc.sectionVisibility || { ...DEFAULT_SECTION_VISIBILITY },
     sectionOrder: doc.sectionOrder || [...DEFAULT_SECTION_ORDER],
@@ -188,6 +278,7 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
   if (!isContactVisible || !isFieldShared(profile, 'phone')) {
     sanitized.phone = '';
     sanitized.whatsapp = '';
+    sanitized.phoneType = '';
   }
 
   if (!isContactVisible || !isFieldShared(profile, 'email')) {
@@ -196,6 +287,7 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
 
   if (!isContactVisible) {
     sanitized.website = '';
+    sanitized.websites = [];
     sanitized.officeAddress = '';
     sanitized.googleMapsUrl = '';
     sanitized.customContacts = [];
@@ -225,8 +317,27 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
   if (!isCanonicalSectionVisible(visibility, settings, 'recommendations')) {
     sanitized.recommendations = [];
     sanitized.testimonials = [];
+  } else if (Array.isArray(sanitized.recommendations)) {
+    sanitized.recommendations = sanitized.recommendations.filter((r: any) => r && r.visible !== false);
   }
   if (!isCanonicalSectionVisible(visibility, settings, 'languages')) sanitized.languages = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'volunteer')) {
+    sanitized.volunteerExperiences = [];
+    sanitized.volunteer = [];
+  }
+  if (!isCanonicalSectionVisible(visibility, settings, 'featured')) {
+    sanitized.featured = [];
+  } else if (Array.isArray(sanitized.featured)) {
+    sanitized.featured = sanitized.featured.filter((f: any) => f && f.visible !== false);
+  }
+  if (!isCanonicalSectionVisible(visibility, settings, 'honorsAwards')) sanitized.honorsAwards = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'publications')) sanitized.publications = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'patents')) sanitized.patents = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'courses')) sanitized.courses = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'testScores')) sanitized.testScores = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'organizations')) sanitized.organizations = [];
+  if (!isCanonicalSectionVisible(visibility, settings, 'interests')) sanitized.interests = [];
+
   if (!isCanonicalSectionVisible(visibility, settings, 'companyInfo')) {
     sanitized.companyInfo = undefined;
   }
@@ -316,6 +427,21 @@ export async function createProfileForUser(
     recommendations: data.recommendations || [],
     languages: data.languages || [],
     customFields: data.customFields || [],
+    industry: data.industry?.trim() || '',
+    headline: data.headline?.trim() || '',
+    openToWork: data.openToWork || { enabled: false, roles: [] },
+    phoneType: data.phoneType || '',
+    websites: Array.isArray(data.websites) ? data.websites : [],
+    featured: Array.isArray(data.featured) ? data.featured : [],
+    honorsAwards: Array.isArray(data.honorsAwards) ? data.honorsAwards : (Array.isArray((data as any).honors) ? (data as any).honors : []),
+    publications: Array.isArray(data.publications) ? data.publications : [],
+    patents: Array.isArray(data.patents) ? data.patents : [],
+    courses: Array.isArray(data.courses) ? data.courses : [],
+    testScores: Array.isArray(data.testScores) ? data.testScores : [],
+    organizations: Array.isArray(data.organizations) ? data.organizations : [],
+    interests: Array.isArray(data.interests) ? data.interests : [],
+    volunteerExperiences: data.volunteerExperiences || (data as any).volunteer || [],
+    volunteer: data.volunteerExperiences || (data as any).volunteer || [],
     sharingSettings: data.sharingSettings || { ...DEFAULT_SHARING_SETTINGS },
     sectionVisibility: data.sectionVisibility || { ...DEFAULT_SECTION_VISIBILITY },
     sectionOrder: data.sectionOrder || [...DEFAULT_SECTION_ORDER],
@@ -481,6 +607,18 @@ export async function updateProfile(
     clearFieldsSet.add('experiences');
     clearFieldsSet.add('experience');
   }
+  if (clearFieldsSet.has('volunteer') || clearFieldsSet.has('volunteerExperiences')) {
+    clearFieldsSet.add('volunteer');
+    clearFieldsSet.add('volunteerExperiences');
+  }
+  if (clearFieldsSet.has('honors') || clearFieldsSet.has('honorsAwards')) {
+    clearFieldsSet.add('honors');
+    clearFieldsSet.add('honorsAwards');
+  }
+  if (clearFieldsSet.has('testimonials') || clearFieldsSet.has('recommendations')) {
+    clearFieldsSet.add('testimonials');
+    clearFieldsSet.add('recommendations');
+  }
 
   // Track old Cloudinary public IDs for safe post-save cleanup
   let oldAvatarPublicId: string | null = null;
@@ -492,7 +630,8 @@ export async function updateProfile(
     'sharingSettings',
     'customThemeColors',
     'customCta',
-    'nfcCard'
+    'nfcCard',
+    'openToWork'
   ]);
 
   const normalizedInput = syncProfileAliases(updatedData);

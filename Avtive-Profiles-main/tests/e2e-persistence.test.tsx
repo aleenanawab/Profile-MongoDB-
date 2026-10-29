@@ -261,6 +261,8 @@ let currentContextValue: ProfileEditorContextValue | null = null;
 
 function ContextReader({ onContext }: { onContext?: (ctx: ProfileEditorContextValue) => void }) {
   const ctx = useProfileEditor();
+  // eslint-disable-next-line react-hooks/globals
+  currentContextValue = ctx;
   React.useEffect(() => {
     currentContextValue = ctx;
     if (onContext) onContext(ctx);
@@ -834,6 +836,410 @@ async function runPersistenceSuite() {
         });
       }, `updateField must handle atom key "${key}" without error`);
     }
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S15: Bug A - ProfileEditorContext exposes savedBaseline and Cancel resets to it
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S15: Bug A - ProfileEditorContext exposes savedBaseline and Cancel resets to it', async () => {
+    const slug = 's15-saved-baseline';
+    const profile = makeBaselineProfile(slug, { name: 'Original Name' });
+    collections.profiles = [clone(profile)];
+    resetHarness();
+    const ctx = await mountProvider(profile);
+
+    // Verify savedBaseline is exposed
+    assert(ctx.savedBaseline, 'ProfileEditorContext must expose savedBaseline');
+    assert.strictEqual(ctx.savedBaseline.name, 'Original Name', 'Initial savedBaseline must match initialProfile');
+
+    // Simulate an edit and save
+    await act(async () => {
+      ctx.updateField('name', 'Autosaved Name');
+    });
+    let saveRes: any;
+    await act(async () => {
+      saveRes = await ctx.saveProfile();
+    });
+    assert(saveRes.ok, 'Save must succeed');
+    assert.strictEqual(ctx.savedBaseline.name, 'Autosaved Name', 'savedBaseline must update upon successful save');
+
+    // Make an unpersisted change
+    await act(async () => {
+      ctx.updateField('name', 'Unsaved Name');
+    });
+    assert.strictEqual(ctx.liveProfile.name, 'Unsaved Name');
+
+    // Cancelling resets to savedBaseline, NOT stale original
+    await act(async () => {
+      ctx.handleSwitchToProfile(ctx.savedBaseline);
+    });
+    assert.strictEqual(ctx.liveProfile.name, 'Autosaved Name', 'Cancel must revert to savedBaseline');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S16: Bug B - Skills kept as SkillItem { name, category, level } end-to-end
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S16: Bug B - Skills kept as SkillItem { name, category, level } end-to-end', async () => {
+    const slug = 's16-skill-items';
+    const skillList = [
+      { name: 'TypeScript', category: 'Frontend', level: 'Expert', pinned: true },
+      { name: 'MongoDB', category: 'Database', level: 'Advanced', pinned: false }
+    ];
+    const profile = makeBaselineProfile(slug, { skills: skillList as any });
+    collections.profiles = [clone(profile)];
+    resetHarness();
+    const ctx = await mountProvider(profile);
+
+    // Context skills must not be flattened to string[]
+    assert(Array.isArray(ctx.skills), 'skills atom must be an array');
+    const firstSkill = ctx.skills[0] as any;
+    assert.strictEqual(typeof firstSkill, 'object', 'skills atom must contain objects, not strings');
+    assert.strictEqual(firstSkill.name, 'TypeScript');
+    assert.strictEqual(firstSkill.category, 'Frontend', 'Skill category must be preserved');
+    assert.strictEqual(firstSkill.level, 'Expert', 'Skill level must be preserved');
+
+    // Update skills via updateField
+    const updatedSkills = [
+      { name: 'React', category: 'UI', level: 'Senior', pinned: true },
+      { name: 'Next.js', category: 'Framework', level: 'Expert', pinned: true }
+    ];
+    await act(async () => {
+      ctx.updateField('skills', updatedSkills as any);
+    });
+    await ctx.saveProfile();
+
+    // Verify DB retains objects with category and level
+    const dbDoc = await dbProfiles.getProfileByIdOrSlug(slug);
+    assert(dbDoc, 'Profile must exist in DB');
+    assert(Array.isArray(dbDoc.skills), 'DB skills must be an array');
+    assert.strictEqual((dbDoc.skills[0] as any).name, 'React');
+    assert.strictEqual((dbDoc.skills[0] as any).category, 'UI');
+    assert.strictEqual((dbDoc.skills[0] as any).level, 'Senior');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S17: Bug C - Section save with empty array [] sends clearFields and checks skippedKeys
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S17: Bug C - Clearing array fields sends clearFields and handles server wipe guard', async () => {
+    const slug = 's17-clear-array';
+    const profile = makeBaselineProfile(slug, {
+      languages: [{ language: 'English', proficiency: 'Native' }]
+    });
+    collections.profiles = [clone(profile)];
+    resetHarness();
+
+    // Calling API directly with clearFields
+    const req = new NextRequest('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profileId: slug,
+        patch: { languages: [] },
+        clearFields: ['languages']
+      })
+    });
+    const res = await updateRoutePOST(req);
+    const data = await res.json();
+    assert.strictEqual(res.status, 200);
+    assert(data.appliedKeys?.includes('languages'), 'languages must be in appliedKeys');
+    assert.strictEqual(data.skippedKeys?.length || 0, 0, 'languages must not be in skippedKeys when clearFields is sent');
+
+    const dbDoc = await dbProfiles.getProfileByIdOrSlug(slug);
+    assert.deepStrictEqual(dbDoc?.languages, [], 'languages must be cleared in DB');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S18: Bug D - SocialLinksSection hides visible:false and empty/"https://" links
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S18: Bug D - SocialLinksSection hides hidden and empty links at render time', async () => {
+    const { SocialLinksSection } = await import('../src/components/SocialLinksSection');
+    const slug = 's18-social-hide';
+    const profile = makeBaselineProfile(slug, {
+      socials: [
+        { platform: 'github', url: 'https://github.com/test', visible: true, label: 'GitHub' },
+        { platform: 'twitter', url: 'https://twitter.com/hidden', visible: false, label: 'Twitter' },
+        { platform: 'website', url: 'https://', visible: true, label: 'Empty Website' },
+        { platform: 'linkedin', url: '', visible: true, label: 'No URL LinkedIn' }
+      ]
+    });
+
+    const testDiv = dom.window.document.createElement('div');
+    dom.window.document.body.appendChild(testDiv);
+    const testRoot = createRoot(testDiv);
+    await act(async () => {
+      testRoot.render(<SocialLinksSection profile={profile} isEditing={false} />);
+    });
+
+    const links = Array.from(testDiv.querySelectorAll('a'));
+    assert.strictEqual(links.length, 1, 'Only valid visible links should be rendered');
+    assert(links[0].href.includes('github.com/test'), 'GitHub link must be the only rendered link');
+    await act(async () => {
+      testRoot.unmount();
+    });
+    testDiv.remove();
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S19: Bug E - Title aliases: getTitle() precedence rule
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S19: Bug E - Title aliases: getTitle() precedence rule', async () => {
+    const { getTitle } = await import('../src/lib/profileGetters');
+    assert.strictEqual(getTitle({ professionalTitle: 'A', designation: 'B', profession: 'C' }), 'A');
+    assert.strictEqual(getTitle({ designation: 'B', profession: 'C' }), 'B');
+    assert.strictEqual(getTitle({ profession: 'C' }), 'C');
+    assert.strictEqual(getTitle({}), '');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S20: Bug F - AvtiveDigitalCard does not hard-hide volunteer and recommendations
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S20: Bug F - AvtiveDigitalCard does not hard-hide volunteer and recommendations', async () => {
+    const { CANONICAL_SECTION_ALIASES, SECTION_TO_SHARING_KEY } = await import('../src/lib/sections');
+    assert.strictEqual(CANONICAL_SECTION_ALIASES['volunteer'], 'volunteer');
+    assert.strictEqual(CANONICAL_SECTION_ALIASES['recommendations'], 'recommendations');
+    assert.strictEqual(SECTION_TO_SHARING_KEY['volunteer'], 'volunteer');
+    assert.strictEqual(SECTION_TO_SHARING_KEY['recommendations'], 'recommendations');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S21: FIELD MATRIX: LinkedIn parity fields enter -> save -> reload -> sanitize -> clear
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S21: FIELD MATRIX - LinkedIn parity fields enter, save, reload, sanitize & clear', async () => {
+    const slug = 's21-linkedin-matrix';
+    const profile = makeBaselineProfile(slug);
+    collections.profiles = [clone(profile)];
+    resetHarness();
+    const ctx = await mountProvider(profile);
+
+    const testPayload = {
+      industry: 'Software Engineering',
+      headline: 'Principal Engineer & Systems Architect',
+      openToWork: { enabled: true, roles: ['Staff Engineer', 'Engineering Leader'] },
+      phoneType: 'Mobile',
+      websites: [{ url: 'https://portfolio.dev', label: 'Portfolio' }],
+      featured: [{ id: 'f-1', type: 'link' as const, title: 'My Open Source Project', url: 'https://github.com/project' }],
+      experience: [{
+        id: 'exp-1',
+        company: 'Tech Corp',
+        role: 'Tech Lead',
+        employmentType: 'Full-time',
+        locationType: 'remote',
+        startDate: '2020-01',
+        endDate: '2024-01',
+        current: false,
+        skills: ['TypeScript', 'GraphQL'],
+        description: 'Led architecture and migration.'
+      }],
+      education: [{
+        id: 'edu-1',
+        institution: 'Stanford University',
+        degree: 'Bachelor of Science',
+        fieldOfStudy: 'Computer Science',
+        grade: '3.9 GPA',
+        activities: 'Robotics Club',
+        startYear: '2016',
+        endYear: '2020'
+      }],
+      certifications: [{
+        id: 'cert-1',
+        name: 'AWS Solutions Architect',
+        issuer: 'Amazon Web Services',
+        issued: '2023-05',
+        noExpiry: true,
+        credentialId: 'AWS-12345',
+        url: 'https://aws.amazon.com/verify'
+      }],
+      projects: [{
+        id: 'proj-1',
+        title: 'Cloud Dashboard',
+        description: 'Multi-tenant cloud management',
+        startDate: '2022-01',
+        endDate: '2022-08',
+        skills: ['Next.js', 'PostgreSQL'],
+        liveUrl: 'https://dashboard.example.com'
+      }],
+      volunteerExperiences: [{
+        id: 'vol-1',
+        organization: 'Red Cross',
+        role: 'Volunteer Coordinator',
+        cause: 'Disaster Relief',
+        startDate: '2019-01',
+        endDate: '2021-01',
+        current: false,
+        description: 'Coordinated emergency responses.'
+      }],
+      honorsAwards: [{
+        id: 'ha-1',
+        title: 'Engineer of the Year',
+        issuer: 'Global Tech Awards',
+        date: '2023-11',
+        description: 'Recognized for high impact distributed systems work.'
+      }],
+      publications: [{
+        id: 'pub-1',
+        title: 'Scaling Distributed State Machines',
+        publisher: 'ACM Tech Letters',
+        date: '2022-04',
+        url: 'https://acm.org/paper-123',
+        description: 'Research paper on raft consensus optimization.'
+      }],
+      patents: [{
+        id: 'pat-1',
+        title: 'Distributed Transaction Processing',
+        patentOffice: 'USPTO',
+        number: 'US12345678B1',
+        status: 'Granted',
+        date: '2021-09',
+        url: 'https://patents.google.com/patent/US12345678B1',
+        description: 'System and method for consensus transaction handling.'
+      }],
+      courses: [{
+        id: 'crs-1',
+        name: 'Distributed Systems Capstone',
+        number: 'CS 244B',
+        associatedWith: 'Stanford University'
+      }],
+      testScores: [{
+        id: 'ts-1',
+        name: 'GRE Computer Science',
+        score: '99th Percentile',
+        date: '2019-10',
+        description: 'Subject test score'
+      }],
+      organizations: [{
+        id: 'org-1',
+        name: 'IEEE Computer Society',
+        position: 'Senior Member',
+        startDate: '2020-01',
+        current: true,
+        description: 'Professional computing association'
+      }],
+      recommendations: [{
+        id: 'rec-1',
+        author: 'Jane Doe',
+        relationship: 'Manager',
+        text: 'Outstanding leader and engineer with phenomenal attention to detail.',
+        date: '2023-08'
+      }],
+      interests: [{
+        id: 'int-1',
+        type: 'company' as const,
+        name: 'OpenAI',
+        url: 'https://openai.com'
+      }]
+    };
+
+    // 1. Enter fields via updateField
+    for (const [key, val] of Object.entries(testPayload)) {
+      await act(async () => {
+        ctx.updateField(key as any, val);
+      });
+    }
+
+    // 2. Save
+    const saveRes = await ctx.saveProfile();
+    assert(saveRes.ok, `Save must succeed for LinkedIn parity fields: ${saveRes.error}`);
+
+    // 3. Assert in DB with exact shape
+    const dbDoc = await dbProfiles.getProfileByIdOrSlug(slug);
+    assert(dbDoc, 'Doc must exist in DB');
+    assert.strictEqual(dbDoc.industry, 'Software Engineering');
+    assert.strictEqual(dbDoc.headline, 'Principal Engineer & Systems Architect');
+    assert.deepStrictEqual(dbDoc.openToWork, { enabled: true, roles: ['Staff Engineer', 'Engineering Leader'] });
+    assert.strictEqual(dbDoc.phoneType, 'Mobile');
+    assert.strictEqual(dbDoc.websites?.length, 1);
+    assert.strictEqual(dbDoc.featured?.length, 1);
+    assert.strictEqual(dbDoc.honorsAwards?.length, 1);
+    assert.strictEqual(dbDoc.publications?.length, 1);
+    assert.strictEqual(dbDoc.patents?.length, 1);
+    assert.strictEqual(dbDoc.courses?.length, 1);
+    assert.strictEqual(dbDoc.testScores?.length, 1);
+    assert.strictEqual(dbDoc.organizations?.length, 1);
+    assert.strictEqual(dbDoc.recommendations?.length, 1);
+    assert.strictEqual(dbDoc.interests?.length, 1);
+    assert.strictEqual(dbDoc.volunteerExperiences?.length, 1);
+
+    // 4. Reload via mapDocToProfileData
+    const mapped = dbProfiles.mapDocToProfileData(dbDoc);
+    assert.strictEqual(mapped.industry, 'Software Engineering');
+    assert.strictEqual(mapped.headline, 'Principal Engineer & Systems Architect');
+    assert.deepStrictEqual(mapped.openToWork, { enabled: true, roles: ['Staff Engineer', 'Engineering Leader'] });
+
+    // 5. Assert sanitizeProfileForPublic shows to non-owner when visible
+    const publicProfile = sanitizeProfileForPublic(mapped, false);
+    assert.strictEqual(publicProfile.industry, 'Software Engineering');
+    assert.strictEqual(publicProfile.headline, 'Principal Engineer & Systems Architect');
+    assert.strictEqual(publicProfile.featured?.length, 1);
+    assert.strictEqual(publicProfile.honorsAwards?.length, 1);
+
+    // 6. Assert sanitizeProfileForPublic hides when section private
+    const privateProfile = sanitizeProfileForPublic({
+      ...mapped,
+      sectionVisibility: { ...mapped.sectionVisibility, honorsAwards: false, featured: false }
+    }, false);
+    assert.deepStrictEqual(privateProfile.honorsAwards, [], 'Honors awards must be hidden when section private');
+    assert.deepStrictEqual(privateProfile.featured, [], 'Featured must be hidden when section private');
+
+    // 7. Clear list fields and assert gone in DB
+    const clearReq = new NextRequest('http://localhost:3000/api/profile/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profileId: slug,
+        patch: {
+          honorsAwards: [],
+          publications: [],
+          patents: [],
+          courses: [],
+          testScores: [],
+          organizations: [],
+          recommendations: [],
+          interests: [],
+          featured: []
+        },
+        clearFields: [
+          'honorsAwards',
+          'publications',
+          'patents',
+          'courses',
+          'testScores',
+          'organizations',
+          'recommendations',
+          'interests',
+          'featured'
+        ]
+      })
+    });
+    const clearRes = await updateRoutePOST(clearReq);
+    assert.strictEqual(clearRes.status, 200);
+
+    const clearedDbDoc = await dbProfiles.getProfileByIdOrSlug(slug);
+    assert.deepStrictEqual(clearedDbDoc?.honorsAwards, [], 'honorsAwards must be empty in DB');
+    assert.deepStrictEqual(clearedDbDoc?.publications, [], 'publications must be empty in DB');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // S22: Legacy document without new keys opens with zero requests
+  // ──────────────────────────────────────────────────────────
+  await testScenario('S22: Legacy document without new keys opens with zero requests', async () => {
+    const slug = 's22-legacy-doc';
+    const legacyDoc: any = {
+      id: `prof-${slug}`,
+      slug,
+      userId: FIXED_SESSION.id,
+      name: 'Legacy User',
+      skills: ['LegacySkill1', 'LegacySkill2'],
+      experience: [{ company: 'Old Company', role: 'Dev', period: '2015-2018' }]
+    };
+    collections.profiles = [clone(legacyDoc)];
+    resetHarness();
+
+    const mapped = dbProfiles.mapDocToProfileData(legacyDoc);
+    const ctx = await mountProvider(mapped);
+    assert(ctx, 'Provider must mount legacy profile without errors');
+    await sleep(200);
+
+    assert.strictEqual(networkRequestCount, 0, 'Mounting legacy doc must generate zero network requests');
   });
 
   console.log('\n======================================================');

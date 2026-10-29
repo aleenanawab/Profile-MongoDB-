@@ -101,17 +101,17 @@ console.log('--- Running Profile Diff & Patch Verification Tests ---');
 {
   const baseline: any = {
     id: 'user-1',
-    skills: ['TypeScript', 'Go']
+    skills: [{ name: 'TypeScript' }, { name: 'Go' }]
   };
 
   const draftModified: any = {
     ...baseline,
-    skills: ['TypeScript', 'Go', 'Rust']
+    skills: [{ name: 'TypeScript' }, { name: 'Go' }, { name: 'Rust' }]
   };
 
   const diffAdd = diffProfile(baseline, draftModified);
   assert.strictEqual(diffAdd.hasChanges, true);
-  assert.deepStrictEqual(diffAdd.patch.skills, ['TypeScript', 'Go', 'Rust']);
+  assert.deepStrictEqual(diffAdd.patch.skills, [{ name: 'TypeScript' }, { name: 'Go' }, { name: 'Rust' }]);
   assert.strictEqual(diffAdd.clearFields.includes('skills'), false);
 
   const draftCleared: any = {

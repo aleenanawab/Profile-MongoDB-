@@ -178,11 +178,63 @@ export function ExperienceSection({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                      <FormLabel>Duration / Period</FormLabel>
+                      <FormLabel>Employment Type</FormLabel>
+                      <select
+                        value={exp.employmentType || ''}
+                        onChange={(e) => handleUpdateItem(exp.id, { employmentType: e.target.value })}
+                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer"
+                      >
+                        <option value="">Select type...</option>
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Self-employed">Self-employed</option>
+                        <option value="Freelance">Freelance</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Apprenticeship">Apprenticeship</option>
+                      </select>
+                    </div>
+                    <div>
+                      <FormLabel>Location Type</FormLabel>
+                      <select
+                        value={exp.locationType || ''}
+                        onChange={(e) => handleUpdateItem(exp.id, { locationType: e.target.value as any })}
+                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer"
+                      >
+                        <option value="">Select location type...</option>
+                        <option value="On-site">On-site</option>
+                        <option value="Hybrid">Hybrid</option>
+                        <option value="Remote">Remote</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <FormLabel>Start Date</FormLabel>
                       <FormInput
-                        value={exp.period || ''}
-                        onChange={(val) => handleUpdateItem(exp.id, { period: val })}
-                        placeholder="e.g. Jan 2021 - Present"
+                        value={exp.startDate || ''}
+                        onChange={(val) => {
+                          const start = val;
+                          const end = exp.current ? 'Present' : (exp.endDate || '');
+                          const derivedPeriod = start ? (end ? `${start} - ${end}` : start) : end;
+                          handleUpdateItem(exp.id, { startDate: val, period: derivedPeriod || exp.period });
+                        }}
+                        placeholder="e.g. Jan 2021"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>End Date</FormLabel>
+                      <FormInput
+                        disabled={exp.current}
+                        value={exp.endDate || ''}
+                        onChange={(val) => {
+                          const start = exp.startDate || '';
+                          const end = exp.current ? 'Present' : val;
+                          const derivedPeriod = start ? (end ? `${start} - ${end}` : start) : end;
+                          handleUpdateItem(exp.id, { endDate: val, period: derivedPeriod || exp.period });
+                        }}
+                        placeholder={exp.current ? 'Present' : 'e.g. Dec 2023'}
                       />
                     </div>
                     <div>
@@ -190,9 +242,40 @@ export function ExperienceSection({
                       <FormInput
                         value={exp.location || ''}
                         onChange={(val) => handleUpdateItem(exp.id, { location: val })}
-                        placeholder="e.g. San Francisco, CA / Remote"
+                        placeholder="e.g. San Francisco, CA"
                       />
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <input
+                      type="checkbox"
+                      id={`exp-current-${exp.id}`}
+                      checked={Boolean(exp.current)}
+                      onChange={(e) => {
+                        const isCurrent = e.target.checked;
+                        const start = exp.startDate || '';
+                        const end = isCurrent ? 'Present' : (exp.endDate || '');
+                        const derivedPeriod = start ? (end ? `${start} - ${end}` : start) : end;
+                        handleUpdateItem(exp.id, { current: isCurrent, period: derivedPeriod || exp.period });
+                      }}
+                      className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                    />
+                    <label htmlFor={`exp-current-${exp.id}`} className="text-xs text-slate-700 dark:text-zinc-300 cursor-pointer">
+                      I currently work in this role
+                    </label>
+                  </div>
+
+                  <div>
+                    <FormLabel>Skills Used (comma-separated)</FormLabel>
+                    <FormInput
+                      value={Array.isArray(exp.skills) ? exp.skills.join(', ') : ''}
+                      onChange={(val) => {
+                        const parsed = val.split(',').map((s) => s.trim()).filter(Boolean);
+                        handleUpdateItem(exp.id, { skills: parsed });
+                      }}
+                      placeholder="e.g. React, TypeScript, Product Management"
+                    />
                   </div>
 
                   <div>
@@ -215,21 +298,21 @@ export function ExperienceSection({
                       </h3>
                       {exp.role && (
                         <p className={`text-xs font-semibold ${theme.accentText} mt-0.5`}>
-                          {exp.role}
+                          {exp.role} {exp.employmentType ? `• ${exp.employmentType}` : ''}
                         </p>
                       )}
                     </div>
 
-                    {exp.period && (
+                    {(exp.period || exp.startDate || exp.endDate) && (
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.cardBorder} shrink-0 font-mono`}>
-                        {exp.period}
+                        {exp.period || `${exp.startDate || ''} - ${exp.current ? 'Present' : (exp.endDate || '')}`}
                       </span>
                     )}
                   </div>
 
-                  {exp.location && (
+                  {(exp.location || exp.locationType) && (
                     <p className={`text-[11px] ${theme.textSecondary} font-medium`}>
-                      {exp.location}
+                      {[exp.location, exp.locationType].filter(Boolean).join(' • ')}
                     </p>
                   )}
 
@@ -237,6 +320,19 @@ export function ExperienceSection({
                     <p className={`text-xs ${theme.textSecondary} leading-relaxed pt-1`}>
                       {exp.description}
                     </p>
+                  )}
+
+                  {Array.isArray(exp.skills) && exp.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {exp.skills.map((skill, sIdx) => (
+                        <span
+                          key={sIdx}
+                          className={`text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 ${theme.textPrimary} border border-neutral-200 dark:border-neutral-700`}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </>
               )}

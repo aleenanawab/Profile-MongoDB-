@@ -79,6 +79,14 @@ export function HeroSection({
     slug: profile.slug || profile.username || '',
     designation: getTitle(profile),
     profession: getTitle(profile),
+    professionalTitle: getTitle(profile),
+    headline: profile.headline || '',
+    industry: profile.industry || (profile.companyInfo?.industry || ''),
+    openToWork: profile.openToWork || { enabled: false, roles: [] },
+    customCta: profile.customCta || { label: '', url: '' },
+    pronouns: profile.pronouns || '',
+    statusBadge: profile.statusBadge || '',
+    department: profile.department || '',
     tagline: profile.tagline || '',
     location: profile.location || '',
     country: profile.country || '',
@@ -209,6 +217,14 @@ export function HeroSection({
       slug: profile.slug || profile.username || '',
       designation: getTitle(profile),
       profession: getTitle(profile),
+      professionalTitle: getTitle(profile),
+      headline: profile.headline || '',
+      industry: profile.industry || (profile.companyInfo?.industry || ''),
+      openToWork: profile.openToWork || { enabled: false, roles: [] },
+      customCta: profile.customCta || { label: '', url: '' },
+      pronouns: profile.pronouns || '',
+      statusBadge: profile.statusBadge || '',
+      department: profile.department || '',
       tagline: profile.tagline || '',
       location: profile.location || '',
       country: profile.country || '',
@@ -226,6 +242,14 @@ export function HeroSection({
     profile.slug,
     profile.designation,
     profile.profession,
+    profile.professionalTitle,
+    profile.headline,
+    profile.industry,
+    profile.openToWork,
+    profile.customCta,
+    profile.pronouns,
+    profile.statusBadge,
+    profile.department,
     profile.tagline,
     profile.location,
     profile.country,
@@ -239,6 +263,13 @@ export function HeroSection({
     heroDraft.name !== snapshot.name ||
     heroDraft.username !== snapshot.username ||
     heroDraft.designation !== snapshot.designation ||
+    heroDraft.headline !== snapshot.headline ||
+    heroDraft.industry !== snapshot.industry ||
+    JSON.stringify(heroDraft.openToWork) !== JSON.stringify(snapshot.openToWork) ||
+    JSON.stringify(heroDraft.customCta) !== JSON.stringify(snapshot.customCta) ||
+    heroDraft.pronouns !== snapshot.pronouns ||
+    heroDraft.statusBadge !== snapshot.statusBadge ||
+    heroDraft.department !== snapshot.department ||
     heroDraft.tagline !== snapshot.tagline ||
     heroDraft.location !== snapshot.location ||
     heroDraft.country !== snapshot.country ||
@@ -257,7 +288,15 @@ export function HeroSection({
         username: heroDraft.username,
         slug: heroDraft.slug,
         designation: heroDraft.designation,
-        profession: heroDraft.profession,
+        profession: heroDraft.designation,
+        professionalTitle: heroDraft.designation,
+        headline: heroDraft.headline,
+        industry: heroDraft.industry,
+        openToWork: heroDraft.openToWork,
+        customCta: heroDraft.customCta,
+        pronouns: heroDraft.pronouns,
+        statusBadge: heroDraft.statusBadge,
+        department: heroDraft.department,
         tagline: heroDraft.tagline,
         location: heroDraft.location,
         country: heroDraft.country,
@@ -711,21 +750,125 @@ export function HeroSection({
                   />
                 </div>
 
-                {isCompany && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <FormLabel>Headline</FormLabel>
+                  <FormInput
+                    value={heroDraft.headline}
+                    onChange={(val) => setHeroDraft((prev) => ({ ...prev, headline: val }))}
+                    placeholder="e.g. Building next-gen software at Acme | Ex-Google"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <FormLabel>Pronouns</FormLabel>
+                    <FormInput
+                      value={heroDraft.pronouns}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, pronouns: val }))}
+                      placeholder="e.g. they/them, she/her, he/him"
+                    />
+                  </div>
+                  <div>
+                    <FormLabel>Status Badge</FormLabel>
+                    <FormInput
+                      value={heroDraft.statusBadge}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, statusBadge: val }))}
+                      placeholder="e.g. Available, Open for Mentorship"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <FormLabel>Department</FormLabel>
+                    <FormInput
+                      value={heroDraft.department}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, department: val }))}
+                      placeholder="e.g. Engineering / Product"
+                    />
+                  </div>
+                  <div>
+                    <FormLabel>Industry</FormLabel>
+                    <FormInput
+                      value={heroDraft.industry}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, industry: val }))}
+                      placeholder="e.g. Software Development, Financial Services"
+                    />
+                  </div>
+                </div>
+
+                {/* Open to Work Configuration */}
+                <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="hero-open-to-work"
+                      checked={Boolean(heroDraft.openToWork?.enabled)}
+                      onChange={(e) =>
+                        setHeroDraft((prev) => ({
+                          ...prev,
+                          openToWork: {
+                            ...(prev.openToWork || { roles: [] }),
+                            enabled: e.target.checked,
+                          },
+                        }))
+                      }
+                      className="rounded border-emerald-400 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                    />
+                    <label htmlFor="hero-open-to-work" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
+                      Show &ldquo;Open to work&rdquo; badge
+                    </label>
+                  </div>
+                  {heroDraft.openToWork?.enabled && (
                     <div>
-                      <FormLabel>Industry</FormLabel>
+                      <FormLabel>Target Job Titles / Roles (comma-separated)</FormLabel>
                       <FormInput
-                        value={heroDraft.companyInfo?.industry || ''}
-                        onChange={(val) =>
+                        value={Array.isArray(heroDraft.openToWork.roles) ? heroDraft.openToWork.roles.join(', ') : ''}
+                        onChange={(val) => {
+                          const parsedRoles = val.split(',').map((r) => r.trim()).filter(Boolean);
                           setHeroDraft((prev) => ({
                             ...prev,
-                            companyInfo: { ...(prev.companyInfo || {}), industry: val },
-                          }))
-                        }
-                        placeholder="e.g. Software, Fintech"
+                            openToWork: { ...(prev.openToWork || {}), enabled: true, roles: parsedRoles },
+                          }));
+                        }}
+                        placeholder="e.g. Software Engineer, Tech Lead, Engineering Manager"
                       />
                     </div>
+                  )}
+                </div>
+
+                {/* Custom CTA Button Configuration */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <FormLabel>Custom CTA Button Label</FormLabel>
+                    <FormInput
+                      value={heroDraft.customCta?.label || ''}
+                      onChange={(val) =>
+                        setHeroDraft((prev) => ({
+                          ...prev,
+                          customCta: { ...(prev.customCta || {}), label: val },
+                        }))
+                      }
+                      placeholder="e.g. Visit my Portfolio, Book a Call"
+                    />
+                  </div>
+                  <div>
+                    <FormLabel>Custom CTA Button URL</FormLabel>
+                    <FormInput
+                      value={heroDraft.customCta?.url || ''}
+                      onChange={(val) =>
+                        setHeroDraft((prev) => ({
+                          ...prev,
+                          customCta: { ...(prev.customCta || {}), url: val },
+                        }))
+                      }
+                      placeholder="https://cal.com/... or https://..."
+                    />
+                  </div>
+                </div>
+
+                {isCompany && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
                       <FormLabel>Team Size</FormLabel>
                       <FormInput
@@ -804,7 +947,7 @@ export function HeroSection({
                     <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words`}>
                       <span>{profile.name}</span>
                     </h1>
-                    {profile.pronouns && (
+                    {profile.pronouns && (canEdit || profile.sharingSettings?.pronouns === true) && (
                       <span className={`text-xs font-normal ${theme.textMuted} opacity-80`}>
                         ({profile.pronouns})
                       </span>
@@ -822,16 +965,57 @@ export function HeroSection({
                   )}
                 </div>
 
+                {/* Open to Work Badge */}
+                {profile.openToWork?.enabled && (
+                  <div className="pt-1">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Open to work</span>
+                      {Array.isArray(profile.openToWork.roles) && profile.openToWork.roles.length > 0 && (
+                        <span className="text-[11px] font-normal text-emerald-600/80 dark:text-emerald-400/80">
+                          • {profile.openToWork.roles.join(', ')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Headline (distinct from title & bio) */}
+                {profile.headline && (
+                  <p 
+                    onClick={() => canEdit && onOpenEdit?.()}
+                    className={`text-sm sm:text-base font-semibold ${theme.textPrimary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                    title={canEdit ? 'Click to edit headline' : undefined}
+                  >
+                    {profile.headline}
+                  </p>
+                )}
+
                 <p 
                   onClick={() => canEdit && onOpenEdit?.()}
-                  className={`text-sm sm:text-base md:text-lg font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                  className={`text-sm sm:text-base font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                   title={canEdit ? 'Click to edit title' : undefined}
                 >
                   {[
                     getTitle(profile) || profile.profileName || (isCompany ? 'Organization' : 'Professional'),
-                    !isCompany && profile.department
+                    !isCompany && profile.department,
+                    profile.industry
                   ].filter(Boolean).join(' • ')}
                 </p>
+
+                {/* Custom CTA Button */}
+                {profile.customCta?.url && profile.customCta?.label && (
+                  <div className="pt-1">
+                    <a
+                      href={profile.customCta.url.startsWith('http') ? profile.customCta.url : `https://${profile.customCta.url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-xs hover:opacity-90 transition-all"
+                    >
+                      <span>{profile.customCta.label}</span>
+                    </a>
+                  </div>
+                )}
 
                 {/* Corporate Metadata Strip */}
                 {isCompany && (

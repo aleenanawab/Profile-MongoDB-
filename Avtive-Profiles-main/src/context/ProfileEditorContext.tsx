@@ -35,6 +35,7 @@ import {
   DEFAULT_SECTION_ORDER,
   DEFAULT_SECTION_VISIBILITY,
   SocialLink,
+  SkillItem,
 } from '@/types/profile';
 import { ALL_PROFILE_SECTIONS } from '@/components/sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
@@ -91,13 +92,31 @@ export const LIVE_PROFILE_ATOM_KEYS: (keyof ProfileData)[] = [
   'experience',
   'experiences',
   'education',
+  'certifications',
+  'languages',
   'socials',
   'socialLinks',
   'customFields',
   'dynamicSections',
   'sectionOrder',
   'sectionVisibility',
-  'sharingSettings'
+  'sharingSettings',
+  'industry',
+  'headline',
+  'openToWork',
+  'phoneType',
+  'websites',
+  'featured',
+  'honorsAwards',
+  'publications',
+  'patents',
+  'courses',
+  'testScores',
+  'organizations',
+  'interests',
+  'volunteer',
+  'volunteerExperiences',
+  'recommendations'
 ];
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -126,11 +145,25 @@ export function buildSocialLinksFromProfile(p: ProfileData): DraggableLinkItem[]
   return [];
 }
 
-function extractSkills(p: ProfileData): string[] {
+export function extractSkillItems(p: ProfileData): SkillItem[] {
   if (Array.isArray(p.skills) && p.skills.length > 0) {
-    return p.skills.map((s) => (typeof s === 'string' ? s : s.name));
+    return p.skills.map((s) => {
+      if (typeof s === 'string') {
+        return { name: s, category: 'Technical Skills', level: 'Intermediate', pinned: false };
+      }
+      return {
+        name: s?.name || '',
+        category: s?.category || 'Technical Skills',
+        level: s?.level || 'Intermediate',
+        pinned: !!s?.pinned
+      };
+    }).filter((s) => s.name.trim().length > 0);
   }
   return [];
+}
+
+export function extractSkills(p: ProfileData): any[] {
+  return extractSkillItems(p);
 }
 
 export interface SaveProfileResult {
@@ -142,6 +175,7 @@ export interface SaveProfileResult {
 export interface ProfileEditorContextValue {
   // Core profile object (DB baseline — updated after save/switch)
   profile: ProfileData;
+  savedBaseline: ProfileData;
 
   // ── Editable field atoms ──────────────────────────────────────────────────
   activeTheme: ProfileTheme;
@@ -185,8 +219,8 @@ export interface ProfileEditorContextValue {
   contactOrder: string[];
   setContactOrder: React.Dispatch<React.SetStateAction<string[]>>;
 
-  skills: string[];
-  setSkills: React.Dispatch<React.SetStateAction<string[]>>;
+  skills: SkillItem[];
+  setSkills: React.Dispatch<React.SetStateAction<SkillItem[]>>;
   about: string;
   setAbout: (v: string) => void;
 
@@ -300,6 +334,7 @@ const FALLBACK_PROFILE_DATA: ProfileData = {
 
 const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   profile: FALLBACK_PROFILE_DATA,
+  savedBaseline: FALLBACK_PROFILE_DATA,
   setProfile: () => {},
   userProfiles: [],
   currentActiveIdentifier: 'default',
@@ -489,6 +524,7 @@ export function ProfileEditorProvider({
 }: ProfileEditorProviderProps) {
   // ── Core profile baseline ─────────────────────────────────────────────────
   const [profile, setProfile] = useState<ProfileData>(initialProfile);
+  const [savedBaseline, setSavedBaseline] = useState<ProfileData>(initialProfile);
 
   // ── Autosave & Request Sequence State ─────────────────────────────────────
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -557,7 +593,7 @@ export function ProfileEditorProvider({
   const [contactOrder, setContactOrder] = useState<string[]>(initialProfile.contactOrder || []);
 
   // ── Skills / About ────────────────────────────────────────────────────────
-  const [skills, setSkills] = useState<string[]>(extractSkills(initialProfile));
+  const [skills, setSkills] = useState<SkillItem[]>(() => extractSkillItems(initialProfile));
   const [about, setAbout] = useState(
     initialProfile.about ||
       initialProfile.fullBio ||
@@ -800,6 +836,18 @@ export function ProfileEditorProvider({
         next.socials = val as any;
         next.socialLinks = val as any;
       }
+      if (key === 'volunteer' || key === 'volunteerExperiences') {
+        next.volunteer = val as any;
+        next.volunteerExperiences = val as any;
+      }
+      if (key === 'honors' || key === 'honorsAwards') {
+        next.honors = val as any;
+        next.honorsAwards = val as any;
+      }
+      if (key === 'recommendations' || key === 'testimonials') {
+        next.recommendations = val as any;
+        next.testimonials = val as any;
+      }
       return next;
     });
 
@@ -829,7 +877,7 @@ export function ProfileEditorProvider({
     if (key === 'officeAddress' && typeof val === 'string') setOfficeAddress(val);
     if (key === 'customContacts' && Array.isArray(val)) setCustomContacts(val as any[]);
     if (key === 'contactOrder' && Array.isArray(val)) setContactOrder(val as string[]);
-    if (key === 'skills' && Array.isArray(val)) setSkills((val as (string | { name: string })[]).map(s => typeof s === 'string' ? s : s.name));
+    if (key === 'skills' && Array.isArray(val)) setSkills(extractSkillItems({ ...profile, skills: val as any }));
     if (key === 'projects' && Array.isArray(val)) setProjects(val as ProjectItem[]);
     if ((key === 'experiences' || key === 'experience') && Array.isArray(val)) setExperiences(val as ExperienceItem[]);
     if (key === 'education' && Array.isArray(val)) setEducation(val as EducationItem[]);
@@ -1077,6 +1125,7 @@ export function ProfileEditorProvider({
   const handleProfileSectionSaveSuccess = useCallback(
     (savedProfile: ProfileData, isNew?: boolean) => {
       setProfile(savedProfile);
+      setSavedBaseline(savedProfile);
       if (savedProfile.theme) setActiveTheme(savedProfile.theme);
       if (savedProfile.firstName) setFirstName(savedProfile.firstName);
       if (savedProfile.secondName || savedProfile.lastName)
@@ -1128,6 +1177,7 @@ export function ProfileEditorProvider({
     }
     lastSavedProfileRef.current = newProf;
     setProfile(newProf);
+    setSavedBaseline(newProf);
     setActiveTheme(newProf.theme === 'default' ? 'editorial' : (newProf.theme || 'editorial'));
 
     const fName = newProf.firstName || (newProf.name ? newProf.name.split(' ')[0] : '');
@@ -1153,7 +1203,7 @@ export function ProfileEditorProvider({
     setOfficeAddress(newProf.officeAddress || '');
     setCustomContacts(Array.isArray(newProf.customContacts) ? newProf.customContacts : []);
     setContactOrder(Array.isArray(newProf.contactOrder) ? newProf.contactOrder : []);
-    setSkills(extractSkills(newProf));
+    setSkills(extractSkillItems(newProf));
     setAbout(newProf.about || newProf.fullBio || '');
     setProjects(Array.isArray(newProf.projects) ? newProf.projects : []);
     setExperiences(
@@ -1294,13 +1344,25 @@ export function ProfileEditorProvider({
 
       if (data?.rejectedKeys && data.rejectedKeys.length > 0) {
         console.warn('[saveProfile] Unknown keys stripped by server:', data.rejectedKeys);
+        const err = `Failed to save: rejected keys [${data.rejectedKeys.join(', ')}]`;
+        setAutosaveStatus('error');
+        setAutosaveStatusText(err);
+        setStatusMessage({ type: 'error', text: err });
+        showToast(err);
+        setIsSaving(false);
+        executionResult = { ok: false, error: err };
+        return executionResult;
       }
       if (data?.skippedKeys && data.skippedKeys.length > 0) {
         console.warn('[saveProfile] Wipe guard protected keys:', data.skippedKeys);
-        const warnMsg = `Field(s) ${data.skippedKeys.join(', ')} were not cleared.`;
+        const warnMsg = `Failed to save: skipped keys [${data.skippedKeys.join(', ')}]`;
         setAutosaveStatus('error');
         setAutosaveStatusText(warnMsg);
+        setStatusMessage({ type: 'error', text: warnMsg });
         showToast(warnMsg);
+        setIsSaving(false);
+        executionResult = { ok: false, error: warnMsg };
+        return executionResult;
       }
 
       const savedSlug =
@@ -1317,6 +1379,7 @@ export function ProfileEditorProvider({
       // Update baseline with confirmed server document
       lastSavedProfileRef.current = finalProfile;
       lastSavedSnapshotRef.current = getProfileSnapshot(finalProfile);
+      setSavedBaseline(finalProfile);
 
       // Merge server values only into fields the user has not edited while request was in-flight
       setProfile((currentDraft) => {
@@ -1561,6 +1624,7 @@ export function ProfileEditorProvider({
   const value = useMemo<ProfileEditorContextValue>(
     () => ({
       profile,
+      savedBaseline,
       setProfile,
       activeTheme, setActiveTheme,
       firstName, setFirstName,
@@ -1650,7 +1714,7 @@ export function ProfileEditorProvider({
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      profile, activeTheme, firstName, secondName, username,
+      profile, savedBaseline, activeTheme, firstName, secondName, username,
       professionalTitle, bio, tagline, company, location, avatar, coverImage,
       skills, about, projects, experiences, education,
       socialLinks, customFields, dynamicSections,

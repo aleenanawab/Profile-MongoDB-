@@ -33,7 +33,17 @@ import {
   CheckCircle2,
   MessageSquare,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  HeartHandshake,
+  Quote,
+  Trophy,
+  BookOpen,
+  Lightbulb,
+  BookMarked,
+  FileSpreadsheet,
+  Network,
+  Compass,
+  Star
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
 import { AvtiveLogoIcon } from '@/components/DesktopWindowPreview';
@@ -54,15 +64,25 @@ export const DESKTOP_SIDEBAR_SECTIONS: SidebarSectionItem[] = [
   { key: 'companyInfo', label: 'Company Info', icon: Building2, category: 'core' },
   { key: 'teamMembers', label: 'Team Members', icon: Users, category: 'core' },
   { key: 'personalDetails', label: 'Personal Details', icon: FileText, category: 'core' },
+  { key: 'featured', label: 'Featured', icon: Star, category: 'core' },
   { key: 'contactInfo', label: 'Contact Info', icon: Phone, category: 'core' },
   { key: 'skills', label: 'Skills & Services', icon: Code, category: 'core' },
   { key: 'projects', label: 'Projects', icon: FolderGit2, category: 'core' },
   { key: 'customFields', label: 'Custom Fields', icon: Layers, category: 'core' },
   { key: 'experience', label: 'Experience', icon: Briefcase, category: 'core' },
   { key: 'education', label: 'Education', icon: GraduationCap, category: 'core' },
+  { key: 'volunteer', label: 'Volunteer', icon: HeartHandshake, category: 'core' },
+  { key: 'honorsAwards', label: 'Honors & Awards', icon: Trophy, category: 'core' },
+  { key: 'publications', label: 'Publications', icon: BookOpen, category: 'core' },
+  { key: 'patents', label: 'Patents', icon: Lightbulb, category: 'core' },
+  { key: 'courses', label: 'Courses', icon: BookMarked, category: 'core' },
+  { key: 'testScores', label: 'Test Scores', icon: FileSpreadsheet, category: 'core' },
+  { key: 'organizations', label: 'Organizations', icon: Network, category: 'core' },
+  { key: 'interests', label: 'Interests', icon: Compass, category: 'core' },
   { key: 'expertise', label: 'Expertise', icon: Award, category: 'core' },
   { key: 'certifications', label: 'Certifications', icon: CheckCircle2, category: 'core' },
   { key: 'languages', label: 'Languages', icon: Globe, category: 'core' },
+  { key: 'recommendations', label: 'Recommendations', icon: Quote, category: 'core' },
   { key: 'socialLinks', label: 'Social Links', icon: Link2, category: 'core' },
   
   // 14-17: Advanced Management
@@ -117,7 +137,7 @@ function DesktopSidebarReorderItem({
       value={sec}
       dragListener={false}
       dragControls={dragControls}
-      className={`w-full flex items-center justify-between px-2 py-1.5 rounded-xl text-xs font-semibold transition-all relative select-none group ${
+      className={`w-full flex items-center justify-between px-2.5 py-1.5 min-h-[38px] h-[38px] rounded-xl text-xs font-semibold transition-all relative select-none group ${
         isArmed
           ? 'bg-cyan-100/70 dark:bg-cyan-950/60 border border-cyan-400 dark:border-cyan-500 shadow-md'
           : isActive
@@ -270,6 +290,31 @@ export function DesktopProfileSidebar({
         return skillsCount > 0 ? skillsCount : undefined;
       case 'projects':
         return projectsCount > 0 ? projectsCount : undefined;
+      case 'experience':
+        return Array.isArray(profile.experience) && profile.experience.length > 0 ? profile.experience.length : undefined;
+      case 'education':
+        return Array.isArray(profile.education) && profile.education.length > 0 ? profile.education.length : undefined;
+      case 'volunteer':
+        const vol = (profile.volunteerExperiences && profile.volunteerExperiences.length > 0) ? profile.volunteerExperiences : profile.volunteer;
+        return Array.isArray(vol) && vol.length > 0 ? vol.length : undefined;
+      case 'featured':
+        return Array.isArray(profile.featured) && profile.featured.length > 0 ? profile.featured.length : undefined;
+      case 'honorsAwards':
+        return Array.isArray(profile.honorsAwards) && profile.honorsAwards.length > 0 ? profile.honorsAwards.length : undefined;
+      case 'publications':
+        return Array.isArray(profile.publications) && profile.publications.length > 0 ? profile.publications.length : undefined;
+      case 'patents':
+        return Array.isArray(profile.patents) && profile.patents.length > 0 ? profile.patents.length : undefined;
+      case 'courses':
+        return Array.isArray(profile.courses) && profile.courses.length > 0 ? profile.courses.length : undefined;
+      case 'testScores':
+        return Array.isArray(profile.testScores) && profile.testScores.length > 0 ? profile.testScores.length : undefined;
+      case 'organizations':
+        return Array.isArray(profile.organizations) && profile.organizations.length > 0 ? profile.organizations.length : undefined;
+      case 'interests':
+        return Array.isArray(profile.interests) && profile.interests.length > 0 ? profile.interests.length : undefined;
+      case 'recommendations':
+        return Array.isArray(profile.recommendations) && profile.recommendations.length > 0 ? profile.recommendations.length : undefined;
       case 'teamMembers':
         return Array.isArray(profile.teamMembers) && profile.teamMembers.length > 0 
           ? `${profile.teamMembers.length} members` 
@@ -294,7 +339,6 @@ export function DesktopProfileSidebar({
   const coreSections = React.useMemo(() => {
     return DESKTOP_SIDEBAR_SECTIONS.filter(s => {
       if (s.category !== 'core') return false;
-      if (s.key === 'recommendations') return false;
       if (!isCompany && (s.key === 'teamMembers' || s.key === 'companyInfo')) return false;
       if (isCompany && (s.key === 'personalDetails' || s.key === 'experience' || s.key === 'education' || s.key === 'certifications' || s.key === 'languages')) return false;
       return true;
@@ -495,7 +539,7 @@ export function DesktopProfileSidebar({
               return (
                 <div
                   key={sec.key}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-all relative ${
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 min-h-[38px] h-[38px] rounded-xl text-xs font-semibold transition-all relative ${
                     isActive
                       ? 'bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-400/50 dark:border-cyan-500/40 text-cyan-950 dark:text-white font-bold shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent'
@@ -570,7 +614,7 @@ export function DesktopProfileSidebar({
                     setActiveSection(sec.key);
                     onSelectSection?.(sec.key);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-semibold transition-all relative cursor-pointer text-left ${
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 min-h-[38px] h-[38px] rounded-xl text-xs font-semibold transition-all relative cursor-pointer text-left ${
                     isActive
                       ? 'bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-400/50 dark:border-cyan-500/40 text-cyan-950 dark:text-white font-bold shadow-2xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent'

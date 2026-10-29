@@ -38,7 +38,17 @@ import {
   Tag,
   RotateCcw,
   X,
-  Archive
+  Archive,
+  HeartHandshake,
+  Quote,
+  Trophy,
+  BookOpen,
+  Lightbulb,
+  BookMarked,
+  FileSpreadsheet,
+  Network,
+  Compass,
+  Star
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
 import { normalizeSectionKey } from '@/lib/sections';
@@ -46,9 +56,20 @@ import {
   ProjectItem, 
   ExperienceItem, 
   EducationItem, 
-  CustomFieldItem 
+  CustomFieldItem
 } from '@/types/profile';
+import { getTitle } from '@/lib/profileGetters';
 import { LinkedInIcon, GithubIcon, TwitterIcon, WhatsAppIcon } from '@/components/BrandIcons';
+import { VolunteerSection } from '@/components/VolunteerSection';
+import { RecommendationsSection } from '@/components/RecommendationsSection';
+import { FeaturedSection } from '@/components/FeaturedSection';
+import { HonorsAwardsSection } from '@/components/HonorsAwardsSection';
+import { PublicationsSection } from '@/components/PublicationsSection';
+import { PatentsSection } from '@/components/PatentsSection';
+import { CoursesSection } from '@/components/CoursesSection';
+import { TestScoresSection } from '@/components/TestScoresSection';
+import { OrganizationsSection } from '@/components/OrganizationsSection';
+import { InterestsSection } from '@/components/InterestsSection';
 
 export function MobileProfileEditor() {
   const router = useRouter();
@@ -248,12 +269,22 @@ export function MobileProfileEditor() {
   const allSections = [
     { key: 'profile', label: 'Profile', icon: User },
     { key: 'personalDetails', label: 'Personal Details', icon: FileText },
+    { key: 'featured', label: 'Featured', icon: Star },
     { key: 'skills', label: 'Skills', icon: SlidersHorizontal },
     { key: 'projects', label: 'Projects', icon: FolderGit2 },
     { key: 'education', label: 'Education', icon: GraduationCap },
     { key: 'contactInfo', label: 'Contact Info', icon: Phone },
     { key: 'socialLinks', label: 'Social Links', icon: Link2 },
     { key: 'experience', label: 'Experience', icon: Briefcase },
+    { key: 'volunteer', label: 'Volunteer', icon: HeartHandshake },
+    { key: 'honorsAwards', label: 'Honors & Awards', icon: Trophy },
+    { key: 'publications', label: 'Publications', icon: BookOpen },
+    { key: 'patents', label: 'Patents', icon: Lightbulb },
+    { key: 'courses', label: 'Courses', icon: BookMarked },
+    { key: 'testScores', label: 'Test Scores', icon: FileSpreadsheet },
+    { key: 'organizations', label: 'Organizations', icon: Network },
+    { key: 'interests', label: 'Interests', icon: Compass },
+    { key: 'recommendations', label: 'Recommendations', icon: Quote },
     { key: 'enhanceProfile', label: 'Enhance Profile', icon: Sparkles },
     { key: 'limitations', label: 'Limitations', icon: EyeOff },
     { key: 'accountInfo', label: 'Account info', icon: UserCheck },
@@ -354,7 +385,7 @@ export function MobileProfileEditor() {
                 {profile.name || ''}
               </h2>
               <p className="text-xs text-slate-400 font-medium truncate">
-                {profile.professionalTitle || profile.designation || ''}
+                {getTitle(profile)}
               </p>
             </div>
           </div>
@@ -481,7 +512,7 @@ export function MobileProfileEditor() {
                       {sec.key === 'profile' && (
                         <div className="space-y-2.5 pt-2">
                           <div>
-                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">Name</label>
+                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">Full Name</label>
                             <input
                               type="text"
                               value={profile.name || ''}
@@ -489,6 +520,124 @@ export function MobileProfileEditor() {
                               placeholder="Enter your name"
                               className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
                             />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">Professional Title</label>
+                            <input
+                              type="text"
+                              value={getTitle(profile)}
+                              onChange={(e) => {
+                                updateField('professionalTitle', e.target.value);
+                                updateField('designation', e.target.value);
+                                updateField('profession', e.target.value);
+                              }}
+                              placeholder="e.g. Senior Software Architect"
+                              className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">Short Bio</label>
+                            <input
+                              type="text"
+                              value={profile.shortBio ?? profile.bio ?? ''}
+                              onChange={(e) => {
+                                updateField('shortBio', e.target.value);
+                                updateField('bio', e.target.value);
+                              }}
+                              placeholder="Brief 1-line headline"
+                              className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">Tagline</label>
+                            <input
+                              type="text"
+                              value={profile.tagline || ''}
+                              onChange={(e) => updateField('tagline', e.target.value)}
+                              placeholder="e.g. Innovator & Open Source Contributor"
+                              className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-300 mb-1">Headline</label>
+                            <input
+                              type="text"
+                              value={profile.headline || ''}
+                              onChange={(e) => updateField('headline', e.target.value)}
+                              placeholder="e.g. Senior Staff Engineer @ TechCorp | Distributed Systems Specialist"
+                              className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Industry</label>
+                              <input
+                                type="text"
+                                value={profile.industry || ''}
+                                onChange={(e) => updateField('industry', e.target.value)}
+                                placeholder="e.g. Technology"
+                                className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Pronouns</label>
+                              <input
+                                type="text"
+                                value={profile.pronouns || ''}
+                                onChange={(e) => updateField('pronouns', e.target.value)}
+                                placeholder="e.g. He/Him"
+                                className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Department</label>
+                              <input
+                                type="text"
+                                value={profile.department || ''}
+                                onChange={(e) => updateField('department', e.target.value)}
+                                placeholder="e.g. Engineering"
+                                className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Tagline</label>
+                              <input
+                                type="text"
+                                value={profile.tagline || ''}
+                                onChange={(e) => updateField('tagline', e.target.value)}
+                                placeholder="e.g. Innovator"
+                                className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500 focus:outline-hidden focus:border-cyan-500"
+                              />
+                            </div>
+                          </div>
+                          {/* Open to Work Toggle */}
+                          <div className="p-2.5 rounded-xl bg-[#070D18] border border-white/10 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-semibold text-slate-300">Open to Work Badge</span>
+                              <input
+                                type="checkbox"
+                                checked={profile.openToWork?.enabled ?? false}
+                                onChange={(e) => {
+                                  const enabled = e.target.checked;
+                                  updateField('openToWork', { enabled, roles: profile.openToWork?.roles || [] });
+                                }}
+                                className="w-4 h-4 rounded text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                              />
+                            </div>
+                            {profile.openToWork?.enabled && (
+                              <input
+                                type="text"
+                                value={(profile.openToWork?.roles || []).join(', ')}
+                                onChange={(e) => {
+                                  const roles = e.target.value.split(',').map(r => r.trim()).filter(Boolean);
+                                  updateField('openToWork', { enabled: true, roles });
+                                }}
+                                placeholder="Target roles (comma-separated)"
+                                className="w-full text-xs px-3 py-1.5 rounded-lg bg-[#0E1626] border border-white/10 text-white placeholder:text-slate-500"
+                              />
+                            )}
                           </div>
                           <div>
                             <label className="block text-[11px] font-semibold text-slate-300 mb-1">Bio</label>
@@ -794,6 +943,126 @@ export function MobileProfileEditor() {
                               className="w-full text-xs px-3 py-2 rounded-xl bg-[#0E1626] border border-white/10 text-white"
                             />
                           </div>
+                        </div>
+                      )}
+
+                      {/* Featured Section */}
+                      {sec.key === 'featured' && (
+                        <div className="pt-2">
+                          <FeaturedSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Volunteer Section */}
+                      {sec.key === 'volunteer' && (
+                        <div className="pt-2">
+                          <VolunteerSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Recommendations Section */}
+                      {sec.key === 'recommendations' && (
+                        <div className="pt-2">
+                          <RecommendationsSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Honors & Awards Section */}
+                      {sec.key === 'honorsAwards' && (
+                        <div className="pt-2">
+                          <HonorsAwardsSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Publications Section */}
+                      {sec.key === 'publications' && (
+                        <div className="pt-2">
+                          <PublicationsSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Patents Section */}
+                      {sec.key === 'patents' && (
+                        <div className="pt-2">
+                          <PatentsSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Courses Section */}
+                      {sec.key === 'courses' && (
+                        <div className="pt-2">
+                          <CoursesSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Test Scores Section */}
+                      {sec.key === 'testScores' && (
+                        <div className="pt-2">
+                          <TestScoresSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Organizations Section */}
+                      {sec.key === 'organizations' && (
+                        <div className="pt-2">
+                          <OrganizationsSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
+                        </div>
+                      )}
+
+                      {/* Interests Section */}
+                      {sec.key === 'interests' && (
+                        <div className="pt-2">
+                          <InterestsSection
+                            profile={profile}
+                            canEdit={true}
+                            isEditing={true}
+                            onUpdateField={updateField}
+                          />
                         </div>
                       )}
 

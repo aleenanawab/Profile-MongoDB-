@@ -138,19 +138,19 @@ export function EducationSection({
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div>
+                        <FormLabel required>School / University</FormLabel>
+                        <FormInput
+                          value={edu.institution || (edu as any).school || ''}
+                          onChange={(val) => handleUpdateItem(edu.id, { institution: val, school: val })}
+                          placeholder="e.g. Stanford University"
+                        />
+                      </div>
+                      <div>
                         <FormLabel required>Degree / Program</FormLabel>
                         <FormInput
                           value={edu.degree || ''}
                           onChange={(val) => handleUpdateItem(edu.id, { degree: val })}
-                          placeholder="e.g. B.S. in Computer Science"
-                        />
-                      </div>
-                      <div>
-                        <FormLabel required>School / Institution</FormLabel>
-                        <FormInput
-                          value={edu.institution || (edu as any).school || ''}
-                          onChange={(val) => handleUpdateItem(edu.id, { institution: val })}
-                          placeholder="e.g. Stanford University"
+                          placeholder="e.g. Bachelor of Science"
                         />
                       </div>
                     </div>
@@ -164,22 +164,70 @@ export function EducationSection({
                     </button>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <FormLabel>Field of Study</FormLabel>
+                      <FormInput
+                        value={edu.fieldOfStudy || ''}
+                        onChange={(val) => handleUpdateItem(edu.id, { fieldOfStudy: val })}
+                        placeholder="e.g. Computer Science & AI"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>Grade / GPA</FormLabel>
+                      <FormInput
+                        value={edu.grade || ''}
+                        onChange={(val) => handleUpdateItem(edu.id, { grade: val })}
+                        placeholder="e.g. 3.9 / 4.0 or First Class"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <FormLabel>Start Year</FormLabel>
+                      <FormInput
+                        value={edu.startYear || ''}
+                        onChange={(val) => {
+                          const start = val;
+                          const end = edu.endYear || '';
+                          const derivedPeriod = start ? (end ? `${start} - ${end}` : start) : end;
+                          handleUpdateItem(edu.id, { startYear: val, period: derivedPeriod || edu.period });
+                        }}
+                        placeholder="e.g. 2019"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>End Year (or Expected)</FormLabel>
+                      <FormInput
+                        value={edu.endYear || ''}
+                        onChange={(val) => {
+                          const start = edu.startYear || '';
+                          const end = val;
+                          const derivedPeriod = start ? (end ? `${start} - ${end}` : start) : end;
+                          handleUpdateItem(edu.id, { endYear: val, period: derivedPeriod || edu.period });
+                        }}
+                        placeholder="e.g. 2023"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <FormLabel>Graduation Year / Period</FormLabel>
+                    <FormLabel>Activities & Societies</FormLabel>
                     <FormInput
-                      value={edu.period || edu.year || ''}
-                      onChange={(val) => handleUpdateItem(edu.id, { period: val, year: val })}
-                      placeholder="e.g. 2019 - 2023"
+                      value={edu.activities || ''}
+                      onChange={(val) => handleUpdateItem(edu.id, { activities: val })}
+                      placeholder="e.g. Robotics Club, Student Council"
                     />
                   </div>
 
                   <div>
-                    <FormLabel>Notes / Honors / Activities</FormLabel>
+                    <FormLabel>Description / Notes</FormLabel>
                     <FormTextarea
                       rows={2}
                       value={edu.description || ''}
                       onChange={(val) => handleUpdateItem(edu.id, { description: val })}
-                      placeholder="Honors, thesis, activities, or coursework..."
+                      placeholder="Thesis, awards, honors, or key courses..."
                     />
                   </div>
                 </div>
@@ -189,19 +237,31 @@ export function EducationSection({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className={`text-sm font-bold ${theme.textPrimary}`}>
-                        {edu.degree}
+                        {edu.institution || (edu as any).school}
                       </h3>
                       <p className={`text-xs font-semibold ${theme.accentText} mt-0.5`}>
-                        {edu.institution || (edu as any).school}
+                        {[edu.degree, edu.fieldOfStudy].filter(Boolean).join(', ')}
                       </p>
                     </div>
 
-                    {(edu.period || edu.year) && (
+                    {(edu.period || edu.year || edu.startYear || edu.endYear) && (
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.cardBorder} shrink-0 font-mono`}>
-                        {edu.period || edu.year}
+                        {edu.period || `${edu.startYear || ''} - ${edu.endYear || ''}` || edu.year}
                       </span>
                     )}
                   </div>
+
+                  {edu.grade && (
+                    <p className={`text-[11px] ${theme.textSecondary} font-medium`}>
+                      Grade: {edu.grade}
+                    </p>
+                  )}
+
+                  {edu.activities && (
+                    <p className={`text-[11px] ${theme.textSecondary} italic`}>
+                      Activities: {edu.activities}
+                    </p>
+                  )}
 
                   {edu.description && (
                     <p className={`text-xs ${theme.textSecondary} leading-relaxed pt-1`}>

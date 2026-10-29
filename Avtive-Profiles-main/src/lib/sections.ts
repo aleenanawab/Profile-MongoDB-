@@ -34,7 +34,21 @@ export const CANONICAL_SECTION_ALIASES: Record<string, string> = {
   experience: 'experience',
   education: 'education',
   hero: 'profile',
-  profile: 'profile'
+  profile: 'profile',
+  volunteer: 'volunteer',
+  volunteerExperiences: 'volunteer',
+  recommendations: 'recommendations',
+  featured: 'featured',
+  honorsAwards: 'honorsAwards',
+  honors: 'honorsAwards',
+  awards: 'honorsAwards',
+  publications: 'publications',
+  patents: 'patents',
+  courses: 'courses',
+  testScores: 'testScores',
+  scores: 'testScores',
+  organizations: 'organizations',
+  interests: 'interests'
 };
 
 export const CANONICAL_TO_PRIMARY_ALIASES: Record<string, string[]> = {
@@ -47,7 +61,10 @@ export const CANONICAL_TO_PRIMARY_ALIASES: Record<string, string[]> = {
   certifications: ['certificates'],
   companyInfo: ['company'],
   teamMembers: ['team'],
-  virtualCard: ['virtual-card', 'nfc', 'nfcCard']
+  virtualCard: ['virtual-card', 'nfc', 'nfcCard'],
+  volunteer: ['volunteerExperiences'],
+  honorsAwards: ['honors', 'awards'],
+  testScores: ['scores']
 };
 
 export const SECTION_TO_SHARING_KEY: Record<string, string> = {
@@ -63,7 +80,17 @@ export const SECTION_TO_SHARING_KEY: Record<string, string> = {
   customFields: 'customFields',
   virtualCard: 'nfcCard',
   companyInfo: 'companySection',
-  teamMembers: 'companySection'
+  teamMembers: 'companySection',
+  volunteer: 'volunteer',
+  recommendations: 'recommendations',
+  featured: 'featured',
+  honorsAwards: 'honorsAwards',
+  publications: 'publications',
+  patents: 'patents',
+  courses: 'courses',
+  testScores: 'testScores',
+  organizations: 'organizations',
+  interests: 'interests'
 };
 
 export function normalizeSectionKey(key: string): string {
@@ -113,13 +140,23 @@ export function reconcileSectionVisibility(
   const allCanonical = [
     'personalDetails',
     'contactInfo',
+    'featured',
     'skills',
     'projects',
-    'customFields',
     'experience',
     'education',
     'certifications',
+    'volunteer',
+    'honorsAwards',
+    'publications',
+    'patents',
+    'courses',
+    'testScores',
+    'organizations',
     'languages',
+    'recommendations',
+    'interests',
+    'customFields',
     'socialLinks',
     'virtualCard',
     'companyInfo',
@@ -195,13 +232,23 @@ export function toggleCanonicalSectionVisibility(
 export const INDIVIDUAL_DEFAULT_SECTION_ORDER: string[] = [
   'personalDetails',
   'contactInfo',
+  'featured',
   'skills',
   'projects',
-  'customFields',
   'experience',
   'education',
   'certifications',
+  'volunteer',
+  'honorsAwards',
+  'publications',
+  'patents',
+  'courses',
+  'testScores',
+  'organizations',
   'languages',
+  'recommendations',
+  'interests',
+  'customFields',
   'socialLinks',
   'virtualCard'
 ];
@@ -231,7 +278,6 @@ export function getCanonicalSectionOrder(
     for (const rawKey of existingOrder) {
       if (!rawKey || typeof rawKey !== 'string') continue;
       if (rawKey === 'hero' || rawKey === 'profile') continue;
-      if (rawKey === 'recommendations') continue;
       const key = normalizeSectionKey(rawKey);
       if (!isCompany && (key === 'companyInfo' || key === 'teamMembers')) continue;
       if (isCompany && (key === 'personalDetails' || key === 'experience' || key === 'education' || key === 'certifications' || key === 'languages')) continue;

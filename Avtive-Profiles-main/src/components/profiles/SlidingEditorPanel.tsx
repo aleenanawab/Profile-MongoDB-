@@ -525,11 +525,14 @@ export function SlidingEditorPanel({
   const handleAddSkill = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const trimmed = newSkillInput.trim();
-    if (!trimmed || skills.includes(trimmed)) return;
-    setSkills((prev) => [...prev, trimmed]);
+    if (!trimmed || skills.some((s) => (typeof s === 'string' ? s : s.name).toLowerCase() === trimmed.toLowerCase())) return;
+    setSkills((prev) => [...prev, { id: `skill-${Date.now()}`, name: trimmed, category: 'Industry Knowledge', level: 'Intermediate', pinned: false }]);
     setNewSkillInput('');
   };
-  const handleRemoveSkill = (s: string) => setSkills((prev) => prev.filter((x) => x !== s));
+  const handleRemoveSkill = (skillKeyOrName: string) =>
+    setSkills((prev) =>
+      prev.filter((x) => (typeof x === 'string' ? x : x.id || x.name) !== skillKeyOrName && (typeof x === 'string' ? x : x.name) !== skillKeyOrName)
+    );
 
   // ── Projects (panel-local project form state; setProjects comes from context) ─
   const handleOpenAddProject = () => {
@@ -828,21 +831,25 @@ export function SlidingEditorPanel({
                   </form>
 
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white dark:bg-white/10 border border-slate-200 dark:border-white/15 text-xs font-medium text-slate-800 dark:text-white shadow-2xs"
-                      >
-                        <span>{skill}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSkill(skill)}
-                          className="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                    {skills.map((skill, sIdx) => {
+                      const skillName = typeof skill === 'string' ? skill : skill.name;
+                      const skillKey = typeof skill === 'string' ? skill : skill.id || skill.name || `skill-${sIdx}`;
+                      return (
+                        <span
+                          key={skillKey}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white dark:bg-white/10 border border-slate-200 dark:border-white/15 text-xs font-medium text-slate-800 dark:text-white shadow-2xs"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+                          <span>{skillName}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSkill(skillKey)}
+                            className="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}

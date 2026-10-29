@@ -176,11 +176,12 @@ export function CertificationsSection({
                       />
                     </div>
                     <div>
-                      <FormLabel>Expiration (Optional)</FormLabel>
+                      <FormLabel>Expiration</FormLabel>
                       <FormInput
-                        value={cert.expires || ''}
+                        disabled={cert.noExpiry}
+                        value={cert.noExpiry ? 'No Expiration' : (cert.expires || '')}
                         onChange={(val) => handleUpdateItem(cert.id, { expires: val })}
-                        placeholder="e.g. 2026 / Never"
+                        placeholder="e.g. 2026"
                       />
                     </div>
                     <div>
@@ -200,6 +201,25 @@ export function CertificationsSection({
                         placeholder="https://..."
                       />
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <input
+                      type="checkbox"
+                      id={`cert-noexp-${cert.id}`}
+                      checked={Boolean(cert.noExpiry)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        handleUpdateItem(cert.id, {
+                          noExpiry: checked,
+                          expires: checked ? 'No Expiration' : ''
+                        });
+                      }}
+                      className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                    />
+                    <label htmlFor={`cert-noexp-${cert.id}`} className="text-xs text-slate-700 dark:text-zinc-300 cursor-pointer">
+                      This credential does not expire
+                    </label>
                   </div>
                 </div>
               ) : (
@@ -233,8 +253,12 @@ export function CertificationsSection({
                     </p>
 
                     <div className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] ${theme.textMuted} font-mono`}>
-                      <span>Issued {cert.issued}</span>
-                      {cert.expires && <span>• Expires {cert.expires}</span>}
+                      {cert.issued && <span>Issued {cert.issued}</span>}
+                      {cert.noExpiry ? (
+                        <span>• No Expiration</span>
+                      ) : (
+                        cert.expires && <span>• Expires {cert.expires}</span>
+                      )}
                       {cert.credentialId && (
                         <span>• ID: <span className={`font-bold ${theme.textPrimary}`}>{cert.credentialId}</span></span>
                       )}

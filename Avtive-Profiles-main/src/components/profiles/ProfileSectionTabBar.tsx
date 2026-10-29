@@ -19,11 +19,21 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  HeartHandshake,
+  Quote,
+  Trophy,
+  BookOpen,
+  Lightbulb,
+  BookMarked,
+  FileSpreadsheet,
+  Network,
+  Compass,
+  Star
 } from 'lucide-react';
 import { ProfileData, normalizeProfileType } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/themeStyles';
-import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
+import { getCanonicalSectionOrder, normalizeSectionKey, isCanonicalSectionVisible } from '@/lib/sections';
 
 export interface ProfileSectionTabBarProps {
   profile: ProfileData;
@@ -64,24 +74,7 @@ export function ProfileSectionTabBar({
 
     const isVisible = (key: string): boolean => {
       if (isEditing || canEdit) return true;
-      const canonicalKey = normalizeSectionKey(key);
-      if (typeof visibility[canonicalKey] === 'boolean') return visibility[canonicalKey];
-      if (typeof visibility[key] === 'boolean') return visibility[key];
-      switch (canonicalKey) {
-        case 'companyInfo':
-        case 'teamMembers': return sharing.companySection !== false;
-        case 'personalDetails': return sharing.bio !== false;
-        case 'skills': return sharing.skills !== false || sharing.services !== false;
-        case 'experience': return sharing.experience !== false;
-        case 'education': return sharing.education !== false;
-        case 'projects': return sharing.projects !== false;
-        case 'certifications': return sharing.certifications !== false;
-        case 'languages': return sharing.languages !== false;
-        case 'recommendations': return false;
-        case 'socialLinks': return sharing.socialLinks !== false;
-        case 'virtualCard': return sharing.nfcCard !== false;
-        default: return true;
-      }
+      return isCanonicalSectionVisible(visibility, sharing, key);
     };
 
     let baseTabs: SectionTabItem[] = [];
@@ -103,12 +96,22 @@ export function ProfileSectionTabBar({
       baseTabs = [
         { key: 'profile', label: 'Profile', icon: User },
         { key: 'personalDetails', label: 'About', icon: FileText },
+        { key: 'featured', label: 'Featured', icon: Star },
         { key: 'skills', label: 'Skills', icon: Code },
         { key: 'experience', label: 'Experience', icon: Briefcase },
         { key: 'projects', label: 'Projects', icon: FolderGit2 },
         { key: 'education', label: 'Education', icon: GraduationCap },
         { key: 'certifications', label: 'Certificates', icon: Award },
+        { key: 'volunteer', label: 'Volunteer', icon: HeartHandshake },
+        { key: 'honorsAwards', label: 'Honors', icon: Trophy },
+        { key: 'publications', label: 'Publications', icon: BookOpen },
+        { key: 'patents', label: 'Patents', icon: Lightbulb },
+        { key: 'courses', label: 'Courses', icon: BookMarked },
+        { key: 'testScores', label: 'Test Scores', icon: FileSpreadsheet },
+        { key: 'organizations', label: 'Organizations', icon: Network },
+        { key: 'interests', label: 'Interests', icon: Compass },
         { key: 'languages', label: 'Languages', icon: Globe },
+        { key: 'recommendations', label: 'Recommendations', icon: Quote },
         { key: 'contactInfo', label: 'Contact', icon: Phone },
         { key: 'socialLinks', label: 'Socials', icon: Link2 },
       ];
@@ -182,6 +185,7 @@ export function ProfileSectionTabBar({
 
   const isCurrentActive = (key: string) => {
     if (activeSection === key) return true;
+    if (normalizeSectionKey(activeSection) === normalizeSectionKey(key)) return true;
     if (key === 'profile' && (activeSection === 'hero' || activeSection === '')) return true;
     if (key === 'personalDetails' && (activeSection === 'about' || activeSection === 'personal')) return true;
     if (key === 'skills' && activeSection === 'services') return true;
@@ -229,7 +233,7 @@ export function ProfileSectionTabBar({
                 type="button"
                 onClick={() => onSelectSection(item.key)}
                 aria-current={active ? 'page' : undefined}
-                className={`shrink-0 min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${
+                className={`shrink-0 h-10 min-h-[40px] sm:h-11 sm:min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${
                   active
                     ? `${theme.btnPrimary} shadow-xs font-bold scale-[1.02]`
                     : `${theme.textSecondary} hover:${theme.textPrimary} hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent`

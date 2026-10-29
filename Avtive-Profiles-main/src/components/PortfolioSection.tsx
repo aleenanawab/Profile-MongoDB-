@@ -202,22 +202,50 @@ export function PortfolioSection({
                       <FormLabel>Live URL / Repository</FormLabel>
                       <FormInput
                         type="url"
-                        value={project.link || ''}
-                        onChange={(val) => handleUpdateProject(project.id, { link: val })}
+                        value={project.link || (project as any).url || ''}
+                        onChange={(val) => handleUpdateProject(project.id, { link: val, url: val } as any)}
                         placeholder="https://github.com/... or https://..."
                       />
                     </div>
                     <div>
-                      <FormLabel>Tech Stack Tags (comma separated)</FormLabel>
+                      <FormLabel>Contributors</FormLabel>
                       <FormInput
-                        value={Array.isArray(project.tags) ? project.tags.join(', ') : ''}
-                        onChange={(val) => {
-                          const tagList = val.split(',').map((t) => t.trim()).filter(Boolean);
-                          handleUpdateProject(project.id, { tags: tagList });
-                        }}
-                        placeholder="React, Next.js, Node.js, Tailwind"
+                        value={project.contributors || ''}
+                        onChange={(val) => handleUpdateProject(project.id, { contributors: val })}
+                        placeholder="e.g. John Doe, Jane Smith"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormInput
+                        value={project.startDate || ''}
+                        onChange={(val) => handleUpdateProject(project.id, { startDate: val })}
+                        placeholder="e.g. Jan 2023"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>End Date</FormLabel>
+                      <FormInput
+                        value={project.endDate || ''}
+                        onChange={(val) => handleUpdateProject(project.id, { endDate: val })}
+                        placeholder="e.g. Jun 2023 / Ongoing"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <FormLabel>Skills & Technologies (comma separated)</FormLabel>
+                    <FormInput
+                      value={Array.isArray(project.skills) ? project.skills.join(', ') : (Array.isArray(project.tags) ? project.tags.join(', ') : '')}
+                      onChange={(val) => {
+                        const parsed = val.split(',').map((t) => t.trim()).filter(Boolean);
+                        handleUpdateProject(project.id, { skills: parsed, tags: parsed });
+                      }}
+                      placeholder="React, Next.js, TypeScript, MongoDB"
+                    />
                   </div>
                 </div>
               ) : (
@@ -243,22 +271,37 @@ export function PortfolioSection({
 
                   <div className="p-4 sm:p-5 space-y-2.5">
                     <div>
-                      {!project.image && !project.coverImage && project.category && (
-                        <span className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold ${theme.badgeBg} ${theme.badgeText} mb-2 font-mono`}>
-                          {project.category}
-                        </span>
-                      )}
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        {!project.image && !project.coverImage && project.category && (
+                          <span className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold ${theme.badgeBg} ${theme.badgeText} font-mono`}>
+                            {project.category}
+                          </span>
+                        )}
+                        {(project.startDate || project.endDate) && (
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.subCardBorder} shrink-0 font-mono ml-auto`}>
+                            {project.startDate} {project.endDate ? `- ${project.endDate}` : ''}
+                          </span>
+                        )}
+                      </div>
+
                       <h3 className={`text-base font-bold ${theme.textPrimary} group-hover:${theme.accentText} transition-colors`}>
                         {project.title}
                       </h3>
-                      <p className={`text-xs ${theme.textSecondary} leading-relaxed mt-1`}>
-                        {project.description}
-                      </p>
+                      {project.description && (
+                        <p className={`text-xs ${theme.textSecondary} leading-relaxed mt-1`}>
+                          {project.description}
+                        </p>
+                      )}
+                      {project.contributors && (
+                        <p className={`text-[11px] ${theme.textMuted} mt-1`}>
+                          Contributors: {project.contributors}
+                        </p>
+                      )}
                     </div>
 
-                    {project.tags && project.tags.length > 0 && (
+                    {((Array.isArray(project.skills) && project.skills.length > 0) || (Array.isArray(project.tags) && project.tags.length > 0)) && (
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                        {project.tags.map((tag, idx) => (
+                        {((project.skills && project.skills.length > 0) ? project.skills : (project.tags || [])).map((tag, idx) => (
                           <span
                             key={idx}
                             className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${theme.badgeBg} ${theme.badgeText} border ${theme.subCardBorder}`}

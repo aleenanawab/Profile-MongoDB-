@@ -33,11 +33,15 @@ export function ProfileContactSection({
   const [contactDraft, setContactDraft] = React.useState({
     email: profile.email || '',
     phone: profile.phone || '',
+    phoneType: profile.phoneType || 'Mobile',
     whatsapp: profile.whatsapp || '',
     location: profile.location || '',
     country: profile.country || '',
     officeAddress: profile.officeAddress || '',
     website: profile.website || '',
+    websites: Array.isArray(profile.websites) ? profile.websites : (profile.website ? [{ url: profile.website, label: 'Personal Website' }] : []),
+    birthday: profile.birthday || '',
+    googleMapsUrl: profile.googleMapsUrl || '',
   });
   const [snapshot, setSnapshot] = React.useState(contactDraft);
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -47,11 +51,15 @@ export function ProfileContactSection({
     const nextDraft = {
       email: profile.email || '',
       phone: profile.phone || '',
+      phoneType: profile.phoneType || 'Mobile',
       whatsapp: profile.whatsapp || '',
       location: profile.location || '',
       country: profile.country || '',
       officeAddress: profile.officeAddress || '',
       website: profile.website || '',
+      websites: Array.isArray(profile.websites) ? profile.websites : (profile.website ? [{ url: profile.website, label: 'Personal Website' }] : []),
+      birthday: profile.birthday || '',
+      googleMapsUrl: profile.googleMapsUrl || '',
     };
     setContactDraft(nextDraft);
     setSnapshot(nextDraft);
@@ -59,21 +67,29 @@ export function ProfileContactSection({
     profile.id,
     profile.email,
     profile.phone,
+    profile.phoneType,
     profile.whatsapp,
     profile.location,
     profile.country,
     profile.officeAddress,
     profile.website,
+    profile.websites,
+    profile.birthday,
+    profile.googleMapsUrl,
   ]);
 
   const isDirty = (
     contactDraft.email !== snapshot.email ||
     contactDraft.phone !== snapshot.phone ||
+    contactDraft.phoneType !== snapshot.phoneType ||
     contactDraft.whatsapp !== snapshot.whatsapp ||
     contactDraft.location !== snapshot.location ||
     contactDraft.country !== snapshot.country ||
     contactDraft.officeAddress !== snapshot.officeAddress ||
-    contactDraft.website !== snapshot.website
+    contactDraft.website !== snapshot.website ||
+    JSON.stringify(contactDraft.websites) !== JSON.stringify(snapshot.websites) ||
+    contactDraft.birthday !== snapshot.birthday ||
+    contactDraft.googleMapsUrl !== snapshot.googleMapsUrl
   );
 
   const handleSaveContact = async () => {
@@ -83,11 +99,15 @@ export function ProfileContactSection({
       const payload: Partial<ProfileData> = {
         email: contactDraft.email,
         phone: contactDraft.phone,
+        phoneType: contactDraft.phoneType,
         whatsapp: contactDraft.whatsapp,
         location: contactDraft.location,
         country: contactDraft.country,
         officeAddress: contactDraft.officeAddress,
         website: contactDraft.website,
+        websites: contactDraft.websites,
+        birthday: contactDraft.birthday,
+        googleMapsUrl: contactDraft.googleMapsUrl,
       };
       if (onSavePartial) {
         await onSavePartial(payload);
@@ -173,14 +193,28 @@ export function ProfileContactSection({
               />
             </div>
 
-            <div>
-              <FormLabel>Phone Number</FormLabel>
-              <FormInput
-                type="tel"
-                value={contactDraft.phone}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, phone: val }))}
-                placeholder="+92 300 1234567"
-              />
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-2">
+                <FormLabel>Phone Number</FormLabel>
+                <FormInput
+                  type="tel"
+                  value={contactDraft.phone}
+                  onChange={(val) => setContactDraft((prev) => ({ ...prev, phone: val }))}
+                  placeholder="+92 300 1234567"
+                />
+              </div>
+              <div>
+                <FormLabel>Type</FormLabel>
+                <select
+                  value={contactDraft.phoneType}
+                  onChange={(e) => setContactDraft((prev) => ({ ...prev, phoneType: e.target.value }))}
+                  className="w-full min-h-[44px] h-11 px-2.5 text-xs font-normal rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer"
+                >
+                  <option value="Mobile">Mobile</option>
+                  <option value="Work">Work</option>
+                  <option value="Home">Home</option>
+                </select>
+              </div>
             </div>
 
             <div>
@@ -222,14 +256,82 @@ export function ProfileContactSection({
             </div>
 
             <div>
-              <FormLabel>Website URL</FormLabel>
+              <FormLabel>Google Maps URL</FormLabel>
               <FormInput
                 type="url"
-                value={contactDraft.website}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, website: val }))}
-                placeholder="https://www.avtive.app"
+                value={contactDraft.googleMapsUrl}
+                onChange={(val) => setContactDraft((prev) => ({ ...prev, googleMapsUrl: val }))}
+                placeholder="https://maps.google.com/..."
               />
             </div>
+
+            <div>
+              <FormLabel>Birthday</FormLabel>
+              <FormInput
+                value={contactDraft.birthday}
+                onChange={(val) => setContactDraft((prev) => ({ ...prev, birthday: val }))}
+                placeholder="e.g. Jan 15"
+              />
+            </div>
+          </div>
+
+          {/* Websites List Editor */}
+          <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between">
+              <FormLabel>Websites & Portfolios</FormLabel>
+              <button
+                type="button"
+                onClick={() =>
+                  setContactDraft((prev) => ({
+                    ...prev,
+                    websites: [...(prev.websites || []), { url: '', label: 'Personal' }],
+                  }))
+                }
+                className="text-xs text-primary font-semibold hover:underline cursor-pointer"
+              >
+                + Add Website
+              </button>
+            </div>
+            {(contactDraft.websites || []).map((ws, wIdx) => (
+              <div key={wIdx} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={ws.label || ''}
+                  onChange={(e) => {
+                    const next = [...(contactDraft.websites || [])];
+                    next[wIdx] = { ...next[wIdx], label: e.target.value };
+                    setContactDraft((prev) => ({ ...prev, websites: next }));
+                  }}
+                  placeholder="Label (e.g. Blog, Company)"
+                  className="w-1/3 min-h-[38px] px-2.5 text-xs rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800"
+                />
+                <input
+                  type="url"
+                  value={ws.url || ''}
+                  onChange={(e) => {
+                    const next = [...(contactDraft.websites || [])];
+                    next[wIdx] = { ...next[wIdx], url: e.target.value };
+                    setContactDraft((prev) => ({
+                      ...prev,
+                      websites: next,
+                      website: next[0]?.url || prev.website,
+                    }));
+                  }}
+                  placeholder="https://..."
+                  className="flex-1 min-h-[38px] px-2.5 text-xs rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = (contactDraft.websites || []).filter((_, i) => i !== wIdx);
+                    setContactDraft((prev) => ({ ...prev, websites: next }));
+                  }}
+                  className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
 
           <SectionSaveBar
@@ -275,7 +377,7 @@ export function ProfileContactSection({
               </div>
               <div className="min-w-0 flex-1">
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
-                  Phone
+                  Phone {profile.phoneType ? `(${profile.phoneType})` : ''}
                 </span>
                 <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
                   {profile.phone}
@@ -314,9 +416,20 @@ export function ProfileContactSection({
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                   Location
                 </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
-                  {[profile.location, profile.country].filter(Boolean).join(', ')}
-                </span>
+                {profile.googleMapsUrl ? (
+                  <a
+                    href={profile.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block text-xs font-semibold ${theme.textPrimary} hover:underline truncate`}
+                  >
+                    {[profile.location, profile.country].filter(Boolean).join(', ')}
+                  </a>
+                ) : (
+                  <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                    {[profile.location, profile.country].filter(Boolean).join(', ')}
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -337,7 +450,30 @@ export function ProfileContactSection({
             </div>
           )}
 
-          {profile.website && (
+          {/* Multiple Websites or single website */}
+          {Array.isArray(profile.websites) && profile.websites.length > 0 ? (
+            profile.websites.map((ws, i) => (
+              <a
+                key={i}
+                href={ws.url.startsWith('http') ? ws.url : `https://${ws.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
+              >
+                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
+                  <Globe className="w-3.5 h-3.5 text-indigo-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
+                    {ws.label || 'Website'}
+                  </span>
+                  <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                    {ws.url.replace(/^https?:\/\//, '')}
+                  </span>
+                </div>
+              </a>
+            ))
+          ) : profile.website ? (
             <a
               href={profile.website}
               target="_blank"
@@ -356,9 +492,9 @@ export function ProfileContactSection({
                 </span>
               </div>
             </a>
-          )}
+          ) : null}
 
-          {profile.birthday && isFieldShared(profile, 'birthday') && (
+          {profile.birthday && (canEdit || profile.sharingSettings?.birthday === true) && (
             <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
               <div className="w-7 h-7 rounded-lg bg-pink-500/10 flex items-center justify-center shrink-0">
                 <Calendar className="w-3.5 h-3.5 text-pink-500" />

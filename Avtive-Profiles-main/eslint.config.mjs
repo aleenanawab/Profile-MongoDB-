@@ -8,6 +8,7 @@ const eslintConfig = defineConfig([
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
+    "**/node_modules/**",
     ".next/**",
     "out/**",
     "build/**",
@@ -15,6 +16,11 @@ const eslintConfig = defineConfig([
     "Avtive-Profiles/**",
     "scripts/**",
     "scratch/**",
+    ".agents/**",
+    ".agent/**",
+    ".gsd/**",
+    ".gemini/**",
+    "legacy/**",
   ]),
   {
     rules: {
@@ -29,7 +35,8 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": "off",
-      "react-compiler/react-compiler": "off"
+      "react-compiler/react-compiler": "off",
+      "react-hooks/globals": "off"
     }
   }
 ]);

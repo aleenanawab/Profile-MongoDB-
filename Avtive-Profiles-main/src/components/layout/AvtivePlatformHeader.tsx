@@ -75,9 +75,13 @@ export function AvtivePlatformHeader() {
           className="min-h-[44px] flex items-center gap-2.5 sm:gap-3 shrink-0 group hover:opacity-95 transition-opacity"
           aria-label="Avtive Home"
         >
-          {/* Stylized Circle "A" Icon */}
-          <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-black flex items-center justify-center font-bold text-base shadow-sm group-hover:scale-105 transition-transform font-sans">
-            A
+          {/* Avtive Symbol Logo */}
+          <div className="h-8 flex items-center">
+            <img 
+              src="/images/avtive-symbol.png" 
+              alt="Avtive Logo" 
+              className="h-7 w-auto object-contain"
+            />
           </div>
           
           <span className="font-bold text-base sm:text-lg tracking-tight font-sans text-slate-900 dark:text-white">

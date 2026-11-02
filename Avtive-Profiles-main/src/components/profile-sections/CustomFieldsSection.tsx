@@ -44,13 +44,27 @@ export function CustomFieldsSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const next = profile.customFields || [];
-    setFieldsDraft(next);
-    setSnapshot(next);
-  }, [profile.id, profile.customFields]);
-
   const isDirty = JSON.stringify(fieldsDraft) !== JSON.stringify(snapshot);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const next = profile.customFields || [];
+      setFieldsDraft(next);
+      setSnapshot(next);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = profile.customFields || [];
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setFieldsDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.customFields, isDirty, snapshot]);
 
   const handleSave = async () => {
     setSaveStatus('saving');

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Camera, Globe, Mail, Phone, UserPlus, Share2, MessageSquare, Building2, Users, LayoutGrid, SlidersHorizontal, Loader2, Trash2 } from 'lucide-react';
+import { Pencil, Camera, Globe, Mail, Phone, UserPlus, Share2, MessageSquare, Building2, Users, SlidersHorizontal, Loader2, Trash2 } from 'lucide-react';
 import { ProfileData, normalizeProfileType, SocialLink, CompanyInfo } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { GithubIcon, LinkedInIcon, TwitterXIcon, WhatsAppIcon } from '@/components/ui/BrandIcons';
@@ -210,31 +210,86 @@ export function HeroSection({
   const typeBadgeLabel = isCompany ? 'Company · Organization' : 'Individual';
   const activeMemberCount = profile.teamMembers?.filter((m) => m.status !== 'REMOVED')?.length || 0;
 
+  const isDirty = (
+    heroDraft.name !== snapshot.name ||
+    heroDraft.username !== snapshot.username ||
+    heroDraft.designation !== snapshot.designation ||
+    heroDraft.headline !== snapshot.headline ||
+    heroDraft.industry !== snapshot.industry ||
+    JSON.stringify(heroDraft.openToWork) !== JSON.stringify(snapshot.openToWork) ||
+    JSON.stringify(heroDraft.customCta) !== JSON.stringify(snapshot.customCta) ||
+    heroDraft.pronouns !== snapshot.pronouns ||
+    heroDraft.statusBadge !== snapshot.statusBadge ||
+    heroDraft.department !== snapshot.department ||
+    heroDraft.tagline !== snapshot.tagline ||
+    heroDraft.location !== snapshot.location ||
+    heroDraft.country !== snapshot.country ||
+    heroDraft.shortBio !== snapshot.shortBio ||
+    (heroDraft.avatar && heroDraft.avatar !== snapshot.avatar) ||
+    (heroDraft.coverImage && heroDraft.coverImage !== snapshot.coverImage) ||
+    JSON.stringify(heroDraft.companyInfo) !== JSON.stringify(snapshot.companyInfo)
+  );
+
+  const lastProfileIdRef = React.useRef(profile.id);
   React.useEffect(() => {
-    const nextDraft = {
-      name: profile.name || '',
-      username: profile.username || profile.slug || '',
-      slug: profile.slug || profile.username || '',
-      designation: getTitle(profile),
-      profession: getTitle(profile),
-      professionalTitle: getTitle(profile),
-      headline: profile.headline || '',
-      industry: profile.industry || (profile.companyInfo?.industry || ''),
-      openToWork: profile.openToWork || { enabled: false, roles: [] },
-      customCta: profile.customCta || { label: '', url: '' },
-      pronouns: profile.pronouns || '',
-      statusBadge: profile.statusBadge || '',
-      department: profile.department || '',
-      tagline: profile.tagline || '',
-      location: profile.location || '',
-      country: profile.country || '',
-      shortBio: getShortBio(profile),
-      avatar: profile.avatar || '',
-      coverImage: profile.coverImage || '',
-      companyInfo: (profile.companyInfo || {}) as Partial<CompanyInfo>,
-    };
-    setHeroDraft(nextDraft);
-    setSnapshot(nextDraft);
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const nextDraft = {
+        name: profile.name || '',
+        username: profile.username || profile.slug || '',
+        slug: profile.slug || profile.username || '',
+        designation: getTitle(profile),
+        profession: getTitle(profile),
+        professionalTitle: getTitle(profile),
+        headline: profile.headline || '',
+        industry: profile.industry || (profile.companyInfo?.industry || ''),
+        openToWork: profile.openToWork || { enabled: false, roles: [] },
+        customCta: profile.customCta || { label: '', url: '' },
+        pronouns: profile.pronouns || '',
+        statusBadge: profile.statusBadge || '',
+        department: profile.department || '',
+        tagline: profile.tagline || '',
+        location: profile.location || '',
+        country: profile.country || '',
+        shortBio: getShortBio(profile),
+        avatar: profile.avatar || '',
+        coverImage: profile.coverImage || '',
+        companyInfo: (profile.companyInfo || {}) as Partial<CompanyInfo>,
+      };
+      setHeroDraft(nextDraft);
+      setSnapshot(nextDraft);
+      return;
+    }
+
+    if (!isDirty) {
+      const nextDraft = {
+        name: profile.name || '',
+        username: profile.username || profile.slug || '',
+        slug: profile.slug || profile.username || '',
+        designation: getTitle(profile),
+        profession: getTitle(profile),
+        professionalTitle: getTitle(profile),
+        headline: profile.headline || '',
+        industry: profile.industry || (profile.companyInfo?.industry || ''),
+        openToWork: profile.openToWork || { enabled: false, roles: [] },
+        customCta: profile.customCta || { label: '', url: '' },
+        pronouns: profile.pronouns || '',
+        statusBadge: profile.statusBadge || '',
+        department: profile.department || '',
+        tagline: profile.tagline || '',
+        location: profile.location || '',
+        country: profile.country || '',
+        shortBio: getShortBio(profile),
+        avatar: profile.avatar || '',
+        coverImage: profile.coverImage || '',
+        companyInfo: (profile.companyInfo || {}) as Partial<CompanyInfo>,
+      };
+      if (JSON.stringify(nextDraft) !== JSON.stringify(snapshot)) {
+        setHeroDraft(nextDraft);
+        setSnapshot(nextDraft);
+      }
+    }
   }, [
     profile.id,
     profile.name,
@@ -257,27 +312,9 @@ export function HeroSection({
     profile.avatar,
     profile.coverImage,
     profile.companyInfo,
+    isDirty,
+    snapshot
   ]);
-
-  const isDirty = (
-    heroDraft.name !== snapshot.name ||
-    heroDraft.username !== snapshot.username ||
-    heroDraft.designation !== snapshot.designation ||
-    heroDraft.headline !== snapshot.headline ||
-    heroDraft.industry !== snapshot.industry ||
-    JSON.stringify(heroDraft.openToWork) !== JSON.stringify(snapshot.openToWork) ||
-    JSON.stringify(heroDraft.customCta) !== JSON.stringify(snapshot.customCta) ||
-    heroDraft.pronouns !== snapshot.pronouns ||
-    heroDraft.statusBadge !== snapshot.statusBadge ||
-    heroDraft.department !== snapshot.department ||
-    heroDraft.tagline !== snapshot.tagline ||
-    heroDraft.location !== snapshot.location ||
-    heroDraft.country !== snapshot.country ||
-    heroDraft.shortBio !== snapshot.shortBio ||
-    (heroDraft.avatar && heroDraft.avatar !== snapshot.avatar) ||
-    (heroDraft.coverImage && heroDraft.coverImage !== snapshot.coverImage) ||
-    JSON.stringify(heroDraft.companyInfo) !== JSON.stringify(snapshot.companyInfo)
-  );
 
   const handleSaveHero = async () => {
     setSaveStatus('saving');
@@ -551,28 +588,7 @@ export function HeroSection({
           </div>
         )}
 
-        {/* Cover Corner Section Navigation Button (Top corner of profile cover - Visible on Desktop & Mobile in Public Profile View) */}
-        {!isEditing && (onToggleSections || onSectionsMouseEnter) && (
-          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleSections?.();
-              }}
-              onMouseEnter={onSectionsMouseEnter}
-              onMouseLeave={onSectionsMouseLeave}
-              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl sm:rounded-2xl bg-black/60 hover:bg-black/85 text-white backdrop-blur-md border border-white/20 shadow-md flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer z-20 ${
-                isSidebarOpen ? 'ring-2 ring-white/60 bg-black/85' : ''
-              }`}
-              title="Profile Sections Menu"
-              aria-label="Sections Menu"
-              aria-expanded={isSidebarOpen}
-            >
-              <LayoutGrid className="w-4 h-4 text-white sm:w-4.5 sm:h-4.5" />
-            </button>
-          </div>
-        )}
+
 
         {/* Cover Header Controls: Multi-Role Persona Switcher & Edit Icon (Owner Only in Public/Preview View) */}
         {canEdit && !isEditing && (

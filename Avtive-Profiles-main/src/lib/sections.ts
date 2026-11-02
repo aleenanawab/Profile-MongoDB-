@@ -321,8 +321,10 @@ export function getCanonicalSectionOrder(
  */
 export function isFieldShared(
   profile?: { sharingSettings?: any; sectionVisibility?: Record<string, boolean> } | null,
-  field: 'phone' | 'email' | 'whatsapp' | 'website' | 'location' | 'officeAddress' | string = 'phone'
+  field: 'phone' | 'email' | 'whatsapp' | 'website' | 'location' | 'officeAddress' | string = 'phone',
+  isOwner: boolean = false
 ): boolean {
+  if (isOwner) return true;
   if (!profile) return true;
   const isContactVisible = isCanonicalSectionVisible(profile.sectionVisibility, profile.sharingSettings, 'contactInfo');
   if (!isContactVisible) return false;

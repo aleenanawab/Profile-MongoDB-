@@ -264,7 +264,7 @@ export function AvtiveDigitalCard({
           const visibility = activeProfile.sectionVisibility || {};
 
           const isSectionVisible = (rawKey: string): boolean => {
-            if (isEditing) return true;
+            if (isEditing || canEdit) return true;
             // Check individual custom fields
             if (rawKey.startsWith('custom-field-')) {
               const fieldId = rawKey.replace('custom-field-', '');

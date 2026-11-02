@@ -30,13 +30,27 @@ export function CertificationsSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const next = profile.certifications || [];
-    setCertsDraft(next);
-    setSnapshot(next);
-  }, [profile.id, profile.certifications]);
-
   const isDirty = JSON.stringify(certsDraft) !== JSON.stringify(snapshot);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const next = profile.certifications || [];
+      setCertsDraft(next);
+      setSnapshot(next);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = profile.certifications || [];
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setCertsDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.certifications, isDirty, snapshot]);
 
   const handleSave = async () => {
     setSaveStatus('saving');

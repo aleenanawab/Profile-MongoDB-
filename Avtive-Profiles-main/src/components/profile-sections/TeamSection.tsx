@@ -34,13 +34,27 @@ export function TeamSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const next = profile.teamMembers || [];
-    setTeamDraft(next);
-    setSnapshot(next);
-  }, [profile.id, profile.teamMembers]);
-
   const isDirty = JSON.stringify(teamDraft) !== JSON.stringify(snapshot);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const next = profile.teamMembers || [];
+      setTeamDraft(next);
+      setSnapshot(next);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = profile.teamMembers || [];
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setTeamDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.teamMembers, isDirty, snapshot]);
 
   const handleSave = async () => {
     setSaveStatus('saving');

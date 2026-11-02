@@ -74,13 +74,27 @@ export function SkillsSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const nextSkills = normalizeSkillItems(profile.skills);
-    setSkillsDraft(nextSkills);
-    setSnapshot(nextSkills);
-  }, [profile.id, profile.skills]);
-
   const isDirty = JSON.stringify(skillsDraft) !== JSON.stringify(snapshot);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const nextSkills = normalizeSkillItems(profile.skills);
+      setSkillsDraft(nextSkills);
+      setSnapshot(nextSkills);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = normalizeSkillItems(profile.skills);
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setSkillsDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.skills, isDirty, snapshot]);
 
   const updateSkills = (next: SkillItem[]) => {
     setSkillsDraft(next);
@@ -362,13 +376,27 @@ export function ServicesSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const nextServices = profile.services || [];
-    setServicesDraft(nextServices);
-    setSnapshot(nextServices);
-  }, [profile.id, profile.services]);
-
   const isDirty = JSON.stringify(servicesDraft) !== JSON.stringify(snapshot);
+
+  const lastServicesProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastServicesProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastServicesProfileIdRef.current = profile.id;
+      const nextServices = profile.services || [];
+      setServicesDraft(nextServices);
+      setSnapshot(nextServices);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = profile.services || [];
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setServicesDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.services, isDirty, snapshot]);
 
   const updateServices = (next: ServiceItem[]) => {
     setServicesDraft(next);

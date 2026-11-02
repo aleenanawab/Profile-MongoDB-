@@ -34,18 +34,28 @@ export function AboutSection({
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Sync draft when external profile changes or edit mode toggles
-  useEffect(() => {
-    setTaglineDraft(profile.tagline || '');
-    setAboutDraft(getAbout(profile));
-    setSaveStatus('idle');
-    setErrorMessage(null);
-  }, [profile.tagline, profile.about, profile.fullBio, isEditing]);
-
   const hasBio = Boolean(getAbout(profile) || profile.tagline);
   const isDirty =
     taglineDraft !== (profile.tagline || '') ||
     aboutDraft !== getAbout(profile);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  // Sync draft when external profile changes or edit mode toggles
+  useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      setTaglineDraft(profile.tagline || '');
+      setAboutDraft(getAbout(profile));
+      setSaveStatus('idle');
+      setErrorMessage(null);
+      return;
+    }
+    if (!isDirty) {
+      setTaglineDraft(profile.tagline || '');
+      setAboutDraft(getAbout(profile));
+    }
+  }, [profile.id, profile.tagline, profile.about, profile.fullBio, isEditing, isDirty]);
 
   if (!hasBio && !canEdit && !isEditing) {
     return null;

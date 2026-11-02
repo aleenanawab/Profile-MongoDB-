@@ -32,13 +32,27 @@ export function PortfolioSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const next = profile.projects || [];
-    setProjectsDraft(next);
-    setSnapshot(next);
-  }, [profile.id, profile.projects]);
-
   const isDirty = JSON.stringify(projectsDraft) !== JSON.stringify(snapshot);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const next = profile.projects || [];
+      setProjectsDraft(next);
+      setSnapshot(next);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = profile.projects || [];
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setProjectsDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.projects, isDirty, snapshot]);
 
   const handleSave = async () => {
     setSaveStatus('saving');
@@ -66,7 +80,10 @@ export function PortfolioSection({
     setErrorMessage(undefined);
   };
 
-  const hasProjects = projectsDraft.length > 0;
+  const effectiveProjects = isEditing
+    ? projectsDraft
+    : (Array.isArray(profile.projects) && profile.projects.length > 0 ? profile.projects : projectsDraft);
+  const hasProjects = effectiveProjects.length > 0;
 
   if (!hasProjects && !canEdit && !isEditing) {
     return null;
@@ -143,7 +160,7 @@ export function PortfolioSection({
       {/* Visual Project Cards */}
       {hasProjects ? (
         <div className="space-y-4">
-          {projectsDraft.map((project) => (
+          {effectiveProjects.map((project) => (
             <div
               key={project.id}
               onClick={() => {

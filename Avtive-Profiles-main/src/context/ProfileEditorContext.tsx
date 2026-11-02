@@ -36,6 +36,7 @@ import {
   SocialLink,
   SkillItem,
   ServiceItem,
+  WebsiteItem,
 } from '@/types/profile';
 import { ALL_PROFILE_SECTIONS } from '@/components/profile-sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
@@ -591,9 +592,15 @@ export function ProfileEditorProvider({
 
   // ── Contact Info ──────────────────────────────────────────────────────────
   const [phone, setPhone] = useState(initialProfile.phone || '');
+  const [phoneType, setPhoneType] = useState(initialProfile.phoneType || 'Mobile');
   const [whatsapp, setWhatsapp] = useState(initialProfile.whatsapp || '');
   const [email, setEmail] = useState(initialProfile.email || '');
   const [website, setWebsite] = useState(initialProfile.website || '');
+  const [websites, setWebsites] = useState<WebsiteItem[]>(
+    Array.isArray(initialProfile.websites) ? initialProfile.websites : []
+  );
+  const [birthday, setBirthday] = useState(initialProfile.birthday || '');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState(initialProfile.googleMapsUrl || '');
   const [country, setCountry] = useState(initialProfile.country || '');
   const [officeAddress, setOfficeAddress] = useState(initialProfile.officeAddress || '');
   const [customContacts, setCustomContacts] = useState(initialProfile.customContacts || []);
@@ -704,8 +711,12 @@ export function ProfileEditorProvider({
       location: location !== undefined ? location : (profile.location || ''),
       email: email !== undefined ? email : (profile.email || ''),
       phone: phone !== undefined ? phone : (profile.phone || ''),
+      phoneType: phoneType !== undefined ? phoneType : (profile.phoneType || 'Mobile'),
       whatsapp: whatsapp !== undefined ? whatsapp : (profile.whatsapp || ''),
       website: website !== undefined ? website : (profile.website || ''),
+      websites: websites !== undefined ? websites : (profile.websites || []),
+      birthday: birthday !== undefined ? birthday : (profile.birthday || ''),
+      googleMapsUrl: googleMapsUrl !== undefined ? googleMapsUrl : (profile.googleMapsUrl || ''),
       country: country !== undefined ? country : (profile.country || ''),
       officeAddress: officeAddress !== undefined ? officeAddress : (profile.officeAddress || ''),
       customContacts: customContacts || profile.customContacts || [],
@@ -734,7 +745,7 @@ export function ProfileEditorProvider({
       profile,
       cleanUsername, cleanSlug, fullName, firstName, secondName,
       professionalTitle, bio, about, tagline, company, location,
-      email, phone, whatsapp, website, country, officeAddress, customContacts, contactOrder,
+      email, phone, phoneType, whatsapp, website, websites, birthday, googleMapsUrl, country, officeAddress, customContacts, contactOrder,
       activeTheme, avatar, coverImage,
       skills, services, projects, experiences, education,
       activeSocialsPayload, customFields, dynamicSections,
@@ -882,9 +893,13 @@ export function ProfileEditorProvider({
     if (key === 'avatar' && typeof val === 'string') setAvatar(val);
     if (key === 'coverImage' && typeof val === 'string') setCoverImage(val);
     if (key === 'phone' && typeof val === 'string') setPhone(val);
+    if (key === 'phoneType' && typeof val === 'string') setPhoneType(val);
     if (key === 'whatsapp' && typeof val === 'string') setWhatsapp(val);
     if (key === 'email' && typeof val === 'string') setEmail(val);
     if (key === 'website' && typeof val === 'string') setWebsite(val);
+    if (key === 'websites' && Array.isArray(val)) setWebsites(val as WebsiteItem[]);
+    if (key === 'birthday' && typeof val === 'string') setBirthday(val);
+    if (key === 'googleMapsUrl' && typeof val === 'string') setGoogleMapsUrl(val);
     if (key === 'country' && typeof val === 'string') setCountry(val);
     if (key === 'officeAddress' && typeof val === 'string') setOfficeAddress(val);
     if (key === 'customContacts' && Array.isArray(val)) setCustomContacts(val as any[]);

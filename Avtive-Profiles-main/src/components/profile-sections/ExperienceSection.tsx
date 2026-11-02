@@ -36,13 +36,27 @@ export function ExperienceSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const next = getInitialExperiences(profile);
-    setExperiencesDraft(next);
-    setSnapshot(next);
-  }, [profile.id, profile.experiences, profile.experience]);
-
   const isDirty = JSON.stringify(experiencesDraft) !== JSON.stringify(snapshot);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const next = getInitialExperiences(profile);
+      setExperiencesDraft(next);
+      setSnapshot(next);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = getInitialExperiences(profile);
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setExperiencesDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.experiences, profile.experience, isDirty, snapshot]);
 
   const handleSave = async () => {
     setSaveStatus('saving');

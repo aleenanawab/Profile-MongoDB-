@@ -14,7 +14,6 @@ import {
   ChevronDown,
   LogIn, 
   LogOut,
-  LayoutGrid,
   Save,
   Check,
   X,
@@ -81,22 +80,8 @@ export function HeaderNav({
   return (
     <header className={`sticky top-0 z-40 w-full pt-[max(0rem,env(safe-area-inset-top))] backdrop-blur-md ${theme.headerBg} border-b ${theme.divider} transition-colors shadow-2xs`}>
       <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-2 flex items-center justify-between gap-1.5 sm:gap-2.5 min-w-0">
-        {/* Left: Menu Toggle & Avtive Brand */}
+        {/* Left: Avtive Brand */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {onToggleSections && (
-            <button
-              type="button"
-              onClick={onToggleSections}
-              onMouseEnter={onSectionsMouseEnter}
-              onMouseLeave={onSectionsMouseLeave}
-              className={`min-h-[44px] min-w-[44px] px-2.5 sm:px-3 rounded-xl ${theme.cardBg} hover:opacity-90 ${theme.textPrimary} border ${theme.cardBorder} transition-colors shadow-2xs shrink-0 cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 text-xs font-semibold`}
-              title="Profile Sections Menu"
-              aria-label="Sections Menu"
-            >
-              <LayoutGrid className={`w-4 h-4 ${theme.accentText}`} />
-              <span className="hidden sm:inline">Menu</span>
-            </button>
-          )}
 
           <Link 
             href="/"

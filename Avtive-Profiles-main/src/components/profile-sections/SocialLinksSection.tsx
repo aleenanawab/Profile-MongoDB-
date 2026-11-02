@@ -57,13 +57,27 @@ export function SocialLinksSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const next = getInitialSocials(profile);
-    setSocialsDraft(next);
-    setSnapshot(next);
-  }, [profile.id, profile.socials, profile.socialLinks]);
-
   const isDirty = JSON.stringify(socialsDraft) !== JSON.stringify(snapshot);
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const next = getInitialSocials(profile);
+      setSocialsDraft(next);
+      setSnapshot(next);
+      return;
+    }
+
+    if (!isDirty) {
+      const incoming = getInitialSocials(profile);
+      if (JSON.stringify(incoming) !== JSON.stringify(snapshot)) {
+        setSocialsDraft(incoming);
+        setSnapshot(incoming);
+      }
+    }
+  }, [profile.id, profile.socials, profile.socialLinks, isDirty, snapshot]);
 
   const handleSave = async () => {
     setSaveStatus('saving');

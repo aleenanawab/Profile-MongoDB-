@@ -47,37 +47,6 @@ export function ProfileContactSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  React.useEffect(() => {
-    const nextDraft = {
-      email: profile.email || '',
-      phone: profile.phone || '',
-      phoneType: profile.phoneType || 'Mobile',
-      whatsapp: profile.whatsapp || '',
-      location: profile.location || '',
-      country: profile.country || '',
-      officeAddress: profile.officeAddress || '',
-      website: profile.website || '',
-      websites: Array.isArray(profile.websites) ? profile.websites : (profile.website ? [{ url: profile.website, label: 'Personal Website' }] : []),
-      birthday: profile.birthday || '',
-      googleMapsUrl: profile.googleMapsUrl || '',
-    };
-    setContactDraft(nextDraft);
-    setSnapshot(nextDraft);
-  }, [
-    profile.id,
-    profile.email,
-    profile.phone,
-    profile.phoneType,
-    profile.whatsapp,
-    profile.location,
-    profile.country,
-    profile.officeAddress,
-    profile.website,
-    profile.websites,
-    profile.birthday,
-    profile.googleMapsUrl,
-  ]);
-
   const isDirty = (
     contactDraft.email !== snapshot.email ||
     contactDraft.phone !== snapshot.phone ||
@@ -91,6 +60,70 @@ export function ProfileContactSection({
     contactDraft.birthday !== snapshot.birthday ||
     contactDraft.googleMapsUrl !== snapshot.googleMapsUrl
   );
+
+  const lastProfileIdRef = React.useRef(profile.id);
+  React.useEffect(() => {
+    const isProfileSwitch = profile.id !== lastProfileIdRef.current;
+    if (isProfileSwitch) {
+      lastProfileIdRef.current = profile.id;
+      const nextDraft = {
+        email: profile.email || '',
+        phone: profile.phone || '',
+        phoneType: profile.phoneType || 'Mobile',
+        whatsapp: profile.whatsapp || '',
+        location: profile.location || '',
+        country: profile.country || '',
+        officeAddress: profile.officeAddress || '',
+        website: profile.website || '',
+        websites: Array.isArray(profile.websites) ? profile.websites : (profile.website ? [{ url: profile.website, label: 'Personal Website' }] : []),
+        birthday: profile.birthday || '',
+        googleMapsUrl: profile.googleMapsUrl || '',
+      };
+      setContactDraft(nextDraft);
+      setSnapshot(nextDraft);
+      return;
+    }
+
+    if (!isDirty) {
+      const nextDraft = {
+        email: profile.email || '',
+        phone: profile.phone || '',
+        phoneType: profile.phoneType || 'Mobile',
+        whatsapp: profile.whatsapp || '',
+        location: profile.location || '',
+        country: profile.country || '',
+        officeAddress: profile.officeAddress || '',
+        website: profile.website || '',
+        websites: Array.isArray(profile.websites) ? profile.websites : (profile.website ? [{ url: profile.website, label: 'Personal Website' }] : []),
+        birthday: profile.birthday || '',
+        googleMapsUrl: profile.googleMapsUrl || '',
+      };
+      if (JSON.stringify(nextDraft) !== JSON.stringify(snapshot)) {
+        setContactDraft(nextDraft);
+        setSnapshot(nextDraft);
+      }
+    }
+  }, [
+    profile.id,
+    profile.email,
+    profile.phone,
+    profile.phoneType,
+    profile.whatsapp,
+    profile.location,
+    profile.country,
+    profile.officeAddress,
+    profile.website,
+    profile.websites,
+    profile.birthday,
+    profile.googleMapsUrl,
+    isDirty,
+    snapshot
+  ]);
+
+  const handleUpdateContactField = (field: string, val: any) => {
+    setContactDraft((prev) => ({ ...prev, [field]: val }));
+    onUpdateField?.(field as any, val);
+  };
 
   const handleSaveContact = async () => {
     setSaveStatus('saving');
@@ -128,18 +161,19 @@ export function ProfileContactSection({
     setErrorMessage(undefined);
   };
 
-  if (!isEditing && sharing.contactInfo === false) {
+  if (!isEditing && !canEdit && sharing.contactInfo === false) {
     return null;
   }
 
   const hasContactInfo = Boolean(
-    (profile.email && sharing.email !== false) ||
-    (profile.phone && sharing.phone !== false) ||
-    (profile.whatsapp && sharing.phone !== false) ||
+    (profile.email && (canEdit || sharing.email !== false)) ||
+    (profile.phone && (canEdit || sharing.phone !== false)) ||
+    (profile.whatsapp && (canEdit || sharing.phone !== false)) ||
     profile.location ||
     profile.country ||
     profile.officeAddress ||
-    profile.website
+    profile.website ||
+    (Array.isArray(profile.websites) && profile.websites.length > 0)
   );
 
   if (!isEditing && !hasContactInfo && !canEdit) {
@@ -188,7 +222,7 @@ export function ProfileContactSection({
               <FormInput
                 type="email"
                 value={contactDraft.email}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, email: val }))}
+                onChange={(val) => handleUpdateContactField('email', val)}
                 placeholder="email@example.com"
               />
             </div>
@@ -199,7 +233,7 @@ export function ProfileContactSection({
                 <FormInput
                   type="tel"
                   value={contactDraft.phone}
-                  onChange={(val) => setContactDraft((prev) => ({ ...prev, phone: val }))}
+                  onChange={(val) => handleUpdateContactField('phone', val)}
                   placeholder="+92 300 1234567"
                 />
               </div>
@@ -207,7 +241,7 @@ export function ProfileContactSection({
                 <FormLabel>Type</FormLabel>
                 <select
                   value={contactDraft.phoneType}
-                  onChange={(e) => setContactDraft((prev) => ({ ...prev, phoneType: e.target.value }))}
+                  onChange={(e) => handleUpdateContactField('phoneType', e.target.value)}
                   className="w-full min-h-[44px] h-11 px-2.5 text-xs font-normal rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer"
                 >
                   <option value="Mobile">Mobile</option>
@@ -222,7 +256,7 @@ export function ProfileContactSection({
               <FormInput
                 type="tel"
                 value={contactDraft.whatsapp}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, whatsapp: val }))}
+                onChange={(val) => handleUpdateContactField('whatsapp', val)}
                 placeholder="+92 312 5175041"
               />
             </div>
@@ -231,7 +265,7 @@ export function ProfileContactSection({
               <FormLabel>Location / City</FormLabel>
               <FormInput
                 value={contactDraft.location}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, location: val }))}
+                onChange={(val) => handleUpdateContactField('location', val)}
                 placeholder="e.g. Islamabad, Pakistan"
               />
             </div>
@@ -241,7 +275,7 @@ export function ProfileContactSection({
               <SearchableCombobox
                 options={COUNTRIES}
                 value={contactDraft.country}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, country: val as string }))}
+                onChange={(val) => handleUpdateContactField('country', val as string)}
                 placeholder="Select Country..."
               />
             </div>
@@ -250,7 +284,7 @@ export function ProfileContactSection({
               <FormLabel>Office Address</FormLabel>
               <FormInput
                 value={contactDraft.officeAddress}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, officeAddress: val }))}
+                onChange={(val) => handleUpdateContactField('officeAddress', val)}
                 placeholder="Suite 400, Tech Park, City"
               />
             </div>
@@ -260,7 +294,7 @@ export function ProfileContactSection({
               <FormInput
                 type="url"
                 value={contactDraft.googleMapsUrl}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, googleMapsUrl: val }))}
+                onChange={(val) => handleUpdateContactField('googleMapsUrl', val)}
                 placeholder="https://maps.google.com/..."
               />
             </div>
@@ -269,7 +303,7 @@ export function ProfileContactSection({
               <FormLabel>Birthday</FormLabel>
               <FormInput
                 value={contactDraft.birthday}
-                onChange={(val) => setContactDraft((prev) => ({ ...prev, birthday: val }))}
+                onChange={(val) => handleUpdateContactField('birthday', val)}
                 placeholder="e.g. Jan 15"
               />
             </div>
@@ -281,12 +315,14 @@ export function ProfileContactSection({
               <FormLabel>Websites & Portfolios</FormLabel>
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  const nextWebsites = [...(contactDraft.websites || []), { url: '', label: 'Personal' }];
                   setContactDraft((prev) => ({
                     ...prev,
-                    websites: [...(prev.websites || []), { url: '', label: 'Personal' }],
-                  }))
-                }
+                    websites: nextWebsites,
+                  }));
+                  onUpdateField?.('websites', nextWebsites);
+                }}
                 className="text-xs text-primary font-semibold hover:underline cursor-pointer"
               >
                 + Add Website
@@ -301,6 +337,7 @@ export function ProfileContactSection({
                     const next = [...(contactDraft.websites || [])];
                     next[wIdx] = { ...next[wIdx], label: e.target.value };
                     setContactDraft((prev) => ({ ...prev, websites: next }));
+                    onUpdateField?.('websites', next);
                   }}
                   placeholder="Label (e.g. Blog, Company)"
                   className="w-1/3 min-h-[38px] px-2.5 text-xs rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800"
@@ -316,6 +353,8 @@ export function ProfileContactSection({
                       websites: next,
                       website: next[0]?.url || prev.website,
                     }));
+                    onUpdateField?.('websites', next);
+                    if (next[0]?.url) onUpdateField?.('website', next[0].url);
                   }}
                   placeholder="https://..."
                   className="flex-1 min-h-[38px] px-2.5 text-xs rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800"
@@ -325,6 +364,7 @@ export function ProfileContactSection({
                   onClick={() => {
                     const next = (contactDraft.websites || []).filter((_, i) => i !== wIdx);
                     setContactDraft((prev) => ({ ...prev, websites: next }));
+                    onUpdateField?.('websites', next);
                   }}
                   className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
                 >
@@ -348,7 +388,7 @@ export function ProfileContactSection({
         </div>
       ) : hasContactInfo ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-          {profile.email && isFieldShared(profile, 'email') && (
+          {profile.email && (canEdit || isFieldShared(profile, 'email', canEdit)) && (
             <a
               href={`mailto:${profile.email}`}
               className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
@@ -367,7 +407,7 @@ export function ProfileContactSection({
             </a>
           )}
 
-          {profile.phone && isFieldShared(profile, 'phone') && (
+          {profile.phone && (canEdit || isFieldShared(profile, 'phone', canEdit)) && (
             <a
               href={`tel:${profile.phone.replace(/[^0-9+]/g, '')}`}
               className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
@@ -386,7 +426,7 @@ export function ProfileContactSection({
             </a>
           )}
 
-          {profile.whatsapp && isFieldShared(profile, 'whatsapp') && (
+          {profile.whatsapp && (canEdit || isFieldShared(profile, 'whatsapp', canEdit)) && (
             <a
               href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(profile.name)}`}
               target="_blank"

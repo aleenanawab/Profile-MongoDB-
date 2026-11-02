@@ -19,8 +19,8 @@ import {
   Check,
   KeyRound
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
+import { PremiumAuthCard, PasswordStrengthMeter } from '@/components/ui/premium-auth';
 
 export default function RegisterClient() {
   const router = useRouter();
@@ -195,6 +195,7 @@ export default function RegisterClient() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <PasswordStrengthMeter password={password} />
           </div>
 
           <div className="space-y-1">
@@ -370,6 +371,7 @@ export default function RegisterClient() {
                   {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
               </div>
+              <PasswordStrengthMeter password={password} />
             </div>
 
             <div className="space-y-1">

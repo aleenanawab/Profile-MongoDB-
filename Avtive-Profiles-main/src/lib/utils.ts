@@ -1,5 +1,12 @@
 
 /**
+ * Class name merger utility
+ */
+export function cn(...inputs: (string | undefined | null | false)[]): string {
+  return inputs.filter(Boolean).join(' ');
+}
+
+/**
  * Validate and sanitize returnUrl to prevent open redirects.
  * Only accepts same-origin relative paths starting with a single '/'
  * Rejects '//', backslashes '\', protocols, javascript:, data:, and encoded variants.

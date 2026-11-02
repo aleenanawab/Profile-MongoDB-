@@ -12,7 +12,9 @@ import {
   Sparkles,
   Pencil,
   Plus,
-  Trash2
+  Trash2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { ProfileData, CustomFieldItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
@@ -76,7 +78,7 @@ export function CustomFieldsSection({
     setErrorMessage(undefined);
   };
 
-  const visibleFields = fieldsDraft.filter((f) => isEditing || f.visible !== false);
+  const visibleFields = fieldsDraft.filter((f) => isEditing || (f.visible !== false && (f as any).isPublic !== false));
 
   if (visibleFields.length === 0 && !canEdit && !isEditing) {
     return null;
@@ -244,6 +246,18 @@ export function CustomFieldsSection({
                     <option value="date">Date</option>
                     <option value="markdown">Markdown</option>
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextVis = field.visible === false ? true : false;
+                      handleUpdateFieldItem(field.id, { visible: nextVis, isPublic: nextVis } as any);
+                    }}
+                    className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-700/50 transition-colors shrink-0 cursor-pointer"
+                    title={field.visible !== false ? 'Field is visible on public profile' : 'Field is hidden from public profile'}
+                    aria-label="Toggle field visibility"
+                  >
+                    {field.visible !== false ? <Eye className="w-4 h-4 text-emerald-500" /> : <EyeOff className="w-4 h-4 text-slate-400" />}
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleRemoveField(field.id)}

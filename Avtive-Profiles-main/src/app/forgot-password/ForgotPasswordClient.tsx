@@ -19,6 +19,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
+import { PasswordStrengthMeter } from '@/components/ui/premium-auth';
 
 export default function ForgotPasswordClient() {
   const [identifier, setIdentifier] = useState('');
@@ -277,6 +278,7 @@ export default function ForgotPasswordClient() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                <PasswordStrengthMeter password={newPassword} />
               </div>
 
               <div className="space-y-1.5">
@@ -446,6 +448,7 @@ export default function ForgotPasswordClient() {
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
+                <PasswordStrengthMeter password={newPassword} />
               </div>
 
               <div className="space-y-1">

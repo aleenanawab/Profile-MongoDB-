@@ -44,7 +44,8 @@ import {
   FileSpreadsheet,
   Network,
   Compass,
-  Star
+  Star,
+  AlertCircle
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
 import { AvtiveLogoIcon } from '@/components/ui/BrandIcons';
@@ -149,7 +150,7 @@ function DesktopSidebarReorderItem({
           {...dragHandleProps}
           title="Press and hold (200ms) to drag and reorder"
           aria-label={`Press and hold to drag and reorder ${sec.label}`}
-          className={`p-1 rounded shrink-0 transition-colors cursor-grab active:cursor-grabbing ${
+          className={`p-1 rounded shrink-0 transition-colors cursor-grab active:cursor-grabbing touch-none ${
             isArmed
               ? 'text-cyan-600 dark:text-cyan-400 bg-cyan-200/50 dark:bg-cyan-900/50'
               : isPressing
@@ -272,18 +273,29 @@ export function DesktopProfileSidebar({
   }, [liveProfile, savedBaseline]);
 
   const [justSaved, setJustSaved] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (isDirty) {
       setJustSaved(false);
+      setSaveError(null);
     }
   }, [isDirty]);
 
   const handleSaveClick = async () => {
     if (!isDirty || isSaving) return;
-    const res = await saveProfile();
-    if (res && res.ok) {
-      setJustSaved(true);
+    setSaveError(null);
+    try {
+      const res = await saveProfile();
+      if (res && res.ok) {
+        setJustSaved(true);
+      } else {
+        setSaveError(res?.error || 'Failed to save changes. Please try again.');
+        setJustSaved(false);
+      }
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to save changes.');
+      setJustSaved(false);
     }
   };
 
@@ -569,6 +581,13 @@ export function DesktopProfileSidebar({
               </>
             )}
           </button>
+
+          {saveError && (
+            <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>{saveError}</span>
+            </div>
+          )}
 
           <Link
             href={`/profile/${currentIdentifier}`}

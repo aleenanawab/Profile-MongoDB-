@@ -96,6 +96,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
+    if (body.website || body.honeypot || body.companyField) {
+      return NextResponse.json(
+        { error: 'Spam submission detected.' },
+        { status: 400 }
+      );
+    }
+
     const rawName = typeof body.name === 'string' ? body.name : '';
     const rawMessage = typeof body.message === 'string' ? body.message : '';
 

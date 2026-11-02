@@ -6,6 +6,8 @@ import { ProfileData, TeamMemberItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, SectionSaveBar } from '@/components/ui/formControls';
 
+import { TeamLanyardRail } from '@/components/ui/team-lanyard-rail';
+
 interface TeamSectionProps {
   profile: ProfileData;
   onSelectTeamMember?: (member: TeamMemberItem) => void;
@@ -137,7 +139,19 @@ export function TeamSection({
       </div>
 
       {hasMembers ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <>
+          {!isEditing && (
+            <div className="mb-2 -mx-2 sm:-mx-4">
+              <TeamLanyardRail
+                members={teamDraft}
+                theme={theme}
+                companyName={profile.company || profile.name}
+                onSelectTeamMember={onSelectTeamMember}
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {teamDraft.map((member) => {
             const isLinked = Boolean(member.profileId);
             const isPending = member.status === 'PENDING';
@@ -262,6 +276,7 @@ export function TeamSection({
             );
           })}
         </div>
+        </>
       ) : (
         <div className="p-4 rounded-2xl border border-dashed border-slate-300 dark:border-white/10 flex flex-col items-center justify-center text-center gap-2">
           <p className={`text-xs ${theme.textSecondary}`}>

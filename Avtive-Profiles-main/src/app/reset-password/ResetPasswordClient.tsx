@@ -14,6 +14,7 @@ import {
   Check
 } from 'lucide-react';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
+import { PasswordStrengthMeter } from '@/components/ui/premium-auth';
 
 export default function ResetPasswordClient() {
   const router = useRouter();
@@ -214,6 +215,7 @@ export default function ResetPasswordClient() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              <PasswordStrengthMeter password={newPassword} />
             </div>
 
             <div className="space-y-1.5">

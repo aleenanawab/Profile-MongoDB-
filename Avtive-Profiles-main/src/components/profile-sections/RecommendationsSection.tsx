@@ -28,6 +28,7 @@ export function RecommendationsSection({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [authorName, setAuthorName] = useState('');
   const [message, setMessage] = useState('');
+  const [honeypot, setHoneypot] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
@@ -64,6 +65,11 @@ export function RecommendationsSection({
     const cleanName = authorName.replace(/<[^>]*>?/gm, '').trim();
     const cleanMessage = message.replace(/<[^>]*>?/gm, '').trim();
 
+    if (honeypot) {
+      setFormError('Invalid submission.');
+      return;
+    }
+
     if (!cleanName) {
       setFormError('Please enter your name.');
       return;
@@ -90,7 +96,7 @@ export function RecommendationsSection({
       const res = await fetch(`/api/profile/${encodeURIComponent(identifier)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: cleanName, message: cleanMessage })
+        body: JSON.stringify({ name: cleanName, message: cleanMessage, website: honeypot })
       });
 
       const data = await res.json().catch(() => ({}));
@@ -157,6 +163,18 @@ export function RecommendationsSection({
           <span>{formSuccess}</span>
         </div>
       )}
+
+      {/* Anti-spam Honeypot Field */}
+      <div className="hidden" aria-hidden="true" style={{ display: 'none' }}>
+        <input
+          type="text"
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
+      </div>
 
       <div className="space-y-1">
         <div className="flex justify-between items-center text-[11px]">

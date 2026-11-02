@@ -19,6 +19,7 @@ import {
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { usePortfolioTheme } from '@/context/ThemeContext';
 import { sanitizeReturnUrl, resolveReturnUrlForExistingUser } from '@/lib/utils';
+import { PremiumAuthCard } from '@/components/ui/premium-auth';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
@@ -60,6 +61,7 @@ export default function LoginClient() {
   // Shared Application State between Desktop & Mobile Working Screens
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -100,6 +102,7 @@ export default function LoginClient() {
           const savedEmail = localStorage.getItem('avtive_remembered_identifier');
           if (savedEmail) {
             setEmail(savedEmail);
+            setRememberMe(true);
           }
         } catch {}
       }
@@ -208,7 +211,11 @@ export default function LoginClient() {
         sessionStorage.removeItem('avtive_temp_reg_creds');
         sessionStorage.setItem('avtive_active_session', 'true');
         localStorage.setItem('avtive_returning_user', 'true');
-        localStorage.setItem('avtive_remembered_identifier', normalizedEmail);
+        if (rememberMe) {
+          localStorage.setItem('avtive_remembered_identifier', normalizedEmail);
+        } else {
+          localStorage.removeItem('avtive_remembered_identifier');
+        }
       } catch {}
 
       const returnUrl = getReturnUrl();
@@ -311,263 +318,231 @@ export default function LoginClient() {
   // ──────────────────────────────────────────────────────────────────────────
   const desktopView = (
     <div className="w-full max-w-md mx-auto my-auto py-8 sm:py-12 px-4 sm:px-6 flex flex-col items-center justify-center">
-      
-      {/* Centered Avtive Brand Header */}
-      <div className="flex flex-col items-center justify-center mb-6 text-center">
-        <div className="flex items-center justify-center gap-2.5 mb-1.5">
-          <div className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${themeStyles.gradientBadge} flex items-center justify-center font-extrabold text-white text-base shadow-sm`}>
-            A
+      {showForgotPassword ? (
+        <>
+          {/* Centered Avtive Brand Header */}
+          <div className="flex flex-col items-center justify-center mb-6 text-center">
+            <div className="flex items-center justify-center gap-2.5 mb-1.5">
+              <div className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${themeStyles.gradientBadge} flex items-center justify-center font-extrabold text-white text-base shadow-sm`}>
+                A
+              </div>
+              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Avtive</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Digital Identity Workspace</p>
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Avtive</span>
-        </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">Digital Identity Workspace</p>
-      </div>
 
-      {/* Main Login Card - Adapts to Theme (White in Light Mode, #0E1528 in Dark Mode) */}
-      <div className="w-full rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/60 p-6 sm:p-8 space-y-5 text-left transition-colors">
-        
-        {showForgotPassword ? (
-          /* Forgot Password Sub-Flow */
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={closeForgotPasswordView}
-                className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back to Sign In</span>
-              </button>
-            </div>
+          {/* Forgot Password Sub-Flow Card */}
+          <div className="w-full rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-black/60 p-6 sm:p-8 space-y-5 text-left transition-colors">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={closeForgotPasswordView}
+                  className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Sign In</span>
+                </button>
+              </div>
 
-            <div className="space-y-1">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Forgot Password?</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Enter your email address and we&apos;ll send you a password reset link.
-              </p>
-            </div>
-
-            {forgotSuccessMessage && (
-              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
-                <div className="flex items-center gap-2 font-bold">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                  <span>{forgotResetUrl ? 'Recovery Link Ready' : 'Password Reset Email Sent'}</span>
-                </div>
-                <p className="text-[11px] text-emerald-800 dark:text-emerald-200">
-                  {forgotSuccessMessage}
+              <div className="space-y-1">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Forgot Password?</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Enter your email address and we&apos;ll send you a password reset link.
                 </p>
               </div>
-            )}
 
-            {forgotResetUrl && (
-              <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-slate-800 dark:text-slate-100 text-xs space-y-2.5">
-                <div className="flex items-center gap-2 font-bold text-cyan-700 dark:text-cyan-300">
-                  <ShieldCheck className="w-4 h-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                  <span>One-Time Direct Reset Link</span>
+              {forgotSuccessMessage && (
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
+                  <div className="flex items-center gap-2 font-bold">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    <span>{forgotResetUrl ? 'Recovery Link Ready' : 'Password Reset Email Sent'}</span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 dark:text-emerald-200">
+                    {forgotSuccessMessage}
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Since SMTP email delivery is unconfigured in this environment, click below to set your new password using this verified server token:
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
-                  <Link
-                    href={forgotResetUrl}
-                    className={`py-2 px-3.5 rounded-xl bg-gradient-to-r ${themeStyles.gradient} text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer`}
-                  >
-                    <span>Reset Password Now</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(forgotResetUrl);
-                      alert('Reset link copied to clipboard!');
-                    }}
-                    className="py-2 px-3.5 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-1.5 border border-slate-200 dark:border-white/10 cursor-pointer"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Link</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {forgotErrorMessage && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{forgotErrorMessage}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSendResetLink} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    required
-                    value={forgotEmail}
-                    onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="e.g. aleena@example.com"
-                    className={`w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
-                  />
-                  <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSendingReset}
-                className={`w-full min-h-[44px] py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
-              >
-                {isSendingReset ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Sending Reset Link...</span>
-                  </>
-                ) : (
-                  <span>Send Reset Link</span>
-                )}
-              </button>
-            </form>
-
-            <div className="pt-1 text-center">
-              <button
-                type="button"
-                onClick={closeForgotPasswordView}
-                className="text-xs min-h-[44px] inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-              >
-                Remember your password? <span className={`font-semibold ${themeStyles.textLink} hover:underline ml-1`}>Sign In</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Regular Sign In Form */
-          <>
-            <div className="space-y-1">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Sign In</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Enter your credentials or authenticate via Google
-              </p>
-            </div>
-
-            {successMessage && (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>{successMessage}</span>
-              </div>
-            )}
-
-            {errorMessage && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  autoComplete="username"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. aleena@example.com"
-                  className={`w-full px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
-                  <button
-                    type="button"
-                    onClick={openForgotPasswordView}
-                    className={`text-xs font-medium min-h-[44px] inline-flex items-center ${themeStyles.textLink} hover:underline cursor-pointer`}
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className={`w-full pl-4 pr-12 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full min-h-[44px] py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Signing In...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="relative flex items-center justify-center my-3">
-              <div className="border-t border-slate-200 dark:border-white/10 w-full" />
-              <span className="bg-white dark:bg-[#0E1528] px-3 text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">or</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {isGoogleLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
-                  <span>Connecting to Google...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                  </svg>
-                  <span>Continue with Google</span>
-                </>
               )}
-            </button>
 
-            <div className="pt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+              {forgotResetUrl && (
+                <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-slate-800 dark:text-slate-100 text-xs space-y-2.5">
+                  <div className="flex items-center gap-2 font-bold text-cyan-700 dark:text-cyan-300">
+                    <ShieldCheck className="w-4 h-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                    <span>One-Time Direct Reset Link</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Since SMTP email delivery is unconfigured in this environment, click below to set your new password using this verified server token:
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
+                    <Link
+                      href={forgotResetUrl}
+                      className={`py-2 px-3.5 rounded-xl bg-gradient-to-r ${themeStyles.gradient} text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer`}
+                    >
+                      <span>Reset Password Now</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(forgotResetUrl);
+                        alert('Reset link copied to clipboard!');
+                      }}
+                      className="py-2 px-3.5 rounded-xl bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-1.5 border border-slate-200 dark:border-white/10 cursor-pointer"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy Link</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {forgotErrorMessage && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{forgotErrorMessage}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSendResetLink} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="e.g. aleena@example.com"
+                      className={`w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
+                    />
+                    <Mail className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSendingReset}
+                  className={`w-full min-h-[44px] py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
+                >
+                  {isSendingReset ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Sending Reset Link...</span>
+                    </>
+                  ) : (
+                    <span>Send Reset Link</span>
+                  )}
+                </button>
+              </form>
+
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={closeForgotPasswordView}
+                  className="text-xs min-h-[44px] inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  Remember your password? <span className={`font-semibold ${themeStyles.textLink} hover:underline ml-1`}>Sign In</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Regular Sign In Form rendered in PremiumAuthCard */
+        <PremiumAuthCard
+          title="Sign In"
+          subtitle="Enter your credentials or authenticate via Google"
+          badge="Avtive Identity"
+          errorMessage={errorMessage}
+          successMessage={successMessage}
+          onGoogleSignIn={handleGoogleSignIn}
+          isGoogleLoading={isGoogleLoading}
+          googleButtonText="Continue with Google"
+          footerContent={
+            <span>
               Don&apos;t have an account?{' '}
               <Link href="/register" className={`font-bold ${themeStyles.textLink} hover:underline ml-1`}>
                 Sign Up
               </Link>
+            </span>
+          }
+        >
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
+              <input
+                type="email"
+                required
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. aleena@example.com"
+                className={`w-full px-4 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
+              />
             </div>
-          </>
-        )}
 
-      </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={`w-full pl-4 pr-12 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none ${themeStyles.ringFocus} focus:bg-white dark:focus:bg-[#070D18] transition-all`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white cursor-pointer"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 dark:text-slate-400">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                />
+                <span>Remember me</span>
+              </label>
+              <button
+                type="button"
+                onClick={openForgotPasswordView}
+                className={`text-xs font-medium min-h-[44px] inline-flex items-center ${themeStyles.textLink} hover:underline cursor-pointer`}
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full min-h-[44px] py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r ${themeStyles.gradient} text-white shadow-md ${themeStyles.shadowPill} transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2`}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+        </PremiumAuthCard>
+      )}
 
     </div>
   );
@@ -726,16 +701,7 @@ export default function LoginClient() {
               </div>
 
               <div className="space-y-1 w-full box-border">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300">Password</label>
-                  <button
-                    type="button"
-                    onClick={openForgotPasswordView}
-                    className={`text-[11px] font-medium min-h-[44px] inline-flex items-center ${themeStyles.textLink} hover:underline cursor-pointer`}
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
+                <label className="text-[11px] font-medium text-slate-700 dark:text-slate-300">Password</label>
                 <div className="relative w-full box-border">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -749,12 +715,31 @@ export default function LoginClient() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white cursor-pointer"
                     aria-label="Toggle password visibility"
                   >
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-1 w-full box-border">
+                <label className="flex items-center gap-1.5 cursor-pointer select-none text-[11px] text-slate-600 dark:text-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-slate-300 dark:border-white/20 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                  />
+                  <span>Remember me</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={openForgotPasswordView}
+                  className={`text-[11px] font-medium min-h-[44px] inline-flex items-center ${themeStyles.textLink} hover:underline cursor-pointer`}
+                >
+                  Forgot Password?
+                </button>
               </div>
 
               <div className="pt-2 w-full box-border">

@@ -35,6 +35,7 @@ import {
   DEFAULT_SECTION_VISIBILITY,
   SocialLink,
   SkillItem,
+  ServiceItem,
 } from '@/types/profile';
 import { ALL_PROFILE_SECTIONS } from '@/components/profile-sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
@@ -87,6 +88,7 @@ export const LIVE_PROFILE_ATOM_KEYS: (keyof ProfileData)[] = [
   'avatar',
   'coverImage',
   'skills',
+  'services',
   'projects',
   'experience',
   'experiences',
@@ -220,6 +222,8 @@ export interface ProfileEditorContextValue {
 
   skills: SkillItem[];
   setSkills: React.Dispatch<React.SetStateAction<SkillItem[]>>;
+  services: ServiceItem[];
+  setServices: React.Dispatch<React.SetStateAction<ServiceItem[]>>;
   about: string;
   setAbout: (v: string) => void;
 
@@ -253,6 +257,7 @@ export interface ProfileEditorContextValue {
   isUploadingAvatar: boolean;
   isUploadingCover: boolean;
   isSaving: boolean;
+  isDirty: boolean;
   isConfirmed: boolean;
   setIsConfirmed: React.Dispatch<React.SetStateAction<boolean>>;
   statusMessage: { type: 'success' | 'error'; text: string } | null;
@@ -404,6 +409,9 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   setCoverImage: () => {},
   skills: [],
   setSkills: () => {},
+  services: [],
+  setServices: () => {},
+  isDirty: false,
   projects: [],
   setProjects: () => {},
   experiences: [],
@@ -593,6 +601,9 @@ export function ProfileEditorProvider({
 
   // ── Skills / About ────────────────────────────────────────────────────────
   const [skills, setSkills] = useState<SkillItem[]>(() => extractSkillItems(initialProfile));
+  const [services, setServices] = useState<ServiceItem[]>(() =>
+    Array.isArray(initialProfile.services) ? initialProfile.services : []
+  );
   const [about, setAbout] = useState(
     initialProfile.about ||
       initialProfile.fullBio ||
@@ -703,6 +714,8 @@ export function ProfileEditorProvider({
       avatar: avatar,
       coverImage: coverImage,
       skills: skills,
+      services: services,
+      recommendations: Array.isArray(profile.recommendations) ? profile.recommendations : [],
       projects: projects,
       experience: experiences,
       experiences: experiences,
@@ -723,7 +736,7 @@ export function ProfileEditorProvider({
       professionalTitle, bio, about, tagline, company, location,
       email, phone, whatsapp, website, country, officeAddress, customContacts, contactOrder,
       activeTheme, avatar, coverImage,
-      skills, projects, experiences, education,
+      skills, services, projects, experiences, education,
       activeSocialsPayload, customFields, dynamicSections,
       canonicalSectionOrder, sectionVisibility, sharingSettings,
     ]
@@ -877,6 +890,7 @@ export function ProfileEditorProvider({
     if (key === 'customContacts' && Array.isArray(val)) setCustomContacts(val as any[]);
     if (key === 'contactOrder' && Array.isArray(val)) setContactOrder(val as string[]);
     if (key === 'skills' && Array.isArray(val)) setSkills(extractSkillItems({ ...profile, skills: val as any }));
+    if (key === 'services' && Array.isArray(val)) setServices(val as ServiceItem[]);
     if (key === 'projects' && Array.isArray(val)) setProjects(val as ProjectItem[]);
     if ((key === 'experiences' || key === 'experience') && Array.isArray(val)) setExperiences(val as ExperienceItem[]);
     if (key === 'education' && Array.isArray(val)) setEducation(val as EducationItem[]);
@@ -1619,11 +1633,14 @@ export function ProfileEditorProvider({
     return profile.slug || profile.id || initialProfile.slug || initialProfile.id || '';
   }, [profile.slug, profile.id, initialProfile.slug, initialProfile.id]);
 
+    const isDirty = useMemo(() => isProfileDirty(liveProfile, savedBaseline), [liveProfile, savedBaseline]);
+
   // ── Context value ─────────────────────────────────────────────────────────
   const value = useMemo<ProfileEditorContextValue>(
     () => ({
       profile,
       savedBaseline,
+      isDirty,
       setProfile,
       activeTheme, setActiveTheme,
       firstName, setFirstName,
@@ -1645,6 +1662,7 @@ export function ProfileEditorProvider({
       customContacts, setCustomContacts,
       contactOrder, setContactOrder,
       skills, setSkills,
+      services, setServices,
       about, setAbout,
       projects, setProjects,
       experiences, setExperiences,
@@ -1715,11 +1733,11 @@ export function ProfileEditorProvider({
     [
       profile, savedBaseline, activeTheme, firstName, secondName, username,
       professionalTitle, bio, tagline, company, location, avatar, coverImage,
-      skills, about, projects, experiences, education,
+      skills, services, about, projects, experiences, education,
       socialLinks, customFields, dynamicSections,
       sectionOrder, sectionVisibility, sharingSettings,
       fullName, liveProfile, activeSocialsPayload,
-      isUploadingAvatar, isUploadingCover, isSaving, isConfirmed, statusMessage, copySuccess,
+      isUploadingAvatar, isUploadingCover, isSaving, isDirty, isConfirmed, statusMessage, copySuccess,
       activeSection, activeSectionTarget, isDark, toastMessage, _userProfiles, currentIdentifier,
       expandedSections, autosaveStatus, autosaveStatusText, canonicalSectionOrder,
     ]

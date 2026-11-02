@@ -133,6 +133,7 @@ function PublicProfileClientInner({
       case 'teamMembers': return 'Team';
       case 'personalDetails': return 'Bio';
       case 'skills': return 'Skills';
+      case 'services': return 'Services';
       case 'projects': return 'Projects';
       case 'education': return 'Edu';
       case 'contactInfo': return 'Contact';
@@ -141,6 +142,7 @@ function PublicProfileClientInner({
       case 'certifications': return 'Certs';
       case 'languages': return 'Langs';
       case 'customFields': return 'Custom';
+      case 'recommendations': return 'Reviews';
       default: return fullLabel;
     }
   };

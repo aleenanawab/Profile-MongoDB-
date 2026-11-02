@@ -21,6 +21,7 @@ import {
   Settings,
   ExternalLink,
   Save,
+  Check,
   Loader2,
   GripVertical,
   X,
@@ -49,6 +50,7 @@ import { useProfileEditor } from '@/context/ProfileEditorContext';
 import { AvtiveLogoIcon } from '@/components/ui/BrandIcons';
 import { ProfileSwitcher } from '@/components/profiles/ProfileSwitcher';
 import { useLongPressDrag } from '@/hooks/useLongPressDrag';
+import { isProfileDirty } from '@/lib/profileDiff';
 
 export interface SidebarSectionItem {
   key: string;
@@ -59,14 +61,15 @@ export interface SidebarSectionItem {
 }
 
 export const DESKTOP_SIDEBAR_SECTIONS: SidebarSectionItem[] = [
-  // 1-13: Core Profile Sections
+  // Core Profile Sections
   { key: 'profile', label: 'Profile', icon: User, category: 'core' },
   { key: 'companyInfo', label: 'Company Info', icon: Building2, category: 'core' },
   { key: 'teamMembers', label: 'Team Members', icon: Users, category: 'core' },
   { key: 'personalDetails', label: 'Personal Details', icon: FileText, category: 'core' },
   { key: 'featured', label: 'Featured', icon: Star, category: 'core' },
   { key: 'contactInfo', label: 'Contact Info', icon: Phone, category: 'core' },
-  { key: 'skills', label: 'Skills & Services', icon: Code, category: 'core' },
+  { key: 'skills', label: 'Skills', icon: Code, category: 'core' },
+  { key: 'services', label: 'Services', icon: Sparkles, category: 'core' },
   { key: 'projects', label: 'Projects', icon: FolderGit2, category: 'core' },
   { key: 'customFields', label: 'Custom Fields', icon: Layers, category: 'core' },
   { key: 'experience', label: 'Experience', icon: Briefcase, category: 'core' },
@@ -83,17 +86,7 @@ export const DESKTOP_SIDEBAR_SECTIONS: SidebarSectionItem[] = [
   { key: 'certifications', label: 'Certifications', icon: CheckCircle2, category: 'core' },
   { key: 'languages', label: 'Languages', icon: Globe, category: 'core' },
   { key: 'recommendations', label: 'Recommendations', icon: Quote, category: 'core' },
-  { key: 'socialLinks', label: 'Social Links', icon: Link2, category: 'core' },
-  
-  // 14-17: Advanced Management
-  { key: 'enhanceProfile', label: 'Enhance Profile', icon: Sparkles, category: 'advanced' },
-  { key: 'limitations', label: 'Limitations', icon: EyeOff, category: 'advanced' },
-  { key: 'accountInfo', label: 'Account Info', icon: UserCheck, category: 'advanced' },
-  { key: 'archive', label: 'Archive', icon: Archive, category: 'advanced' },
-  
-  // 18-19: Security & Settings
-  { key: 'security', label: 'Security', icon: ShieldCheck, category: 'system' },
-  { key: 'settings', label: 'Settings', icon: Settings, category: 'system' }
+  { key: 'socialLinks', label: 'Social Links', icon: Link2, category: 'core' }
 ];
 
 interface DesktopSidebarItemProps {
@@ -258,6 +251,8 @@ export function DesktopProfileSidebar({
 }: DesktopProfileSidebarProps) {
   const { 
     profile, 
+    savedBaseline,
+    liveProfile,
     activeSection, 
     setActiveSection, 
     isSaving, 
@@ -272,7 +267,28 @@ export function DesktopProfileSidebar({
     handleToggleSectionVisibility
   } = useProfileEditor();
 
+  const isDirty = React.useMemo(() => {
+    return isProfileDirty(liveProfile, savedBaseline);
+  }, [liveProfile, savedBaseline]);
+
+  const [justSaved, setJustSaved] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isDirty) {
+      setJustSaved(false);
+    }
+  }, [isDirty]);
+
+  const handleSaveClick = async () => {
+    if (!isDirty || isSaving) return;
+    const res = await saveProfile();
+    if (res && res.ok) {
+      setJustSaved(true);
+    }
+  };
+
   const skillsCount = Array.isArray(profile.skills) ? profile.skills.length : 0;
+  const servicesCount = Array.isArray(profile.services) ? profile.services.length : 0;
   const projectsCount = Array.isArray(profile.projects) ? profile.projects.length : 0;
   
   // Count hidden sections for Archive badge
@@ -288,6 +304,8 @@ export function DesktopProfileSidebar({
     switch (key) {
       case 'skills':
         return skillsCount > 0 ? skillsCount : undefined;
+      case 'services':
+        return servicesCount > 0 ? servicesCount : undefined;
       case 'projects':
         return projectsCount > 0 ? projectsCount : undefined;
       case 'experience':
@@ -351,7 +369,6 @@ export function DesktopProfileSidebar({
     const normalizeKey = (k: string) => {
       if (k === 'about') return 'personalDetails';
       if (k === 'contact') return 'contactInfo';
-      if (k === 'services') return 'skills';
       if (k === 'custom-fields') return 'customFields';
       return k;
     };
@@ -524,133 +541,26 @@ export function DesktopProfileSidebar({
           </Reorder.Group>
         </div>
 
-        {/* Group 2: Advanced Profile Tools */}
-        {!isPublicView && (
-          <div>
-            <div className="px-2 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
-              Management & Enhancements
-            </div>
-            {DESKTOP_SIDEBAR_SECTIONS.filter(s => s.category === 'advanced').map((sec) => {
-              const Icon = sec.icon;
-              const isActive = activeSection === sec.key;
-              const badge = getSectionBadge(sec.key);
-              const isVisible = sectionVisibility[sec.key] !== false;
-
-              return (
-                <div
-                  key={sec.key}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 min-h-[38px] h-[38px] rounded-xl text-xs font-semibold transition-all relative ${
-                    isActive
-                      ? 'bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-400/50 dark:border-cyan-500/40 text-cyan-950 dark:text-white font-bold shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent'
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-sm shadow-cyan-400/80" />
-                  )}
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSection(sec.key);
-                      onSelectSection?.(sec.key);
-                    }}
-                    className="flex-1 flex items-center gap-2.5 min-w-0 text-left cursor-pointer"
-                  >
-                    <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      isActive ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
-                    }`} />
-                    <span className="truncate text-xs">{sec.label}</span>
-                  </button>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {badge !== undefined && (
-                      <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
-                        isActive 
-                          ? 'bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-500/30 dark:text-cyan-200 dark:border-cyan-400/30' 
-                          : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10'
-                      }`}>
-                        {badge}
-                      </span>
-                    )}
-
-                    {sec.key === 'enhanceProfile' && (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSectionVisibility('customFields')}
-                        title={isVisible ? "Hide custom fields" : "Show custom fields"}
-                        aria-label="Toggle custom fields visibility"
-                        className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
-                      >
-                        {isVisible ? (
-                          <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300" />
-                        ) : (
-                          <EyeOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Group 3: System & Security */}
-        {!isPublicView && (
-          <div>
-            <div className="px-2 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
-              System & Security
-            </div>
-            {DESKTOP_SIDEBAR_SECTIONS.filter(s => s.category === 'system').map((sec) => {
-              const Icon = sec.icon;
-              const isActive = activeSection === sec.key;
-
-              return (
-                <button
-                  key={sec.key}
-                  type="button"
-                  onClick={() => {
-                    setActiveSection(sec.key);
-                    onSelectSection?.(sec.key);
-                  }}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 min-h-[38px] h-[38px] rounded-xl text-xs font-semibold transition-all relative cursor-pointer text-left ${
-                    isActive
-                      ? 'bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-400/50 dark:border-cyan-500/40 text-cyan-950 dark:text-white font-bold shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent'
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-sm shadow-cyan-400/80" />
-                  )}
-                  
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-                      isActive ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
-                    }`} />
-                    <span className="truncate text-xs">{sec.label}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
       </div>
 
-      {/* 4. Bottom Sticky Action Footer - Stitch style */}
+      {/* 4. Bottom Sticky Action Footer */}
       {!isPublicView && (
         <div className="p-3.5 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#080D1A] space-y-2 shrink-0 transition-colors">
           <button
             type="button"
-            onClick={() => saveProfile()}
-            disabled={isSaving}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-[#6C4CF1] hover:bg-[#5b3de0] text-white shadow-md shadow-[#6C4CF1]/25 transition-all cursor-pointer disabled:opacity-50 active:scale-98"
+            onClick={handleSaveClick}
+            disabled={isSaving || !isDirty}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px] rounded-xl text-xs font-bold bg-[#6C4CF1] hover:bg-[#5b3de0] text-white shadow-md shadow-[#6C4CF1]/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
           >
             {isSaving ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Saving Changes...</span>
+                <span>Saving…</span>
+              </>
+            ) : justSaved && !isDirty ? (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                <span>Saved</span>
               </>
             ) : (
               <>
@@ -664,7 +574,7 @@ export function DesktopProfileSidebar({
             href={`/profile/${currentIdentifier}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors shadow-2xs"
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 min-h-[44px] rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors shadow-2xs"
             title="Open Public Card in New Tab"
           >
             <ExternalLink className="w-3 h-3 text-[#6C4CF1] dark:text-cyan-400" />

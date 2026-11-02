@@ -12,7 +12,7 @@ export const CANONICAL_SECTION_ALIASES: Record<string, string> = {
   contactInfo: 'contactInfo',
   'custom-fields': 'customFields',
   customFields: 'customFields',
-  services: 'skills',
+  services: 'services',
   skills: 'skills',
   portfolio: 'projects',
   projects: 'projects',
@@ -55,7 +55,8 @@ export const CANONICAL_TO_PRIMARY_ALIASES: Record<string, string[]> = {
   personalDetails: ['about', 'personal'],
   contactInfo: ['contact'],
   customFields: ['custom-fields', 'enhanceProfile'],
-  skills: ['services', 'expertise'],
+  skills: ['expertise'],
+  services: ['services'],
   projects: ['portfolio'],
   socialLinks: ['socials'],
   certifications: ['certificates'],
@@ -71,6 +72,7 @@ export const SECTION_TO_SHARING_KEY: Record<string, string> = {
   personalDetails: 'bio',
   contactInfo: 'contactInfo',
   skills: 'skills',
+  services: 'services',
   projects: 'projects',
   experience: 'experience',
   education: 'education',
@@ -142,6 +144,7 @@ export function reconcileSectionVisibility(
     'contactInfo',
     'featured',
     'skills',
+    'services',
     'projects',
     'experience',
     'education',
@@ -217,9 +220,6 @@ export function toggleCanonicalSectionVisibility(
   if (sharingKey) {
     nextSharingPatch[sharingKey] = nextVal;
   }
-  if (canonical === 'skills') {
-    nextSharingPatch.services = nextVal;
-  }
 
   return {
     nextVisibility,
@@ -234,6 +234,7 @@ export const INDIVIDUAL_DEFAULT_SECTION_ORDER: string[] = [
   'contactInfo',
   'featured',
   'skills',
+  'services',
   'projects',
   'experience',
   'education',
@@ -258,6 +259,7 @@ export const COMPANY_DEFAULT_SECTION_ORDER: string[] = [
   'teamMembers',
   'contactInfo',
   'skills',
+  'services',
   'projects',
   'customFields',
   'socialLinks',

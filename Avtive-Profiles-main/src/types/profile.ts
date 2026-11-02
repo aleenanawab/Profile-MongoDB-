@@ -99,10 +99,11 @@ export const DEFAULT_SECTION_VISIBILITY: Record<string, boolean> = {
   hero: true,
   about: true,
   contact: true,
-  services: true,
   skills: true,
+  services: true,
   projects: true,
   'custom-fields': true,
+  customFields: true,
   experience: true,
   education: true,
   certifications: true,
@@ -128,6 +129,7 @@ export const DEFAULT_SECTION_ORDER: string[] = [
   'contactInfo',
   'featured',
   'skills',
+  'services',
   'projects',
   'experience',
   'education',
@@ -488,6 +490,7 @@ export interface DynamicSection<T = React.ReactNode> {
 
 export interface ProfileData {
   id: string;
+  _id?: string;
   userId?: string;
   theme?: ProfileTheme;
   type: ProfileType;

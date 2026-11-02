@@ -151,6 +151,33 @@ export function CustomFieldsSection({
     );
   };
 
+  const updateFields = (next: CustomFieldItem[]) => {
+    setFieldsDraft(next);
+    onUpdateField?.('customFields', next);
+  };
+
+  const handleAddField = () => {
+    const newField: CustomFieldItem = {
+      id: `cf-${Date.now()}`,
+      label: '',
+      value: '',
+      type: 'text',
+      visible: true,
+    };
+    const next = [...fieldsDraft, newField];
+    updateFields(next);
+  };
+
+  const handleRemoveField = (id: string) => {
+    const next = fieldsDraft.filter((f) => f.id !== id);
+    updateFields(next);
+  };
+
+  const handleUpdateFieldItem = (id: string, updates: Partial<CustomFieldItem>) => {
+    const next = fieldsDraft.map((f) => (f.id === id ? { ...f, ...updates } : f));
+    updateFields(next);
+  };
+
   return (
     <div className={`p-4 sm:p-5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} transition-colors space-y-3.5 shadow-2xs`}>
       <div 
@@ -166,7 +193,7 @@ export function CustomFieldsSection({
             <span>Custom Fields</span>
           </h3>
           {canEdit && !isEditing && (
-            <span className="opacity-0 group-hover/cfheader:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+            <span className="opacity-0 group/cfheader:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
               <Pencil className="w-2.5 h-2.5" />
               Edit All
             </span>
@@ -175,19 +202,10 @@ export function CustomFieldsSection({
         {isEditing ? (
           <button
             type="button"
-            onClick={() => {
-              const newField: CustomFieldItem = {
-                id: `cf-${Date.now()}`,
-                label: '',
-                value: '',
-                type: 'text',
-                visible: true,
-              };
-              setFieldsDraft((prev) => [...prev, newField]);
-            }}
-            className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 cursor-pointer"
+            onClick={handleAddField}
+            className="min-h-[44px] text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Add Field</span>
           </button>
         ) : (
@@ -204,56 +222,44 @@ export function CustomFieldsSection({
               key={field.id}
               className={`p-3.5 rounded-xl border border-black/10 dark:border-white/10 ${theme.subCardBg} space-y-2.5`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="flex-1">
                   <FormInput
                     value={field.label || (field as any).title || ''}
-                    onChange={(val) => {
-                      setFieldsDraft((prev) =>
-                        prev.map((f) => (f.id === field.id ? { ...f, label: val } : f))
-                      );
-                    }}
+                    onChange={(val) => handleUpdateFieldItem(field.id, { label: val, title: val } as any)}
                     placeholder="Field Label (e.g. Portfolio, Discord, Office Hours)"
                   />
                 </div>
-                <select
-                  value={field.type || 'text'}
-                  onChange={(e) => {
-                    const nextType = e.target.value as any;
-                    setFieldsDraft((prev) =>
-                      prev.map((f) => (f.id === field.id ? { ...f, type: nextType } : f))
-                    );
-                  }}
-                  className={`h-10 text-xs px-2.5 rounded-xl border border-slate-300 dark:border-zinc-700 ${theme.textPrimary} bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer`}
-                >
-                  <option value="text">Text</option>
-                  <option value="link">Link</option>
-                  <option value="email">Email</option>
-                  <option value="phone">Phone</option>
-                  <option value="number">Number</option>
-                  <option value="date">Date</option>
-                  <option value="markdown">Markdown</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFieldsDraft((prev) => prev.filter((f) => f.id !== field.id));
-                  }}
-                  className="p-2 text-rose-500 hover:text-rose-600 rounded-lg hover:bg-rose-500/10 transition-colors"
-                  title="Remove field"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={field.type || 'text'}
+                    onChange={(e) => handleUpdateFieldItem(field.id, { type: e.target.value as any })}
+                    className={`h-11 min-h-[44px] text-xs px-3 rounded-xl border border-slate-300 dark:border-zinc-700 ${theme.textPrimary} bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer flex-1 sm:flex-none`}
+                  >
+                    <option value="text">Text</option>
+                    <option value="link">Link</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="markdown">Markdown</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveField(field.id)}
+                    className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-rose-500 hover:text-rose-600 rounded-xl hover:bg-rose-500/10 transition-colors shrink-0 cursor-pointer"
+                    title="Remove field"
+                    aria-label="Remove field"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div>
                 <FormInput
                   value={field.value || (field as any).content || ''}
-                  onChange={(val) => {
-                    setFieldsDraft((prev) =>
-                      prev.map((f) => (f.id === field.id ? { ...f, value: val } : f))
-                    );
-                  }}
+                  onChange={(val) => handleUpdateFieldItem(field.id, { value: val, content: val } as any)}
                   placeholder="Field Value (e.g. https://... or custom details)"
                 />
               </div>
@@ -262,17 +268,8 @@ export function CustomFieldsSection({
 
           <button
             type="button"
-            onClick={() => {
-              const newField: CustomFieldItem = {
-                id: `cf-${Date.now()}`,
-                label: '',
-                value: '',
-                type: 'text',
-                visible: true,
-              };
-              setFieldsDraft((prev) => [...prev, newField]);
-            }}
-            className="w-full py-2 border border-dashed border-purple-500/30 rounded-xl text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-500/5 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            onClick={handleAddField}
+            className="w-full min-h-[44px] py-2.5 border border-dashed border-purple-500/30 rounded-xl text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-500/5 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Another Custom Field</span>

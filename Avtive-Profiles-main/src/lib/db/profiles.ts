@@ -604,6 +604,12 @@ export async function updateProfile(
     clearFieldsSet.add('testimonials');
     clearFieldsSet.add('recommendations');
   }
+  if (clearFieldsSet.has('services')) {
+    clearFieldsSet.add('services');
+  }
+  if (clearFieldsSet.has('customFields')) {
+    clearFieldsSet.add('customFields');
+  }
 
   // Track old Cloudinary public IDs for safe post-save cleanup
   let oldAvatarPublicId: string | null = null;

@@ -27,7 +27,7 @@ import {
 import { getCanonicalSectionOrder, normalizeSectionKey, isCanonicalSectionVisible } from '@/lib/sections';
 import { HeroSection } from '@/components/profile-sections/HeroSection';
 import { AboutSection } from '@/components/profile-sections/AboutSection';
-import { SkillsServicesSection } from '@/components/profile-sections/SkillsServicesSection';
+import { SkillsSection, ServicesSection, SkillsServicesSection } from '@/components/profile-sections/SkillsServicesSection';
 import { ExperienceSection } from '@/components/profile-sections/ExperienceSection';
 import { PortfolioSection } from '@/components/profile-sections/PortfolioSection';
 import { CertificationsSection } from '@/components/profile-sections/CertificationsSection';
@@ -363,12 +363,26 @@ export function AvtiveDigitalCard({
                   />
                 );
 
-              case 'services':
               case 'skills':
-                if (!isSectionVisible('services') && !isSectionVisible('skills')) return null;
+                if (!isSectionVisible('skills')) return null;
                 return (
-                  <SkillsServicesSection
+                  <SkillsSection
                     key="skills"
+                    profile={activeProfile}
+                    isEditing={isEditing}
+                    canEdit={canEdit}
+                    onSelectSection={onSelectSection}
+                    onUpdateField={handleFieldUpdate}
+                    onSavePartial={handleSavePartial}
+                    theme={theme}
+                  />
+                );
+
+              case 'services':
+                if (!isSectionVisible('services')) return null;
+                return (
+                  <ServicesSection
+                    key="services"
                     profile={activeProfile}
                     isEditing={isEditing}
                     canEdit={canEdit}

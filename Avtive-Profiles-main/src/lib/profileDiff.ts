@@ -6,6 +6,7 @@ export type FieldKind = 'primitive' | 'nested_object' | 'array' | 'server_only';
 export const FIELD_CLASSIFICATIONS = {
   // Server-only / Identifiers (never compared for user edit dirtiness)
   id: 'server_only',
+  _id: 'server_only',
   userId: 'server_only',
   createdAt: 'server_only',
   updatedAt: 'server_only',

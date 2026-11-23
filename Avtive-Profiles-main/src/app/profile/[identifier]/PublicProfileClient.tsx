@@ -28,6 +28,7 @@ import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
+import { getBackgroundTheme, BackgroundTheme } from '@/data/backgroundThemes';
 
 export interface PublicProfileClientProps {
   initialProfile: ProfileData;
@@ -86,6 +87,7 @@ function PublicProfileClientInner({
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<UserSession | null>(session);
+  const [previewBackgroundTheme, setPreviewBackgroundTheme] = useState<BackgroundTheme | null>(null);
 
   const {
     liveProfile,
@@ -115,6 +117,8 @@ function PublicProfileClientInner({
   }, [profile]);
 
   const activeThemeConfig = getThemeConfig(activeTheme);
+  const activeBgThemeId = (isEditing ? liveProfile.activeBackgroundThemeId : profile.activeBackgroundThemeId) || profile.activeBackgroundThemeId;
+  const activeBackgroundTheme = previewBackgroundTheme || getBackgroundTheme(activeBgThemeId);
 
   const isCompany = profileType === 'team' || profile.type === 'team';
   const mobileNavSections = React.useMemo(() => {
@@ -841,10 +845,13 @@ function PublicProfileClientInner({
       sectionVisibility: liveProfile.sectionVisibility || base.sectionVisibility,
       sharingSettings: liveProfile.sharingSettings || base.sharingSettings,
       sectionOrder: liveProfile.sectionOrder || base.sectionOrder,
+      savedBackgroundThemeIds: liveProfile.savedBackgroundThemeIds ?? base.savedBackgroundThemeIds,
+      activeBackgroundThemeId: (previewBackgroundTheme ? previewBackgroundTheme.id : (liveProfile.activeBackgroundThemeId ?? base.activeBackgroundThemeId)),
+      introductionMedia: liveProfile.introductionMedia !== undefined ? liveProfile.introductionMedia : base.introductionMedia,
       type: profileType,
       theme: activeTheme
     };
-  }, [profile, isEditing, liveProfile, profileType, activeTheme]);
+  }, [profile, isEditing, liveProfile, profileType, activeTheme, previewBackgroundTheme]);
 
   const desktopView = (
     <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 overflow-hidden relative">
@@ -957,13 +964,19 @@ function PublicProfileClientInner({
             if (mobileOpen) handleCloseMobile();
             if (isSidebarOpen) handleCloseSidebar();
           }}
+          style={activeBackgroundTheme ? { ...activeBackgroundTheme.backgroundStyle, backgroundAttachment: 'local' } : undefined}
           className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
-          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} shadow-none sm:shadow-xl overflow-hidden relative`}>
+          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${
+            activeBackgroundTheme 
+              ? 'bg-white/95 dark:bg-[#0A101E]/95 backdrop-blur-md shadow-2xl' 
+              : `${activeThemeConfig.cardBg} shadow-none sm:shadow-xl`
+          } overflow-hidden relative`}>
             <AvtiveDigitalCard
               profile={cardProfile}
               canEdit={isOwner}
               isEditing={isEditing}
+              onPreviewBackgroundTheme={setPreviewBackgroundTheme}
               isConnected={false}
               onDraftChange={handleDraftChange}
               onOpenEdit={handleOpenEditMode}
@@ -1005,34 +1018,31 @@ function PublicProfileClientInner({
 
   const mobileView = (
     <div className="w-full h-full flex-1 flex flex-col min-h-0 relative overflow-hidden">
-      {/* If editing on mobile, show an elegant top edit action strip so the user can Save & Exit anytime! */}
-      {isEditing && (
-        <div className="shrink-0 z-40 w-full px-3 py-2 bg-slate-900/95 text-white dark:bg-black/95 backdrop-blur-md border-b border-white/10 flex items-center justify-between shadow-md">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-400">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span>Editing Profile</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              className="px-2.5 py-1 text-xs text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={isSaving || isUploadingAvatar || isUploadingCover}
-              onClick={handleSaveAndExit}
-              className="px-3 py-1 text-xs font-semibold rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-            >
-              {isSaving ? 'Saving...' : (isUploadingAvatar || isUploadingCover) ? 'Uploading...' : 'Done'}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Clean Public & Owner Header - Firmly Docked at Top (Row 1) */}
+      <div className="shrink-0 z-40 w-full">
+        <HeaderNav
+          currentProfile={{ ...profile, theme: activeTheme }}
+          profileType={profileType}
+          onSelectProfileType={(type) => setProfileType(type)}
+          canEdit={isOwner}
+          isEditing={isEditing}
+          onCancelEdit={handleCancelEdit}
+          onSaveEdits={handleSaveAndExit}
+          isSaving={isSaving}
+          onOpenEdit={handleOpenEditMode}
+          onOpenShare={() => setIsShareModalOpen(true)}
+          isDark={isDark}
+          onToggleTheme={handleToggleTheme}
+          session={currentUser}
+          onLogout={handleLogout}
+          theme={activeThemeConfig}
+          onToggleSections={handleTriggerClick}
+          onSectionsMouseEnter={handleTriggerMouseEnter}
+          onSectionsMouseLeave={handleTriggerMouseLeave}
+        />
+      </div>
 
-      {/* Pinned Visible Section Navigation Tab Bar (Stitch Design) */}
+      {/* Pinned Visible Section Navigation Tab Bar (Row 2 directly below controls) */}
       <div className="shrink-0 z-30 w-full">
         <ProfileSectionTabBar
           profile={{ ...profile, type: profileType, theme: activeTheme }}
@@ -1051,12 +1061,14 @@ function PublicProfileClientInner({
             if (mobileOpen) handleCloseMobile();
             if (isSidebarOpen) handleCloseSidebar();
           }}
+          style={activeBackgroundTheme ? { ...activeBackgroundTheme.backgroundStyle, backgroundAttachment: 'local' } : undefined}
           className="h-full min-h-0 overflow-y-auto overscroll-contain transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
           <AvtiveDigitalCard
             profile={cardProfile}
             canEdit={isOwner}
             isEditing={isEditing}
+            onPreviewBackgroundTheme={setPreviewBackgroundTheme}
             isConnected={false}
             onDraftChange={handleDraftChange}
             onOpenEdit={handleOpenEditMode}
@@ -1181,8 +1193,19 @@ function PublicProfileClientInner({
   return (
     <div 
       data-theme={activeTheme}
-      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${activeThemeConfig.pageBg} ${activeThemeConfig.textPrimary} transition-all duration-300 font-sans`}
+      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${
+        activeBackgroundTheme ? 'bg-transparent' : activeThemeConfig.pageBg
+      } ${activeThemeConfig.textPrimary} transition-all duration-300 font-sans relative`}
     >
+      {/* Visual Background Theme Layer (At the very back of the complete profile) */}
+      {activeBackgroundTheme && (
+        <div 
+          className="fixed inset-0 pointer-events-none z-0 transition-all duration-700 ease-in-out"
+          style={{ ...activeBackgroundTheme.backgroundStyle, zIndex: 0 }}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Toast Notification Banner */}
       {toastMessage && (
         <div className="fixed top-4 right-4 z-50 px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-semibold shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in slide-in-from-top-2">
@@ -1195,6 +1218,7 @@ function PublicProfileClientInner({
         workflowSubtitle="Verified Public Profile"
         currentUrlPath={`/profile/${profile.slug || profile.id}`}
         showWindowHeader={false}
+        stageBackgroundStyle={activeBackgroundTheme?.backgroundStyle}
         desktopContent={desktopView}
         mobileContent={mobileView}
       />

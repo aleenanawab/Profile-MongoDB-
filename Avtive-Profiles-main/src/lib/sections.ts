@@ -48,7 +48,9 @@ export const CANONICAL_SECTION_ALIASES: Record<string, string> = {
   testScores: 'testScores',
   scores: 'testScores',
   organizations: 'organizations',
-  interests: 'interests'
+  interests: 'interests',
+  introductionMedia: 'introductionMedia',
+  backgrounds: 'backgrounds'
 };
 
 export const CANONICAL_TO_PRIMARY_ALIASES: Record<string, string[]> = {
@@ -92,7 +94,9 @@ export const SECTION_TO_SHARING_KEY: Record<string, string> = {
   courses: 'courses',
   testScores: 'testScores',
   organizations: 'organizations',
-  interests: 'interests'
+  interests: 'interests',
+  introductionMedia: 'introductionMedia',
+  backgrounds: 'backgrounds'
 };
 
 export function normalizeSectionKey(key: string): string {

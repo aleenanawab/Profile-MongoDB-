@@ -29,7 +29,8 @@ import {
   FileSpreadsheet,
   Network,
   Compass,
-  Star
+  Star,
+  Palette
 } from 'lucide-react';
 import { ProfileData, normalizeProfileType } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
@@ -93,6 +94,9 @@ export function ProfileSectionTabBar({
         baseTabs.push({ key: 'customFields', label: 'Highlights', icon: Tag });
       }
       baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
+      if (isEditing || canEdit) {
+        baseTabs.push({ key: 'backgrounds', label: 'Themes', icon: Palette });
+      }
     } else {
       baseTabs = [
         { key: 'profile', label: 'Profile', icon: User },
@@ -121,6 +125,9 @@ export function ProfileSectionTabBar({
         baseTabs.push({ key: 'customFields', label: 'Custom', icon: Tag });
       }
       baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
+      if (isEditing || canEdit) {
+        baseTabs.push({ key: 'backgrounds', label: 'Themes', icon: Palette });
+      }
     }
 
     const availableTabs = baseTabs.filter(t => isVisible(t.key));

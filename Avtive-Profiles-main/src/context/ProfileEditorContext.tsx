@@ -37,6 +37,7 @@ import {
   SkillItem,
   ServiceItem,
   WebsiteItem,
+  ProfileIntroductionMedia,
 } from '@/types/profile';
 import { ALL_PROFILE_SECTIONS } from '@/components/profile-sections/DynamicSectionGroups';
 import { uploadImageToStorage } from '@/lib/imageCompression';
@@ -61,6 +62,9 @@ export interface DraggableLinkItem {
 }
 
 export const LIVE_PROFILE_ATOM_KEYS: (keyof ProfileData)[] = [
+  'savedBackgroundThemeIds',
+  'activeBackgroundThemeId',
+  'introductionMedia',
   'username',
   'slug',
   'name',
@@ -249,6 +253,13 @@ export interface ProfileEditorContextValue {
   sharingSettings: SharingSettings;
   setSharingSettings: React.Dispatch<React.SetStateAction<SharingSettings>>;
 
+  savedBackgroundThemeIds: string[];
+  setSavedBackgroundThemeIds: React.Dispatch<React.SetStateAction<string[]>>;
+  activeBackgroundThemeId: string;
+  setActiveBackgroundThemeId: (v: string) => void;
+  introductionMedia: ProfileIntroductionMedia | null;
+  setIntroductionMedia: React.Dispatch<React.SetStateAction<ProfileIntroductionMedia | null>>;
+
   // ── Derived ───────────────────────────────────────────────────────────────
   fullName: string;
   liveProfile: ProfileData;          // use this for <AvtiveDigitalCard> / <PhonePreview>
@@ -431,6 +442,12 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   setSectionVisibility: () => {},
   sharingSettings: {},
   setSharingSettings: () => {},
+  savedBackgroundThemeIds: [],
+  setSavedBackgroundThemeIds: () => {},
+  activeBackgroundThemeId: '',
+  setActiveBackgroundThemeId: () => {},
+  introductionMedia: null,
+  setIntroductionMedia: () => {},
   liveProfile: FALLBACK_PROFILE_DATA,
   activeSocialsPayload: [],
   isUploadingAvatar: false,
@@ -592,7 +609,7 @@ export function ProfileEditorProvider({
 
   // ── Contact Info ──────────────────────────────────────────────────────────
   const [phone, setPhone] = useState(initialProfile.phone || '');
-  const [phoneType, setPhoneType] = useState(initialProfile.phoneType || 'Mobile');
+  const [phoneType, setPhoneType] = useState(initialProfile.phoneType || '');
   const [whatsapp, setWhatsapp] = useState(initialProfile.whatsapp || '');
   const [email, setEmail] = useState(initialProfile.email || '');
   const [website, setWebsite] = useState(initialProfile.website || '');
@@ -636,6 +653,17 @@ export function ProfileEditorProvider({
   // ── Social Links ──────────────────────────────────────────────────────────
   const [socialLinks, setSocialLinks] = useState<DraggableLinkItem[]>(() =>
     buildSocialLinksFromProfile(initialProfile)
+  );
+
+  // ── Background Themes & Introduction Media ─────────────────────────────────
+  const [savedBackgroundThemeIds, setSavedBackgroundThemeIds] = useState<string[]>(
+    Array.isArray(initialProfile.savedBackgroundThemeIds) ? initialProfile.savedBackgroundThemeIds : []
+  );
+  const [activeBackgroundThemeId, setActiveBackgroundThemeId] = useState<string>(
+    initialProfile.activeBackgroundThemeId || ''
+  );
+  const [introductionMedia, setIntroductionMedia] = useState<ProfileIntroductionMedia | null>(
+    initialProfile.introductionMedia || null
   );
 
   // ── Custom Fields / Dynamic Sections ─────────────────────────────────────
@@ -711,7 +739,7 @@ export function ProfileEditorProvider({
       location: location !== undefined ? location : (profile.location || ''),
       email: email !== undefined ? email : (profile.email || ''),
       phone: phone !== undefined ? phone : (profile.phone || ''),
-      phoneType: phoneType !== undefined ? phoneType : (profile.phoneType || 'Mobile'),
+      phoneType: phoneType !== undefined ? phoneType : (profile.phoneType || ''),
       whatsapp: whatsapp !== undefined ? whatsapp : (profile.whatsapp || ''),
       website: website !== undefined ? website : (profile.website || ''),
       websites: websites !== undefined ? websites : (profile.websites || []),
@@ -739,7 +767,10 @@ export function ProfileEditorProvider({
       sectionVisibility: sectionVisibility,
       sharingSettings: sharingSettings,
       companyInfo: profile.companyInfo,
-      teamMembers: profile.teamMembers
+      teamMembers: profile.teamMembers,
+      savedBackgroundThemeIds: savedBackgroundThemeIds !== undefined ? savedBackgroundThemeIds : (profile.savedBackgroundThemeIds || []),
+      activeBackgroundThemeId: activeBackgroundThemeId !== undefined ? activeBackgroundThemeId : (profile.activeBackgroundThemeId || ''),
+      introductionMedia: introductionMedia !== undefined ? introductionMedia : (profile.introductionMedia || null)
     }),
     [
       profile,
@@ -750,6 +781,7 @@ export function ProfileEditorProvider({
       skills, services, projects, experiences, education,
       activeSocialsPayload, customFields, dynamicSections,
       canonicalSectionOrder, sectionVisibility, sharingSettings,
+      savedBackgroundThemeIds, activeBackgroundThemeId, introductionMedia
     ]
   );
 
@@ -927,6 +959,9 @@ export function ProfileEditorProvider({
     if (key === 'sectionOrder' && Array.isArray(val)) setSectionOrder(val as string[]);
     if (key === 'sectionVisibility' && typeof val === 'object' && val !== null) setSectionVisibility(val as Record<string, boolean>);
     if (key === 'sharingSettings' && typeof val === 'object' && val !== null) setSharingSettings(val as SharingSettings);
+    if (key === 'savedBackgroundThemeIds' && Array.isArray(val)) setSavedBackgroundThemeIds(val as string[]);
+    if (key === 'activeBackgroundThemeId' && typeof val === 'string') setActiveBackgroundThemeId(val);
+    if (key === 'introductionMedia') setIntroductionMedia(val as ProfileIntroductionMedia | null);
   }, []);
 
   // ── Upload Handlers ───────────────────────────────────────────────────────
@@ -1243,6 +1278,9 @@ export function ProfileEditorProvider({
     setSocialLinks(buildSocialLinksFromProfile(newProf));
     setCustomFields(Array.isArray(newProf.customFields) ? newProf.customFields : []);
     setDynamicSections(Array.isArray(newProf.dynamicSections) ? newProf.dynamicSections : []);
+    setSavedBackgroundThemeIds(Array.isArray(newProf.savedBackgroundThemeIds) ? newProf.savedBackgroundThemeIds : []);
+    setActiveBackgroundThemeId(newProf.activeBackgroundThemeId || '');
+    setIntroductionMedia(newProf.introductionMedia || null);
     if (Array.isArray(newProf.sectionOrder) && newProf.sectionOrder.length > 0) {
       setSectionOrder(newProf.sectionOrder);
     } else {
@@ -1688,6 +1726,9 @@ export function ProfileEditorProvider({
       sectionOrder, setSectionOrder,
       sectionVisibility, setSectionVisibility,
       sharingSettings, setSharingSettings,
+      savedBackgroundThemeIds, setSavedBackgroundThemeIds,
+      activeBackgroundThemeId, setActiveBackgroundThemeId,
+      introductionMedia, setIntroductionMedia,
       fullName,
       liveProfile,
       activeSocialsPayload,

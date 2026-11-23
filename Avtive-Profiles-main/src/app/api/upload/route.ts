@@ -1,31 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { uploadToCloudinary } from '@/lib/storage';
-import { 
-  getProfileByIdOrSlug, 
-  updateProfile, 
-  getCompanyById, 
-  getCompanyMemberByUser, 
-  updateCompany 
+import {
+  getProfileByIdOrSlug,
+  updateProfile,
+  getCompanyById,
+  getCompanyMemberByUser,
+  updateCompany
 } from '@/lib/db';
 
-const ALLOWED_MIME_PREFIXES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
-const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
-function hasValidImageSignature(buffer: Buffer, mimeType: string): boolean {
-  if (mimeType === 'image/jpeg') {
-    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+const ALLOWED_AUDIO_MIMES = [
+  'audio/webm',
+  'audio/mp3',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/wave',
+  'audio/x-wav',
+  'audio/ogg',
+  'audio/m4a',
+  'audio/mp4',
+  'audio/x-m4a',
+  'audio/aac'
+];
+const ALLOWED_AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.webm', '.aac'];
+const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB (sensible duration limit)
+
+const ALLOWED_VIDEO_MIMES = [
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/x-matroska'
+];
+const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov'];
+const MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25MB
+
+function hasValidMediaSignature(buffer: Buffer, mimeType: string): boolean {
+  if (mimeType.startsWith('image/')) {
+    if (mimeType === 'image/jpeg') {
+      return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    }
+    if (mimeType === 'image/png') {
+      return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    }
+    if (mimeType === 'image/webp') {
+      return buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+    }
+    if (mimeType === 'image/heic' || mimeType === 'image/heif') {
+      return buffer.length >= 12 && buffer.toString('ascii', 4, 8) === 'ftyp';
+    }
+    return false;
   }
-  if (mimeType === 'image/png') {
-    return buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+
+  // Audio signatures
+  if (mimeType === 'audio/mp3' || mimeType === 'audio/mpeg') {
+    if (buffer.length >= 3 && buffer.toString('ascii', 0, 3) === 'ID3') return true;
+    if (buffer.length >= 2 && buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return true;
+    return true;
   }
-  if (mimeType === 'image/webp') {
-    return buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
+  if (mimeType.includes('wav')) {
+    return buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WAVE';
   }
-  if (mimeType === 'image/heic' || mimeType === 'image/heif') {
-    return buffer.length >= 12 && buffer.toString('ascii', 4, 8) === 'ftyp';
+  if (mimeType.includes('ogg')) {
+    return buffer.length >= 4 && buffer.toString('ascii', 0, 4) === 'OggS';
   }
+
+  // Video / Audio containers: MP4 / M4A / QuickTime
+  if (mimeType.includes('mp4') || mimeType.includes('m4a') || mimeType.includes('quicktime')) {
+    if (buffer.length >= 8) {
+      const type = buffer.toString('ascii', 4, 8);
+      if (type === 'ftyp' || type === 'moov' || type === 'wide' || type === 'mdat') return true;
+    }
+    return true;
+  }
+
+  // WebM (audio or video)
+  if (mimeType.includes('webm')) {
+    return buffer.length >= 4 && buffer[0] === 0x1a && buffer[1] === 0x45 && buffer[2] === 0xdf && buffer[3] === 0xa3;
+  }
+
   return false;
 }
 
@@ -34,7 +90,8 @@ function getExtension(mimeType: string, originalName?: string): string {
     const extMatch = originalName.match(/\.([a-zA-Z0-9]+)$/);
     if (extMatch && extMatch[1]) {
       const ext = `.${extMatch[1].toLowerCase()}`;
-      if (ALLOWED_EXTENSIONS.includes(ext)) {
+      const allExts = [...ALLOWED_IMAGE_EXTENSIONS, ...ALLOWED_AUDIO_EXTENSIONS, ...ALLOWED_VIDEO_EXTENSIONS];
+      if (allExts.includes(ext)) {
         if (ext === '.heic' || ext === '.heif') return '.jpg';
         return ext;
       }
@@ -42,6 +99,13 @@ function getExtension(mimeType: string, originalName?: string): string {
   }
   if (mimeType.includes('png')) return '.png';
   if (mimeType.includes('webp')) return '.webp';
+  if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return '.mp3';
+  if (mimeType.includes('wav')) return '.wav';
+  if (mimeType.includes('ogg')) return '.ogg';
+  if (mimeType.includes('m4a')) return '.m4a';
+  if (mimeType.includes('quicktime') || mimeType.includes('mov')) return '.mov';
+  if (mimeType.includes('webm')) return '.webm';
+  if (mimeType.includes('mp4')) return '.mp4';
   return '.jpg';
 }
 
@@ -77,6 +141,8 @@ export async function POST(request: NextRequest) {
         requestedBucket = 'links';
       } else if (jBucket === 'avatars' || jBucket === 'avatar') {
         requestedBucket = 'avatars';
+      } else if (jBucket === 'media' || jBucket === 'video' || jBucket === 'audio' || jBucket === 'intro') {
+        requestedBucket = 'media';
       }
 
       profileId = jsonBody.profileId;
@@ -126,13 +192,19 @@ export async function POST(request: NextRequest) {
         requestedBucket = 'links';
       } else if (formBucket === 'avatars' || formBucket === 'avatar') {
         requestedBucket = 'avatars';
+      } else if (formBucket === 'media' || formBucket === 'video' || formBucket === 'audio' || formBucket === 'intro') {
+        requestedBucket = 'media';
       }
 
       profileId = (formData.get('profileId') as string) || undefined;
       companyId = (formData.get('companyId') as string) || undefined;
       field = (formData.get('field') as string) || undefined;
 
-      const file = (formData.get('file') || formData.get('image') || formData.get('avatar')) as File | string | null;
+      if (field === 'introductionMedia') {
+        requestedBucket = 'media';
+      }
+
+      const file = (formData.get('file') || formData.get('image') || formData.get('avatar') || formData.get('media')) as File | string | null;
 
       if (!file) {
         return NextResponse.json(
@@ -146,20 +218,25 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ success: true, url: file, storage: 'remote' });
         }
         return NextResponse.json(
-          { error: 'Invalid image format.' },
-          { status: 400 }
-        );
-      }
-
-      if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          { error: 'File size exceeds the 5MB limit. Please select a smaller photo.' },
+          { error: 'Invalid media format.' },
           { status: 400 }
         );
       }
 
       mimeType = file.type || 'image/jpeg';
       originalName = file.name;
+
+      const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
+      const isVideo = ALLOWED_VIDEO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
+      const maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
+      const sizeLabel = isVideo ? '25MB' : isAudio ? '10MB' : '5MB';
+
+      if (file.size > maxAllowedSize) {
+        return NextResponse.json(
+          { error: `File size exceeds the ${sizeLabel} limit.` },
+          { status: 400 }
+        );
+      }
 
       const bytes = await file.arrayBuffer();
       buffer = Buffer.from(bytes);
@@ -172,27 +249,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (buffer.length > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'File size exceeds 5MB limit.' },
-        { status: 400 }
-      );
-    }
-
     mimeType = mimeType.toLowerCase() === 'image/jpg' ? 'image/jpeg' : mimeType.toLowerCase();
 
-    // Validate MIME type
-    const isAllowedType = ALLOWED_MIME_PREFIXES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
-    const isAllowedExt = originalName ? ALLOWED_EXTENSIONS.some(ext => originalName.toLowerCase().endsWith(ext)) : false;
-    if (!isAllowedType && !isAllowedExt) {
+    const isImage = ALLOWED_IMAGE_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
+    const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
+    const isVideo = ALLOWED_VIDEO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
+    const maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
+    const sizeLabel = isVideo ? '25MB' : isAudio ? '10MB' : '5MB';
+
+    if (buffer.length > maxAllowedSize) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPG, PNG, WebP, and HEIC images are permitted.' },
+        { error: `File size exceeds the ${sizeLabel} limit.` },
         { status: 400 }
       );
     }
-    if (!hasValidImageSignature(buffer, mimeType)) {
+
+    const isAllowedExt = originalName ? [
+      ...ALLOWED_IMAGE_EXTENSIONS,
+      ...ALLOWED_AUDIO_EXTENSIONS,
+      ...ALLOWED_VIDEO_EXTENSIONS
+    ].some(ext => originalName.toLowerCase().endsWith(ext)) : false;
+
+    if (!isImage && !isAudio && !isVideo && !isAllowedExt) {
       return NextResponse.json(
-        { error: 'The uploaded file is not a valid JPEG, PNG, WebP, or HEIC image.' },
+        { error: 'Invalid file type. Supported formats: JPG, PNG, WebP, MP3, WAV, OGG, M4A, MP4, WebM, MOV.' },
+        { status: 400 }
+      );
+    }
+
+    if (!hasValidMediaSignature(buffer, mimeType)) {
+      return NextResponse.json(
+        { error: 'The uploaded file does not have a valid image or media signature.' },
         { status: 400 }
       );
     }
@@ -260,6 +347,31 @@ export async function POST(request: NextRequest) {
       if (!persisted.success) {
         return NextResponse.json(
           { error: persisted.error || 'Image uploaded but could not be saved to the profile.' },
+          { status: persisted.status || 500 }
+        );
+      }
+    }
+
+    if (profileId && field === 'introductionMedia') {
+      const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
+      const mediaType = isAudio ? 'voice' : 'video';
+      const persisted = await updateProfile(
+        profileId,
+        {
+          introductionMedia: {
+            type: mediaType,
+            url: uploadResult.url,
+            provider: 'upload',
+            publicId: uploadResult.publicId,
+            duration: 0
+          }
+        },
+        userId,
+        session.email
+      );
+      if (!persisted.success) {
+        return NextResponse.json(
+          { error: persisted.error || 'Media uploaded but could not be saved to profile.' },
           { status: persisted.status || 500 }
         );
       }

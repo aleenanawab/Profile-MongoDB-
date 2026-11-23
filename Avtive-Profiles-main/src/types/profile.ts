@@ -1,3 +1,19 @@
+export type ProfileIntroductionMediaType = 'voice' | 'video' | 'link' | 'external';
+export type ExternalMediaProvider = 'youtube' | 'vimeo' | 'instagram' | 'tiktok' | 'loom' | 'other' | 'custom' | 'upload';
+
+export interface ProfileIntroductionMedia {
+  type: ProfileIntroductionMediaType;
+  url: string;
+  provider?: ExternalMediaProvider;
+  title?: string;
+  duration?: number;
+  thumbnailUrl?: string;
+  publicId?: string;
+  embedUrl?: string;
+  waveform?: number[];
+  createdAt?: string;
+}
+
 export type ProfileType = 'individual' | 'team';
 
 export function normalizeProfileType(type?: string): ProfileType {
@@ -60,6 +76,7 @@ export interface SharingSettings {
   testScores?: boolean;
   organizations?: boolean;
   interests?: boolean;
+  introductionMedia?: boolean;
 }
 
 export const DEFAULT_SHARING_SETTINGS: SharingSettings = {
@@ -121,7 +138,9 @@ export const DEFAULT_SECTION_VISIBILITY: Record<string, boolean> = {
   testScores: true,
   organizations: true,
   recommendations: true,
-  interests: true
+  interests: true,
+  introductionMedia: true,
+  backgrounds: true
 };
 
 export const DEFAULT_SECTION_ORDER: string[] = [
@@ -610,6 +629,13 @@ export interface ProfileData {
   profession?: string;
   createdAt?: string;
   updatedAt?: string;
+
+  // Background Customization
+  savedBackgroundThemeIds?: string[];
+  activeBackgroundThemeId?: string;
+
+  // Introduction Media
+  introductionMedia?: ProfileIntroductionMedia | null;
 
   // Sharing Configuration & Layout Order / Visibility
   sharingSettings?: SharingSettings;

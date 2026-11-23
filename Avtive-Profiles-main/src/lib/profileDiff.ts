@@ -61,6 +61,7 @@ export const FIELD_CLASSIFICATIONS = {
   connectionsCount: 'primitive',
   industry: 'primitive',
   headline: 'primitive',
+  activeBackgroundThemeId: 'primitive',
 
   // Nested Plain Objects (diffed with dot-paths)
   customThemeColors: 'nested_object',
@@ -70,8 +71,10 @@ export const FIELD_CLASSIFICATIONS = {
   sharingSettings: 'nested_object',
   sectionVisibility: 'nested_object',
   openToWork: 'nested_object',
+  introductionMedia: 'nested_object',
 
   // Arrays (diffed by normalized content)
+  savedBackgroundThemeIds: 'array',
   skills: 'array',
   services: 'array',
   projects: 'array',
@@ -280,6 +283,16 @@ export function diffProfile(
     }
 
     if (kind === 'nested_object') {
+      const rawDraft = (cur as any)[key];
+      const rawBase = (base as any)[key];
+
+      if ((rawDraft === null || rawDraft === undefined || (typeof rawDraft === 'object' && Object.keys(rawDraft).length === 0)) && rawBase && Object.keys(rawBase).length > 0) {
+        patch[key] = null;
+        changedKeys.push(key);
+        clearFields.push(key);
+        continue;
+      }
+
       const objBase = (base as any)[key] || {};
       const objDraft = (cur as any)[key] || {};
 

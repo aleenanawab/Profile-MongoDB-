@@ -49,6 +49,8 @@ import { NFCCardPreview } from '@/components/card/NFCCardPreview';
 import { EducationSection } from '@/components/profile-sections/EducationSection';
 import { SocialLinksSection } from '@/components/profile-sections/SocialLinksSection';
 import { CustomFieldsSection } from '@/components/profile-sections/CustomFieldsSection';
+import { BackgroundThemeGallery } from '@/components/themes/BackgroundThemeGallery';
+import { BackgroundTheme } from '@/data/backgroundThemes';
 import { getThemeConfig, PROFILE_THEMES, ThemeConfig } from '@/components/ui/themeStyles';
 
 import { useProfileEditor } from '@/context/ProfileEditorContext';
@@ -65,6 +67,7 @@ interface AvtiveDigitalCardProps {
   onSavePartial?: (partialData: Partial<ProfileData>) => Promise<ProfileData>;
   onCancelEdit?: () => void;
   onThemePreview?: (theme: ProfileTheme) => void;
+  onPreviewBackgroundTheme?: (theme: BackgroundTheme | null) => void;
   onSaveContact: () => void;
   onOpenShare: () => void;
   onOpenConnect: () => void;
@@ -110,6 +113,7 @@ export function AvtiveDigitalCard({
   onSavePartial,
   onCancelEdit,
   onThemePreview,
+  onPreviewBackgroundTheme,
   onSaveContact,
   onOpenShare,
   onOpenConnect,
@@ -257,7 +261,7 @@ export function AvtiveDigitalCard({
         {(() => {
           const dynamicSectionKeys = (activeProfile.dynamicSections || []).map((s) => s.key || s.id);
           const customFieldKeys = (activeProfile.customFields || []).map((f) => `custom-field-${f.id}`);
-          const extraKeys = [...dynamicSectionKeys, ...customFieldKeys];
+          const extraKeys = [...dynamicSectionKeys, ...customFieldKeys, ...(isEditing || canEdit ? ['backgrounds'] : [])];
           const effectiveOrder = getCanonicalSectionOrder(activeProfile.sectionOrder, activeProfile.type, extraKeys);
 
           const sharing = activeProfile.sharingSettings || {};
@@ -659,6 +663,24 @@ export function AvtiveDigitalCard({
                       theme={theme}
                     />
                   </div>
+                );
+
+              case 'backgrounds':
+              case 'themes':
+              case 'background-themes':
+                if (!isEditing && !canEdit) return null;
+                return (
+                  <BackgroundThemeGallery
+                    key="backgrounds"
+                    profile={activeProfile}
+                    isEditing={isEditing}
+                    canEdit={canEdit}
+                    theme={theme}
+                    onUpdateSavedThemes={(savedIds) => handleFieldUpdate('savedBackgroundThemeIds', savedIds)}
+                    onUpdateActiveTheme={(activeId) => handleFieldUpdate('activeBackgroundThemeId', activeId)}
+                    onPreviewTheme={onPreviewBackgroundTheme}
+                    onSavePartial={handleSavePartial}
+                  />
                 );
 
               default: {

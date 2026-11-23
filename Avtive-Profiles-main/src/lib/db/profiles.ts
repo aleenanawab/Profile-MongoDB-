@@ -199,6 +199,18 @@ export function mapDocToProfileData(doc: any): ProfileData {
     testScores: Array.isArray(doc.testScores) ? doc.testScores : [],
     organizations: Array.isArray(doc.organizations) ? doc.organizations : [],
     interests: Array.isArray(doc.interests) ? doc.interests : [],
+    savedBackgroundThemeIds: Array.isArray(doc.savedBackgroundThemeIds) ? doc.savedBackgroundThemeIds : [],
+    activeBackgroundThemeId: doc.activeBackgroundThemeId || '',
+    introductionMedia: doc.introductionMedia && typeof doc.introductionMedia === 'object' && doc.introductionMedia.url ? {
+      type: doc.introductionMedia.type || 'link',
+      url: doc.introductionMedia.url || '',
+      provider: doc.introductionMedia.provider || 'custom',
+      title: doc.introductionMedia.title || '',
+      duration: typeof doc.introductionMedia.duration === 'number' ? doc.introductionMedia.duration : 0,
+      thumbnailUrl: doc.introductionMedia.thumbnailUrl || '',
+      publicId: doc.introductionMedia.publicId || '',
+      embedUrl: doc.introductionMedia.embedUrl || ''
+    } : null,
     volunteerExperiences: volunteer,
     volunteer,
     sharingSettings: doc.sharingSettings || { ...DEFAULT_SHARING_SETTINGS },
@@ -322,6 +334,14 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
   if (!isCanonicalSectionVisible(visibility, settings, 'testScores')) sanitized.testScores = [];
   if (!isCanonicalSectionVisible(visibility, settings, 'organizations')) sanitized.organizations = [];
   if (!isCanonicalSectionVisible(visibility, settings, 'interests')) sanitized.interests = [];
+
+  if (
+    settings.introductionMedia === false ||
+    visibility.introductionMedia === false ||
+    !isCanonicalSectionVisible(visibility, settings, 'personalDetails')
+  ) {
+    sanitized.introductionMedia = null;
+  }
 
   if (!isCanonicalSectionVisible(visibility, settings, 'companyInfo')) {
     sanitized.companyInfo = undefined;
@@ -610,10 +630,14 @@ export async function updateProfile(
   if (clearFieldsSet.has('customFields')) {
     clearFieldsSet.add('customFields');
   }
+  if (clearFieldsSet.has('introductionMedia')) {
+    clearFieldsSet.add('introductionMedia');
+  }
 
   // Track old Cloudinary public IDs for safe post-save cleanup
   let oldAvatarPublicId: string | null = null;
   let oldCoverPublicId: string | null = null;
+  let oldMediaPublicId: string | null = null;
 
   const NESTED_PLAIN_KEYS = new Set([
     'companyInfo',
@@ -622,7 +646,8 @@ export async function updateProfile(
     'customThemeColors',
     'customCta',
     'nfcCard',
-    'openToWork'
+    'openToWork',
+    'introductionMedia'
   ]);
 
   const normalizedInput = syncProfileAliases(updatedData);
@@ -655,6 +680,18 @@ export async function updateProfile(
     }
 
     // 4. Image cleanup tracking
+    if (key === 'introductionMedia') {
+      if (existing.introductionMedia?.publicId) {
+        const newPublicId = value && typeof value === 'object' ? value.publicId : null;
+        if (!newPublicId || newPublicId !== existing.introductionMedia.publicId) {
+          oldMediaPublicId = existing.introductionMedia.publicId;
+        }
+      }
+      if (value === null || value === '' || (typeof value === 'object' && Object.keys(value || {}).length === 0)) {
+        $set['introductionMedia'] = null;
+        continue;
+      }
+    }
     if (key === 'avatar') {
       if (value && value !== existing.avatar && (existing as any).avatarPublicId) {
         oldAvatarPublicId = (existing as any).avatarPublicId;
@@ -725,6 +762,9 @@ export async function updateProfile(
   }
   if (oldCoverPublicId) {
     deleteFromCloudinary(oldCoverPublicId).catch((err) => console.warn('Failed to delete old cover:', err));
+  }
+  if (oldMediaPublicId) {
+    deleteFromCloudinary(oldMediaPublicId, 'video').catch((err) => console.warn('Failed to delete old introduction media:', err));
   }
 
   return {

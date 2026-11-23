@@ -74,10 +74,13 @@ export async function uploadToCloudinary(
     const base64Data = `data:${mimeType};base64,${buffer.toString('base64')}`;
     const cleanPublicId = filename.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
 
+    const isAudioOrVideo = mimeType.startsWith('audio/') || mimeType.startsWith('video/');
+    const resType = isAudioOrVideo ? 'video' : 'auto';
+
     const result = await cloudinary.uploader.upload(base64Data, {
       folder: `avtive/${folder}`,
       public_id: cleanPublicId,
-      resource_type: 'auto',
+      resource_type: resType,
       overwrite: true
     });
 
@@ -152,7 +155,10 @@ export async function ensureCloudinaryAssetUrl(
  * Remove an existing asset from Cloudinary by its public ID.
  * Returns true if destroyed or not found, false on failure.
  */
-export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
+export async function deleteFromCloudinary(
+  publicId: string,
+  resourceType: 'image' | 'video' | 'raw' = 'image'
+): Promise<boolean> {
   if (!publicId || typeof publicId !== 'string') return true;
 
   const cName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_NAME || cloudName;
@@ -169,7 +175,7 @@ export async function deleteFromCloudinary(publicId: string): Promise<boolean> {
   });
 
   try {
-    const res = await cloudinary.uploader.destroy(publicId, { invalidate: true });
+    const res = await cloudinary.uploader.destroy(publicId, { invalidate: true, resource_type: resourceType });
     return res?.result === 'ok' || res?.result === 'not found';
   } catch (err: unknown) {
     console.warn('[Cloudinary Delete Warning]:', err instanceof Error ? err.message : String(err));

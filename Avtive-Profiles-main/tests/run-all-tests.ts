@@ -17,7 +17,8 @@ const testFiles = [
   'tests/avatar-persistence.test.ts',
   'tests/section-visibility.test.ts',
   'tests/contact-and-revert-persistence.test.ts',
-  'tests/oauth-and-stabilization.test.ts'
+  'tests/oauth-and-stabilization.test.ts',
+  'tests/background-and-media-features.test.ts'
 ];
 
 console.log('\n===============================================================');

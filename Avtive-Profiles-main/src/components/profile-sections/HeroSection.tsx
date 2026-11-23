@@ -15,6 +15,7 @@ import { SearchableCombobox } from '@/components/forms/SearchableCombobox';
 import { COUNTRIES } from '@/data/countriesDataset';
 import { compressImageFile, uploadImageToStorage } from '@/lib/imageCompression';
 import { getTitle, getShortBio } from '@/lib/profileGetters';
+import { ProfileIntroductionMediaSection } from '@/components/profile-sections/ProfileIntroductionMedia';
 
 interface HeroSectionProps {
   profile: ProfileData;
@@ -940,6 +941,17 @@ export function HeroSection({
                   />
                 </div>
 
+                {/* Profile Introduction Media inside Edit Form */}
+                <ProfileIntroductionMediaSection
+                  profile={profile}
+                  isEditing={isEditing}
+                  canEdit={canEdit}
+                  theme={theme}
+                  onUpdateField={onUpdateField}
+                  onSavePartial={onSavePartial}
+                  onOpenEdit={onOpenEdit}
+                />
+
                 <SectionSaveBar
                   onSave={handleSaveHero}
                   onCancel={handleCancelHero}
@@ -1104,6 +1116,17 @@ export function HeroSection({
                     </p>
                   </div>
                 )}
+
+                {/* Profile Introduction Media (Voice, Video, or External Link) */}
+                <ProfileIntroductionMediaSection
+                  profile={profile}
+                  isEditing={isEditing}
+                  canEdit={canEdit}
+                  theme={theme}
+                  onUpdateField={onUpdateField}
+                  onSavePartial={onSavePartial}
+                  onOpenEdit={onOpenEdit}
+                />
               </>
             )}
           </div>

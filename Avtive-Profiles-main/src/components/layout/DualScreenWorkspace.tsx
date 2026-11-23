@@ -29,6 +29,7 @@ export interface DualScreenWorkspaceProps {
   className?: string;
   isSaving?: boolean;
   showWindowHeader?: boolean;
+  stageBackgroundStyle?: React.CSSProperties;
 }
 
 export function DualScreenWorkspace({
@@ -37,7 +38,8 @@ export function DualScreenWorkspace({
   mobileContent,
   desktopToolbarRight,
   className = '',
-  showWindowHeader = true
+  showWindowHeader = true,
+  stageBackgroundStyle
 }: DualScreenWorkspaceProps) {
   const { isDark, toggleDarkMode } = usePortfolioTheme();
   const [mobileActiveView, setMobileActiveView] = useState<'editor' | 'preview'>('editor');
@@ -56,7 +58,10 @@ export function DualScreenWorkspace({
   };
 
   return (
-    <div className={`w-full min-h-[100vh] min-h-[100dvh] h-[100vh] h-[100dvh] max-h-[100dvh] flex flex-col justify-start bg-slate-100 dark:bg-[#070B14] text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-200 overflow-hidden box-border pt-[max(0rem,env(safe-area-inset-top))] pb-[max(0rem,env(safe-area-inset-bottom))] pl-[max(0rem,env(safe-area-inset-left))] pr-[max(0rem,env(safe-area-inset-right))] ${className}`}>
+    <div 
+      style={stageBackgroundStyle}
+      className={`w-full min-h-[100vh] min-h-[100dvh] h-[100vh] h-[100dvh] max-h-[100dvh] flex flex-col justify-start ${stageBackgroundStyle ? 'bg-transparent' : 'bg-slate-100 dark:bg-[#070B14]'} text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-200 overflow-hidden box-border pt-[max(0rem,env(safe-area-inset-top))] pb-[max(0rem,env(safe-area-inset-bottom))] pl-[max(0rem,env(safe-area-inset-left))] pr-[max(0rem,env(safe-area-inset-right))] ${className}`}
+    >
       
       {/* ────────────────────────────────────────────────────────────────────────── */}
       {/* PERMANENT TWIN-SCREEN STAGE CONTAINER                                      */}

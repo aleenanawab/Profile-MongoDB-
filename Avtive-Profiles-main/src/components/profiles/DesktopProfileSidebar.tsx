@@ -45,6 +45,7 @@ import {
   Network,
   Compass,
   Star,
+  Palette,
   AlertCircle
 } from 'lucide-react';
 import { useProfileEditor } from '@/context/ProfileEditorContext';
@@ -87,7 +88,8 @@ export const DESKTOP_SIDEBAR_SECTIONS: SidebarSectionItem[] = [
   { key: 'certifications', label: 'Certifications', icon: CheckCircle2, category: 'core' },
   { key: 'languages', label: 'Languages', icon: Globe, category: 'core' },
   { key: 'recommendations', label: 'Recommendations', icon: Quote, category: 'core' },
-  { key: 'socialLinks', label: 'Social Links', icon: Link2, category: 'core' }
+  { key: 'socialLinks', label: 'Social Links', icon: Link2, category: 'core' },
+  { key: 'backgrounds', label: 'Background Themes', icon: Palette, category: 'advanced' }
 ];
 
 interface DesktopSidebarItemProps {

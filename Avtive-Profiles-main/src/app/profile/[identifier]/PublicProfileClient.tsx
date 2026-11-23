@@ -967,10 +967,10 @@ function PublicProfileClientInner({
           style={activeBackgroundTheme ? { ...activeBackgroundTheme.backgroundStyle, backgroundAttachment: 'local' } : undefined}
           className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
-          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${
+          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${
             activeBackgroundTheme 
-              ? 'bg-white/95 dark:bg-[#0A101E]/95 backdrop-blur-md shadow-2xl' 
-              : `${activeThemeConfig.cardBg} shadow-none sm:shadow-xl`
+              ? 'backdrop-blur-md shadow-2xl' 
+              : 'shadow-none sm:shadow-xl'
           } overflow-hidden relative`}>
             <AvtiveDigitalCard
               profile={cardProfile}

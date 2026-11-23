@@ -471,11 +471,13 @@ export function ProfileIntroductionMediaSection({
         <div className={`relative rounded-2xl border transition-all overflow-hidden ${
           !isVisible 
             ? 'border-dashed border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20' 
-            : 'border-slate-200/90 dark:border-white/10 bg-slate-50/90 dark:bg-white/[0.04]'
+            : theme 
+              ? `${theme.subCardBg} ${theme.subCardBorder}` 
+              : 'border-slate-200/90 dark:border-white/10 bg-slate-50/90 dark:bg-white/[0.04]'
         }`}>
           {/* Header Strip with Type Indicator & Edit Controls */}
-          <div className="px-3.5 py-2 flex items-center justify-between border-b border-slate-200/60 dark:border-white/5 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
+          <div className={`px-3.5 py-2 flex items-center justify-between border-b ${theme?.divider || 'border-slate-200/60 dark:border-white/5'} text-xs`}>
+            <div className={`flex items-center gap-1.5 font-semibold ${theme?.textPrimary || 'text-slate-700 dark:text-slate-200'}`}>
               {media.type === 'voice' && (
                 <>
                   <Mic className="w-3.5 h-3.5 text-cyan-500" />
@@ -508,7 +510,7 @@ export function ProfileIntroductionMediaSection({
                 <button
                   type="button"
                   onClick={() => setIsEditorOpen(true)}
-                  className="text-xs font-semibold px-2 py-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors flex items-center gap-1 cursor-pointer"
+                  className={`text-xs font-semibold px-2 py-1 rounded-lg ${theme?.textSecondary || 'text-slate-500'} hover:opacity-80 transition-colors flex items-center gap-1 cursor-pointer`}
                   title="Edit or replace introduction"
                 >
                   <Pencil className="w-3 h-3" />
@@ -546,7 +548,9 @@ export function ProfileIntroductionMediaSection({
                 </button>
 
                 {/* Animated Audio Waveform Bars */}
-                <div className="flex-1 flex items-center gap-1 h-8 px-2 bg-white/60 dark:bg-black/30 rounded-xl border border-slate-200/60 dark:border-white/5 overflow-hidden">
+                <div className={`flex-1 flex items-center gap-1 h-8 px-2 rounded-xl border overflow-hidden ${
+                  theme ? `${theme.subCardBg} ${theme.subCardBorder}` : 'bg-white/60 dark:bg-black/30 border-slate-200/60 dark:border-white/5'
+                }`}>
                   {[24, 45, 78, 60, 90, 40, 70, 85, 30, 55, 95, 65, 35, 75, 50, 80, 45, 65, 90, 30, 50, 85, 60, 40].map((h, idx) => (
                     <span
                       key={idx}
@@ -564,7 +568,7 @@ export function ProfileIntroductionMediaSection({
                 </div>
 
                 {/* Time Display */}
-                <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 font-semibold shrink-0">
+                <div className={`text-[11px] font-mono ${theme?.textSecondary || 'text-slate-500 dark:text-slate-400'} font-semibold shrink-0`}>
                   {Math.floor(audioCurrentTime)}s / {Math.floor(audioDuration || media.duration || 0)}s
                 </div>
               </div>

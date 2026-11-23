@@ -20,15 +20,13 @@ import { ProfileData, ProfileIntroductionMedia } from '../src/types/profile';
 
 describe('Background Theme Collection', () => {
   it('should have predefined categories and presets covering all required styles', () => {
-    assert.ok(BACKGROUND_THEMES.length >= 12, 'Expected at least 12 background presets');
+    assert.ok(BACKGROUND_THEMES.length >= 25, 'Expected at least 25 background presets');
     
     const categories = new Set(BACKGROUND_THEMES.map(t => t.category));
-    assert.ok(categories.has('gradients'), 'Expected gradients category');
-    assert.ok(categories.has('dark'), 'Expected dark category');
-    assert.ok(categories.has('light'), 'Expected light category');
-    assert.ok(categories.has('patterns'), 'Expected patterns category');
-    assert.ok(categories.has('textured'), 'Expected textured category');
-    assert.ok(categories.has('creative'), 'Expected creative category');
+    assert.ok(categories.has('occasions'), 'Expected occasions category');
+    assert.ok(categories.has('festivals'), 'Expected festivals category');
+    assert.ok(categories.has('celebrations'), 'Expected celebrations category');
+    assert.ok(categories.has('everyday'), 'Expected everyday category');
 
     for (const theme of BACKGROUND_THEMES) {
       assert.ok(theme.id, 'Theme must have an id');
@@ -42,7 +40,22 @@ describe('Background Theme Collection', () => {
     const aurora = getBackgroundTheme('aurora-borealis');
     assert.ok(aurora);
     assert.strictEqual(aurora?.name, 'Aurora Borealis');
-    assert.strictEqual(aurora?.category, 'gradients');
+    assert.strictEqual(aurora?.category, 'everyday');
+
+    const christmas = getBackgroundTheme('christmas-wonderland');
+    assert.ok(christmas);
+    assert.strictEqual(christmas?.name, 'Christmas');
+    assert.strictEqual(christmas?.category, 'festivals');
+
+    const eid = getBackgroundTheme('eid-mubarak');
+    assert.ok(eid);
+    assert.strictEqual(eid?.name, 'Eid Mubarak');
+    assert.strictEqual(eid?.category, 'festivals');
+
+    const halloween = getBackgroundTheme('halloween-night');
+    assert.ok(halloween);
+    assert.strictEqual(halloween?.name, 'Halloween');
+    assert.strictEqual(halloween?.category, 'occasions');
 
     const obsidian = getBackgroundTheme('obsidian-grid');
     assert.ok(obsidian);

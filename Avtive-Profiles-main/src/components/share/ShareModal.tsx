@@ -57,7 +57,7 @@ function VisitorPublicShareModal({
       color: { dark: '#000000', light: '#FFFFFF' }
     })
       .then(setQrUrl)
-      .catch(() => {});
+      .catch(() => { });
   }, [isOpen, publicUrl]);
 
   if (!isOpen) return null;
@@ -68,7 +68,7 @@ function VisitorPublicShareModal({
       setCopied(true);
       onCopySuccess?.();
       setTimeout(() => setCopied(false), 2200);
-    } catch {}
+    } catch { }
   };
 
   const handleNativeShare = async () => {
@@ -76,7 +76,7 @@ function VisitorPublicShareModal({
       try {
         await navigator.share({ title: `${profile.name} | Avtive`, url: publicUrl });
         return;
-      } catch {}
+      } catch { }
     }
     await handleCopy();
   };
@@ -88,17 +88,17 @@ function VisitorPublicShareModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#11182B] border border-slate-200 dark:border-white/10 p-6 shadow-2xl space-y-4 text-center"
+        className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 text-center"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-            <Share2 className="w-4 h-4 text-cyan-500" />
+          <h3 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-1.5">
+            <Share2 className="w-4 h-4 text-zinc-900 dark:text-white" />
             <span>Share {profile.name}</span>
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 flex items-center justify-center cursor-pointer"
+            className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 flex items-center justify-center cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />

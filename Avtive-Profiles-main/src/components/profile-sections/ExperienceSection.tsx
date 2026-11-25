@@ -143,7 +143,7 @@ export function ExperienceSection({
           </button>
         ) : (
           canEdit && (
-            <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 opacity-80 hover:opacity-100">
+            <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 opacity-80 hover:opacity-100">
               Click to edit ↗
             </span>
           )
@@ -196,7 +196,7 @@ export function ExperienceSection({
                       <select
                         value={exp.employmentType || ''}
                         onChange={(e) => handleUpdateItem(exp.id, { employmentType: e.target.value })}
-                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer"
+                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
                       >
                         <option value="">Select type...</option>
                         <option value="Full-time">Full-time</option>
@@ -213,7 +213,7 @@ export function ExperienceSection({
                       <select
                         value={exp.locationType || ''}
                         onChange={(e) => handleUpdateItem(exp.id, { locationType: e.target.value as any })}
-                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer"
+                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
                       >
                         <option value="">Select location type...</option>
                         <option value="On-site">On-site</option>

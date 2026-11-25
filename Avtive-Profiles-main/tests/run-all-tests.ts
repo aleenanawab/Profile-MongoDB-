@@ -19,7 +19,8 @@ const testFiles = [
   'tests/contact-and-revert-persistence.test.ts',
   'tests/oauth-and-stabilization.test.ts',
   'tests/background-and-media-features.test.ts',
-  'tests/phase1-sharing-system.test.ts'
+  'tests/phase1-sharing-system.test.ts',
+  'tests/phase2-editor-redesign.test.tsx'
 ];
 
 console.log('\n===============================================================');

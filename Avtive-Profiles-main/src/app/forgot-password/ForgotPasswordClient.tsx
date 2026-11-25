@@ -123,40 +123,40 @@ export default function ForgotPasswordClient() {
     <div className="w-full max-w-4xl mx-auto my-auto py-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
       {/* Left Column: Brand & Security Instructions */}
       <div className="lg:col-span-5 space-y-6 text-left">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-semibold">
-          <Sparkles className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs font-semibold">
+          <Sparkles className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
           <span>In-App Account Recovery</span>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-cyan-500/25">
-              <KeyRound className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white flex items-center justify-center font-extrabold text-white dark:text-black text-xl shadow-xs">
+              <KeyRound className="w-5 h-5" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Reset Password</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-white">Reset Password</h1>
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
             Enter your email or username along with the one-time recovery code provided during registration to securely set a new password.
           </p>
         </div>
 
         <div className="space-y-3 pt-2">
           <div className="flex items-start gap-3">
-            <div className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 mt-0.5 border border-cyan-500/30">
+            <div className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white flex items-center justify-center shrink-0 mt-0.5 border border-zinc-200 dark:border-zinc-800">
               <ShieldCheck className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Zero-Knowledge Recovery</h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              <h4 className="text-xs font-bold text-zinc-950 dark:text-white">Zero-Knowledge Recovery</h4>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                 Only the cryptographic hash of your code is verified. No external email links required.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
+        <div className="p-3.5 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
           <span>Remember your password?</span>
-          <Link href="/login" className="font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 underline underline-offset-4 flex items-center gap-1">
+          <Link href="/login" className="font-bold text-zinc-950 dark:text-white hover:opacity-80 underline underline-offset-4 flex items-center gap-1">
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Sign In</span>
           </Link>
@@ -165,7 +165,7 @@ export default function ForgotPasswordClient() {
 
       {/* Right Column: Reset Password Form */}
       <div className="lg:col-span-7">
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 shadow-xl space-y-5 text-left">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-5 text-left">
           
           <div className="space-y-1">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Account Recovery</h2>
@@ -214,7 +214,7 @@ export default function ForgotPasswordClient() {
 
               <Link
                 href={`/login?email=${encodeURIComponent(identifier.trim())}&reset=success`}
-                className="w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="w-full py-3 px-6 rounded-xl font-bold text-sm bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <span>Return to Login</span>
                 <ArrowRight className="w-4 h-4" />
@@ -234,32 +234,32 @@ export default function ForgotPasswordClient() {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="e.g. aleena@example.com or aleena"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   One-Time Recovery Code
                 </label>
                 <div className="relative">
-                  <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <KeyRound className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
                     value={recoveryCode}
                     onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
                     placeholder="e.g. RC-A1B2-C3D4"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-sm font-mono tracking-wider text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all uppercase"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm font-mono tracking-wider text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all uppercase"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">New Password</label>
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">New Password</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -267,12 +267,12 @@ export default function ForgotPasswordClient() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                    className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white p-1"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-1"
                     aria-label="Toggle password visibility"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -282,9 +282,9 @@ export default function ForgotPasswordClient() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Confirm New Password</label>
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Confirm New Password</label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
@@ -292,12 +292,12 @@ export default function ForgotPasswordClient() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat new password"
-                    className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                    className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white p-1"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-1"
                     aria-label="Toggle confirm password visibility"
                   >
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -308,7 +308,7 @@ export default function ForgotPasswordClient() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 px-6 rounded-xl font-bold text-sm bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
@@ -338,16 +338,16 @@ export default function ForgotPasswordClient() {
       <div className="space-y-3">
         {/* Mobile Header */}
         <div className="flex flex-col items-center justify-center pt-1 pb-1 text-center">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-[10px] font-semibold mb-2">
-            <KeyRound className="w-3 h-3 text-cyan-500 dark:text-cyan-400" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-[10px] font-semibold mb-2">
+            <KeyRound className="w-3 h-3 text-zinc-800 dark:text-zinc-200" />
             <span>Pass Recovery</span>
           </div>
 
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-extrabold text-white text-lg shadow-lg shadow-cyan-500/25 mb-1.5">
-            <KeyRound className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white flex items-center justify-center font-extrabold text-white dark:text-black text-lg shadow-xs mb-1.5">
+            <KeyRound className="w-5 h-5" />
           </div>
-          <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Reset Password</h2>
-          <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">Use your one-time code to set a new password</p>
+          <h2 className="text-lg font-extrabold tracking-tight text-zinc-950 dark:text-white">Reset Password</h2>
+          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">Use your one-time code to set a new password</p>
         </div>
 
         {errorMessage && (
@@ -381,55 +381,55 @@ export default function ForgotPasswordClient() {
 
             <Link
               href={`/login?email=${encodeURIComponent(identifier.trim())}&reset=success`}
-              className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center justify-center gap-1.5"
             >
               <span>Return to Login</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         ) : (
-          <div className="p-3.5 rounded-2xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 shadow-lg space-y-3">
+          <div className="p-3.5 rounded-2xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-3">
             <form onSubmit={handleResetPassword} className="space-y-2.5">
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 ml-0.5">
                   Email or Username
                 </label>
                 <div className="relative">
-                  <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="e.g. aleena@example.com"
-                    className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                    className="w-full pl-8 pr-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 ml-0.5">
                   Recovery Code
                 </label>
                 <div className="relative">
-                  <KeyRound className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <KeyRound className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
                     value={recoveryCode}
                     onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
                     placeholder="RC-XXXX-XXXX"
-                    className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs font-mono tracking-wider text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all uppercase"
+                    className="w-full pl-8 pr-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono tracking-wider text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all uppercase"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 ml-0.5">
                   New Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -437,12 +437,12 @@ export default function ForgotPasswordClient() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="At least 8 chars"
-                    className="w-full pl-8 pr-9 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                    className="w-full pl-8 pr-9 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white p-0.5"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-0.5"
                     aria-label="Toggle password visibility"
                   >
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -452,11 +452,11 @@ export default function ForgotPasswordClient() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 ml-0.5">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
@@ -464,12 +464,12 @@ export default function ForgotPasswordClient() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat password"
-                    className="w-full pl-8 pr-9 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                    className="w-full pl-8 pr-9 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white p-0.5"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white p-0.5"
                     aria-label="Toggle confirm password visibility"
                   >
                     {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -480,7 +480,7 @@ export default function ForgotPasswordClient() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2"
+                className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2"
               >
                 {isLoading ? (
                   <>
@@ -500,9 +500,9 @@ export default function ForgotPasswordClient() {
       </div>
 
       {/* Footer Link */}
-      <div className="pt-3 pb-1 text-center text-[11px] text-slate-500 dark:text-slate-400">
+      <div className="pt-3 pb-1 text-center text-[11px] text-zinc-500 dark:text-zinc-400">
         <span>Remembered your password? </span>
-        <Link href="/login" className="font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 underline underline-offset-4 ml-1">
+        <Link href="/login" className="font-bold text-zinc-950 dark:text-white hover:opacity-80 underline underline-offset-4 ml-1">
           Back to Login
         </Link>
       </div>

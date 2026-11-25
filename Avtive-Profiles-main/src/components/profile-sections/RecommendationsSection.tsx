@@ -132,7 +132,7 @@ export function RecommendationsSection({
     >
       <div className="flex items-center justify-between border-b border-black/5 dark:border-white/5 pb-2">
         <h3 className={`text-xs font-bold uppercase tracking-wider font-mono ${theme.textPrimary} flex items-center gap-1.5`}>
-          <MessageSquare className="w-3.5 h-3.5 text-cyan-500" />
+          <MessageSquare className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
           <span>Write a Recommendation</span>
         </h3>
         <button
@@ -188,14 +188,14 @@ export function RecommendationsSection({
           onChange={(e) => setAuthorName(e.target.value)}
           placeholder="Your full name or title"
           disabled={isSubmitting}
-          className={`w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50`}
+          className={`w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-zinc-900/15 disabled:opacity-50`}
         />
       </div>
 
       <div className="space-y-1">
         <div className="flex justify-between items-center text-[11px]">
           <label className={`font-semibold ${theme.textPrimary}`}>Recommendation *</label>
-          <span className="text-[10px] text-slate-400 font-mono">{message.length}/500</span>
+          <span className="text-[10px] text-zinc-400 font-mono">{message.length}/500</span>
         </div>
         <textarea
           rows={3}
@@ -204,7 +204,7 @@ export function RecommendationsSection({
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Share your experience working with them..."
           disabled={isSubmitting}
-          className={`w-full p-3 min-h-[80px] rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 resize-y`}
+          className={`w-full p-3 min-h-[80px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-zinc-900/15 disabled:opacity-50 resize-y`}
         />
       </div>
 
@@ -217,14 +217,14 @@ export function RecommendationsSection({
             setFormSuccess(null);
           }}
           disabled={isSubmitting}
-          className="min-h-[44px] px-4 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
+          className="min-h-[44px] px-4 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting || !authorName.trim() || !message.trim()}
-          className="min-h-[44px] px-5 rounded-xl text-xs font-bold bg-[#6C4CF1] hover:bg-[#5b3de0] text-white shadow-md shadow-[#6C4CF1]/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`min-h-[44px] px-5 rounded-xl text-xs font-bold ${theme.btnPrimary} flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {isSubmitting ? (
             <>
@@ -252,13 +252,13 @@ export function RecommendationsSection({
       >
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2`}>
-            <Quote className="w-4 h-4 text-cyan-500" />
+            <Quote className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
             <span>Recommendations</span>
           </h2>
           <button
             type="button"
             onClick={() => setIsFormOpen((prev) => !prev)}
-            className="min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold bg-[#6C4CF1]/10 hover:bg-[#6C4CF1]/20 text-[#6C4CF1] dark:text-cyan-400 border border-[#6C4CF1]/20 transition-all flex items-center gap-1.5 cursor-pointer"
+            className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold ${theme.btnSecondary} transition-all flex items-center gap-1.5 cursor-pointer`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>Leave a Recommendation</span>
@@ -303,7 +303,7 @@ export function RecommendationsSection({
             <button
               type="button"
               onClick={() => setIsFormOpen((prev) => !prev)}
-              className="min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold bg-[#6C4CF1]/10 hover:bg-[#6C4CF1]/20 text-[#6C4CF1] dark:text-cyan-400 border border-[#6C4CF1]/20 transition-all flex items-center gap-1.5 cursor-pointer"
+              className={`min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold ${theme.btnSecondary} transition-all flex items-center gap-1.5 cursor-pointer`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>Leave a Recommendation</span>

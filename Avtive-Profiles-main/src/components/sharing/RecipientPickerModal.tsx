@@ -105,7 +105,7 @@ export function RecipientPickerModal({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search name, company, or label..."
-            className="w-full min-h-[42px] pl-10 pr-3.5 py-2 rounded-xl bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+            className="w-full min-h-[42px] pl-10 pr-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/15"
           />
         </div>
 
@@ -149,8 +149,8 @@ export function RecipientPickerModal({
                   onClick={() => toggleRecipient(contact)}
                   className={`w-full p-3 flex items-center justify-between gap-3 text-left transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-cyan-500/[0.06] dark:bg-cyan-500/10'
-                      : 'hover:bg-slate-50 dark:hover:bg-white/[0.03]'
+                      ? 'bg-zinc-100 dark:bg-zinc-900'
+                      : 'hover:bg-zinc-50 dark:hover:bg-white/[0.03]'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -222,8 +222,8 @@ export function RecipientPickerModal({
         {/* Event / Recipient Context Label Section */}
         <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.02] space-y-2.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
               <span>Optional Event / Recipient Label</span>
             </label>
             {eventLabelDraft && (
@@ -250,8 +250,8 @@ export function RecipientPickerModal({
                   }}
                   className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-cyan-600 text-white border-cyan-600 dark:bg-cyan-500 dark:text-slate-950 dark:border-cyan-500 font-semibold'
-                      : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-slate-300'
+                      ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white font-semibold'
+                      : 'bg-white dark:bg-white/5 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400'
                   }`}
                 >
                   {lbl}
@@ -261,13 +261,13 @@ export function RecipientPickerModal({
           </div>
 
           <div className="relative">
-            <Plus className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Plus className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={customLabelInput}
               onChange={(e) => setCustomLabelInput(e.target.value)}
               placeholder="Or type custom label (e.g. Investor Meeting)"
-              className="w-full pl-8 pr-3 py-2 rounded-xl bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+              className="w-full pl-8 pr-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/15"
             />
           </div>
         </div>

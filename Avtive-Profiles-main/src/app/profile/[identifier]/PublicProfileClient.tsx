@@ -29,6 +29,8 @@ import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
 import { getBackgroundTheme, BackgroundTheme } from '@/data/backgroundThemes';
+import { ProfileEditorSheet } from '@/components/editor/ProfileEditorSheet';
+import { ProfileBackgroundLayer, resolveBackgroundMode } from '@/components/editor/BackgroundRenderer';
 import { SharePresetKey } from '@/types/sharing';
 
 export interface PublicProfileClientProps {
@@ -106,6 +108,7 @@ function PublicProfileClientInner({
     saveProfile,
     handleSwitchToProfile,
     flushAutosave,
+    discardUnsavedChanges,
     isUploadingAvatar,
     isUploadingCover,
     updateProfilePartial
@@ -772,10 +775,11 @@ function PublicProfileClientInner({
   };
 
   const handleCancelEdit = () => {
+    discardUnsavedChanges();
+    setPreviewBackgroundTheme(null);
     const baseline = savedBaseline || profile;
     setProfile(baseline);
     setCurrentDraft(baseline);
-    handleSwitchToProfile(baseline);
     setIsEditing(false);
     const slug = baseline.slug || baseline.id || initialProfile.slug || initialProfile.id;
     if (slug && typeof window !== 'undefined') {
@@ -858,12 +862,18 @@ function PublicProfileClientInner({
       sharingSettings: liveProfile.sharingSettings || base.sharingSettings,
       sectionOrder: liveProfile.sectionOrder || base.sectionOrder,
       savedBackgroundThemeIds: liveProfile.savedBackgroundThemeIds ?? base.savedBackgroundThemeIds,
+      backgroundType: previewBackgroundTheme ? 'occasion' : (liveProfile.backgroundType ?? base.backgroundType),
       activeBackgroundThemeId: (previewBackgroundTheme ? previewBackgroundTheme.id : (liveProfile.activeBackgroundThemeId ?? base.activeBackgroundThemeId)),
       introductionMedia: liveProfile.introductionMedia !== undefined ? liveProfile.introductionMedia : base.introductionMedia,
       type: profileType,
       theme: activeTheme
     };
   }, [profile, isEditing, liveProfile, profileType, activeTheme, previewBackgroundTheme]);
+
+  const hasCustomBackground = resolveBackgroundMode({
+    ...cardProfile,
+    ...(previewBackgroundTheme ? { backgroundType: 'occasion', activeBackgroundThemeId: previewBackgroundTheme.id } : {}),
+  }) !== 'default';
 
   const desktopView = (
     <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 overflow-hidden relative">
@@ -918,13 +928,13 @@ function PublicProfileClientInner({
             />
             <motion.div
               key="desktop-sidebar-drawer"
-              initial={{ x: -340, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -340, opacity: 0 }}
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
               onMouseEnter={handlePanelMouseEnter}
               onMouseLeave={handlePanelMouseLeave}
-              className="fixed top-0 bottom-0 left-0 z-50 h-full max-h-[100dvh] shadow-2xl max-w-full overflow-hidden"
+              className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
             >
               <DesktopProfileSidebar
                 onClose={handleCloseDesktop}
@@ -936,7 +946,7 @@ function PublicProfileClientInner({
         )}
       </AnimatePresence>
 
-      {/* Slide-In Section Drawer on Mobile (< lg) */}
+      {/* Bottom-Up Section Drawer on Mobile (< lg) */}
       <AnimatePresence>
         {mobileOpen && (
           <div className="lg:hidden">
@@ -951,11 +961,11 @@ function PublicProfileClientInner({
             />
             <motion.div
               key="mobile-viewport-sidebar-drawer"
-              initial={{ x: '-100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '-100%', opacity: 0 }}
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="fixed top-0 bottom-0 left-0 z-50 h-full w-full max-w-[320px] shadow-2xl"
+              className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
             >
               <DesktopProfileSidebar
                 onClose={handleCloseMobile}
@@ -976,17 +986,21 @@ function PublicProfileClientInner({
             if (mobileOpen) handleCloseMobile();
             if (isSidebarOpen) handleCloseSidebar();
           }}
-          style={activeBackgroundTheme ? { ...activeBackgroundTheme.backgroundStyle, backgroundAttachment: 'local' } : undefined}
           className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
-          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${activeBackgroundTheme
-              ? 'backdrop-blur-md shadow-2xl'
-              : 'shadow-none sm:shadow-xl'
+          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${hasCustomBackground
+            ? 'backdrop-blur-md shadow-2xl'
+            : 'shadow-none sm:shadow-xl'
             } overflow-hidden relative`}>
+            {isOwner && cardProfile.profileVisibility === 'private' && (
+              <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                Private profile — Visitors see your name only
+              </div>
+            )}
             <AvtiveDigitalCard
               profile={cardProfile}
               canEdit={isOwner}
-              isEditing={isEditing}
+              isEditing={false}
               onPreviewBackgroundTheme={setPreviewBackgroundTheme}
               isConnected={false}
               onDraftChange={handleDraftChange}
@@ -1072,13 +1086,17 @@ function PublicProfileClientInner({
             if (mobileOpen) handleCloseMobile();
             if (isSidebarOpen) handleCloseSidebar();
           }}
-          style={activeBackgroundTheme ? { ...activeBackgroundTheme.backgroundStyle, backgroundAttachment: 'local' } : undefined}
           className="h-full min-h-0 overflow-y-auto overscroll-contain transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
+          {isOwner && cardProfile.profileVisibility === 'private' && (
+            <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[10px] font-semibold text-zinc-700 dark:text-zinc-300">
+              Private profile — Visitors see your name only
+            </div>
+          )}
           <AvtiveDigitalCard
             profile={cardProfile}
             canEdit={isOwner}
-            isEditing={isEditing}
+            isEditing={false}
             onPreviewBackgroundTheme={setPreviewBackgroundTheme}
             isConnected={false}
             onDraftChange={handleDraftChange}
@@ -1128,13 +1146,13 @@ function PublicProfileClientInner({
               />
               <motion.div
                 key="mobile-drawer-panel"
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: '100%', opacity: 0 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-                className="absolute top-0 bottom-0 right-0 h-full w-[80px] shrink-0 flex flex-col items-center py-2 px-1 border-l border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#070D1A] shadow-2xl overflow-y-auto overscroll-contain scrollbar-none z-40"
+                className="absolute inset-x-0 bottom-0 z-40 w-full max-h-[65%] rounded-t-2xl border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto overscroll-contain scrollbar-none py-3 px-2"
               >
-                <div className="w-full flex flex-col items-center gap-1.5 pb-4">
+                <div className="w-full grid grid-cols-4 gap-1.5 pb-2">
                   {mobileNavSections.map((section) => {
                     const IconComponent = section.icon;
                     const isActive = activeTabSection === section.key;
@@ -1146,9 +1164,9 @@ function PublicProfileClientInner({
                           handleSectionSelect(section.key);
                           handleCloseSidebar();
                         }}
-                        className={`min-h-[42px] h-[44px] w-full max-w-[68px] rounded-xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer select-none active:scale-95 ${isActive
-                            ? 'bg-[#6C4CF1]/15 text-[#6C4CF1] dark:bg-cyan-500/20 dark:text-cyan-300 border border-[#6C4CF1]/30 dark:border-cyan-400/30 font-bold shadow-xs'
-                            : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/10'
+                        className={`min-h-[42px] h-[44px] w-full rounded-xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer select-none active:scale-95 ${isActive
+                          ? 'bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white font-bold shadow-xs'
+                          : 'text-zinc-700 dark:text-zinc-200 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900'
                           }`}
                         title={section.label}
                         aria-label={section.label}
@@ -1166,7 +1184,7 @@ function PublicProfileClientInner({
           )}
         </AnimatePresence>
 
-        {/* Slide-In Section Drawer on Mobile Phone Chassis - STRICTLY EDIT MODE ONLY */}
+        {/* Bottom-Up Section Drawer on Mobile Phone Chassis */}
         <AnimatePresence>
           {isEditing && mobileOpen && (
             <>
@@ -1181,11 +1199,11 @@ function PublicProfileClientInner({
               />
               <motion.div
                 key="mobile-chassis-sidebar-drawer"
-                initial={{ x: '-100%', opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: '-100%', opacity: 0 }}
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: '100%', opacity: 0 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-                className="absolute top-0 bottom-0 left-0 z-50 h-full w-full max-w-[320px] shadow-2xl"
+                className="absolute inset-x-0 bottom-0 z-50 w-full max-h-[82%] rounded-t-3xl shadow-2xl overflow-hidden"
               >
                 <DesktopProfileSidebar
                   onClose={handleCloseMobile}
@@ -1203,21 +1221,18 @@ function PublicProfileClientInner({
   return (
     <div
       data-theme={activeTheme}
-      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${activeBackgroundTheme ? 'bg-transparent' : activeThemeConfig.pageBg
+      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${hasCustomBackground ? 'bg-transparent' : activeThemeConfig.pageBg
         } ${activeThemeConfig.textPrimary} transition-all duration-300 font-sans relative`}
     >
-      {/* Visual Background Theme Layer (At the very back of the complete profile) */}
-      {activeBackgroundTheme && (
-        <div
-          className="fixed inset-0 pointer-events-none z-0 transition-all duration-700 ease-in-out"
-          style={{ ...activeBackgroundTheme.backgroundStyle, zIndex: 0 }}
-          aria-hidden="true"
-        />
-      )}
+      {/* Visual Background Layer (Image / Animated Video / Occasion Theme) */}
+      <ProfileBackgroundLayer
+        profile={cardProfile}
+        overrideOccasionThemeId={previewBackgroundTheme?.id}
+      />
 
       {/* Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed top-4 right-4 z-50 px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-semibold shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-4 right-4 z-[60] px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-semibold shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in slide-in-from-top-2">
           {toastMessage}
         </div>
       )}
@@ -1227,10 +1242,35 @@ function PublicProfileClientInner({
         workflowSubtitle="Verified Public Profile"
         currentUrlPath={`/profile/${profile.slug || profile.id}`}
         showWindowHeader={false}
-        stageBackgroundStyle={activeBackgroundTheme?.backgroundStyle}
         desktopContent={desktopView}
         mobileContent={mobileView}
       />
+
+      {/* P3 Same-Page Bottom-Up Profile Editor Sheet */}
+      <AnimatePresence>
+        {isEditing && isOwner && (
+          <ProfileEditorSheet
+            profile={cardProfile}
+            theme={activeThemeConfig}
+            isUploadingAvatar={isUploadingAvatar}
+            isUploadingCover={isUploadingCover}
+            onCancelClose={handleCancelEdit}
+            onDoneClose={(savedProfile) => {
+              setProfile(savedProfile);
+              setCurrentDraft(savedProfile);
+              setIsEditing(false);
+              const targetSlug = savedProfile.slug || savedProfile.id || initialProfile.slug || initialProfile.id;
+              if (targetSlug && typeof window !== 'undefined') {
+                window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
+              }
+              showToast('Profile saved successfully!');
+            }}
+            onSavePartial={handleSavePartial}
+            onPreviewBackgroundTheme={setPreviewBackgroundTheme}
+            onShowToast={showToast}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Connect / Exchange Contact Modal */}
       {isConnectModalOpen && (

@@ -13,7 +13,9 @@ import {
   Check, 
   AlertCircle,
   Tag,
-  LayoutGrid
+  LayoutGrid,
+  FileText,
+  Lock
 } from 'lucide-react';
 import { 
   ProfileData, 
@@ -140,7 +142,7 @@ export function AvtiveDigitalCard({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const activeProfile = profile;
-  const activeThemeKey = activeProfile.theme || 'elegant';
+  const activeThemeKey = activeProfile.theme || 'editorial';
   const theme = getThemeConfig(activeThemeKey);
 
   const isCompany = normalizeProfileType(activeProfile.type) === 'team';
@@ -196,6 +198,42 @@ export function AvtiveDigitalCard({
       onCancelEdit();
     }
   };
+
+  if (!canEdit && activeProfile.profileVisibility === 'private') {
+    return (
+      <div className="relative w-full text-center">
+        <div
+          data-theme={activeThemeKey}
+          className={`w-full overflow-hidden transition-colors duration-200 px-6 py-16 sm:py-24 ${theme.cardBg}`}
+        >
+          <div className="max-w-sm mx-auto space-y-4">
+            <div className="w-12 h-12 mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+              <Lock className="w-5 h-5 text-zinc-900 dark:text-white" />
+            </div>
+            <h1 className={`text-2xl font-bold tracking-tight ${theme.textPrimary}`}>
+              {activeProfile.name || 'Private Profile'}
+            </h1>
+            <p className={`text-xs ${theme.textSecondary}`}>
+              Private profile — Only this person&apos;s name is visible publicly.
+            </p>
+          </div>
+          <div className="mt-12 pt-5 border-t border-zinc-200/70 dark:border-zinc-800/70">
+            <div className={`flex items-center justify-center gap-1 text-xs ${theme.textSecondary}`}>
+              <span>Powered by</span>
+              <a
+                href="https://www.avtive.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`font-bold ${theme.accentText} hover:underline transition-colors`}
+              >
+                Avtive
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full text-left">
@@ -261,7 +299,12 @@ export function AvtiveDigitalCard({
         {(() => {
           const dynamicSectionKeys = (activeProfile.dynamicSections || []).map((s) => s.key || s.id);
           const customFieldKeys = (activeProfile.customFields || []).map((f) => `custom-field-${f.id}`);
-          const extraKeys = [...dynamicSectionKeys, ...customFieldKeys, ...(isEditing || canEdit ? ['backgrounds'] : [])];
+          const extraKeys = [
+            ...dynamicSectionKeys,
+            ...customFieldKeys,
+            ...(activeProfile.resumeUrl ? ['resume'] : []),
+            ...(isEditing ? ['backgrounds'] : []),
+          ];
           const effectiveOrder = getCanonicalSectionOrder(activeProfile.sectionOrder, activeProfile.type, extraKeys);
 
           const sharing = activeProfile.sharingSettings || {};
@@ -665,10 +708,40 @@ export function AvtiveDigitalCard({
                   </div>
                 );
 
+              case 'resume':
+              case 'cv':
+                if (!activeProfile.resumeUrl || !isSectionVisible('resume')) return null;
+                return (
+                  <div key="resume" id="section-resume" className={`px-4 sm:px-6 md:px-8 py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-10 h-10 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} flex items-center justify-center shrink-0`}>
+                          <FileText className={`w-4 h-4 ${theme.accentText}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
+                            CV / Resume
+                          </h2>
+                          <p className={`text-xs truncate ${theme.textSecondary}`}>
+                            {activeProfile.resumeFileName || 'Attached document'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={onOpenResumeModal}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${theme.btnPrimary} transition-colors shrink-0 cursor-pointer`}
+                      >
+                        View PDF
+                      </button>
+                    </div>
+                  </div>
+                );
+
               case 'backgrounds':
               case 'themes':
               case 'background-themes':
-                if (!isEditing && !canEdit) return null;
+                if (!isEditing) return null;
                 return (
                   <BackgroundThemeGallery
                     key="backgrounds"
@@ -700,12 +773,12 @@ export function AvtiveDigitalCard({
                         key={sectionKey} 
                         onClick={() => canEdit && onSelectSection?.('customFields', customField.id)}
                         className={`relative group/cf px-4 sm:px-6 md:px-8 py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors space-y-2.5 ${
-                          canEdit && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
+                          canEdit && onSelectSection ? 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60' : ''
                         }`}
                       >
                         {canEdit && onSelectSection && (
                           <div className="absolute top-4 right-6 opacity-0 group-hover/cf:opacity-100 transition-opacity">
-                            <span className="bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full shadow flex items-center gap-1">
+                            <span className="bg-black text-white dark:bg-white dark:text-black text-[10px] font-semibold px-2 py-0.5 rounded-full shadow flex items-center gap-1">
                               <Tag className="w-2.5 h-2.5" />
                               Edit Field
                             </span>
@@ -713,7 +786,7 @@ export function AvtiveDigitalCard({
                         )}
                         <div className="flex items-center justify-between">
                           <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary} flex items-center gap-1.5`}>
-                            <Tag className="w-3.5 h-3.5 text-purple-500" />
+                            <Tag className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                             <span>{title}</span>
                           </h2>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full ${theme.badgeBg} ${theme.badgeText} font-mono font-semibold`}>

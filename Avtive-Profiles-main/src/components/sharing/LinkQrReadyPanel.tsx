@@ -351,7 +351,7 @@ export function LinkQrReadyPanel({
               <button
                 type="button"
                 onClick={onEditRecipients}
-                className="text-[11px] font-semibold text-cyan-700 dark:text-cyan-400 hover:underline cursor-pointer"
+                className="text-[11px] font-semibold text-zinc-900 dark:text-zinc-200 hover:underline cursor-pointer"
               >
                 Edit
               </button>
@@ -461,7 +461,7 @@ export function LinkQrReadyPanel({
             type="button"
             disabled={isSendingEmail}
             onClick={handleSendEmail}
-            className="w-full min-h-[44px] py-2.5 px-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full min-h-[44px] py-2.5 px-4 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-950 dark:text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isSendingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
             <span>Send Share Link by Email to {emailRecipients.length} Recipient(s)</span>

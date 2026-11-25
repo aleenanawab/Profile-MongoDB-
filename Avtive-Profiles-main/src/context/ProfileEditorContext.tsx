@@ -62,9 +62,15 @@ export interface DraggableLinkItem {
 }
 
 export const LIVE_PROFILE_ATOM_KEYS: (keyof ProfileData)[] = [
+  'profileVisibility',
+  'backgroundType',
+  'customBackgroundImage',
+  'customBackgroundVideo',
   'savedBackgroundThemeIds',
   'activeBackgroundThemeId',
   'introductionMedia',
+  'resumeUrl',
+  'resumeFileName',
   'username',
   'slug',
   'name',
@@ -254,6 +260,18 @@ export interface ProfileEditorContextValue {
   sharingSettings: SharingSettings;
   setSharingSettings: React.Dispatch<React.SetStateAction<SharingSettings>>;
 
+  profileVisibility: 'public' | 'private';
+  setProfileVisibility: (v: 'public' | 'private') => void;
+  backgroundType: 'default' | 'image' | 'video' | 'occasion';
+  setBackgroundType: (v: 'default' | 'image' | 'video' | 'occasion') => void;
+  customBackgroundImage: string;
+  setCustomBackgroundImage: (v: string) => void;
+  customBackgroundVideo: string;
+  setCustomBackgroundVideo: (v: string) => void;
+  resumeUrl: string;
+  setResumeUrl: (v: string) => void;
+  resumeFileName: string;
+  setResumeFileName: (v: string) => void;
   savedBackgroundThemeIds: string[];
   setSavedBackgroundThemeIds: React.Dispatch<React.SetStateAction<string[]>>;
   activeBackgroundThemeId: string;
@@ -295,6 +313,7 @@ export interface ProfileEditorContextValue {
   handleCopyLink: () => Promise<void>;
   handleSaveChanges: () => Promise<void>;
   handleSwitchToProfile: (newProf: ProfileData) => void;
+  discardUnsavedChanges: () => void;
   handleProfileSectionLiveUpdate: (updatedFields: Partial<ProfileData>) => void;
   handleProfileSectionSaveSuccess: (savedProfile: ProfileData, isNew?: boolean) => void;
 
@@ -443,6 +462,18 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   setSectionVisibility: () => { },
   sharingSettings: {},
   setSharingSettings: () => { },
+  profileVisibility: 'public',
+  setProfileVisibility: () => { },
+  backgroundType: 'default',
+  setBackgroundType: () => { },
+  customBackgroundImage: '',
+  setCustomBackgroundImage: () => { },
+  customBackgroundVideo: '',
+  setCustomBackgroundVideo: () => { },
+  resumeUrl: '',
+  setResumeUrl: () => { },
+  resumeFileName: '',
+  setResumeFileName: () => { },
   savedBackgroundThemeIds: [],
   setSavedBackgroundThemeIds: () => { },
   activeBackgroundThemeId: '',
@@ -475,6 +506,7 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   toggleVisibilityField: () => { },
   handleCopyLink: async () => { },
   handleSaveChanges: async () => { },
+  discardUnsavedChanges: () => { },
   handleProfileSectionLiveUpdate: () => { },
   handleProfileSectionSaveSuccess: () => { },
 };
@@ -559,6 +591,7 @@ export function ProfileEditorProvider({
   const requestCounterRef = React.useRef<number>(0);
   const latestDispatchedRef = React.useRef<number>(0);
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const statusResetTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = React.useRef<boolean>(false);
   const lastSavedSnapshotRef = React.useRef<string>('');
   const lastSavedProfileRef = React.useRef<ProfileData>(initialProfile);
@@ -657,6 +690,27 @@ export function ProfileEditorProvider({
   );
 
   // ── Background Themes & Introduction Media ─────────────────────────────────
+  const [profileVisibility, setProfileVisibility] = useState<'public' | 'private'>(
+    initialProfile.profileVisibility === 'private' ? 'private' : 'public'
+  );
+  const [backgroundType, setBackgroundType] = useState<'default' | 'image' | 'video' | 'occasion'>(
+    initialProfile.backgroundType ||
+      (initialProfile.customBackgroundVideo
+        ? 'video'
+        : initialProfile.customBackgroundImage
+        ? 'image'
+        : initialProfile.activeBackgroundThemeId
+        ? 'occasion'
+        : 'default')
+  );
+  const [customBackgroundImage, setCustomBackgroundImage] = useState<string>(
+    initialProfile.customBackgroundImage || ''
+  );
+  const [customBackgroundVideo, setCustomBackgroundVideo] = useState<string>(
+    initialProfile.customBackgroundVideo || ''
+  );
+  const [resumeUrl, setResumeUrl] = useState<string>(initialProfile.resumeUrl || '');
+  const [resumeFileName, setResumeFileName] = useState<string>(initialProfile.resumeFileName || '');
   const [savedBackgroundThemeIds, setSavedBackgroundThemeIds] = useState<string[]>(
     Array.isArray(initialProfile.savedBackgroundThemeIds) ? initialProfile.savedBackgroundThemeIds : []
   );
@@ -769,6 +823,12 @@ export function ProfileEditorProvider({
       sharingSettings: sharingSettings,
       companyInfo: profile.companyInfo,
       teamMembers: profile.teamMembers,
+      profileVisibility: profileVisibility,
+      backgroundType: backgroundType,
+      customBackgroundImage: customBackgroundImage,
+      customBackgroundVideo: customBackgroundVideo,
+      resumeUrl: resumeUrl,
+      resumeFileName: resumeFileName,
       savedBackgroundThemeIds: savedBackgroundThemeIds !== undefined ? savedBackgroundThemeIds : (profile.savedBackgroundThemeIds || []),
       activeBackgroundThemeId: activeBackgroundThemeId !== undefined ? activeBackgroundThemeId : (profile.activeBackgroundThemeId || ''),
       introductionMedia: introductionMedia !== undefined ? introductionMedia : (profile.introductionMedia || null)
@@ -782,6 +842,7 @@ export function ProfileEditorProvider({
       skills, services, projects, experiences, education,
       activeSocialsPayload, customFields, dynamicSections,
       canonicalSectionOrder, sectionVisibility, sharingSettings,
+      profileVisibility, backgroundType, customBackgroundImage, customBackgroundVideo, resumeUrl, resumeFileName,
       savedBackgroundThemeIds, activeBackgroundThemeId, introductionMedia
     ]
   );
@@ -963,6 +1024,17 @@ export function ProfileEditorProvider({
     if (key === 'savedBackgroundThemeIds' && Array.isArray(val)) setSavedBackgroundThemeIds(val as string[]);
     if (key === 'activeBackgroundThemeId' && typeof val === 'string') setActiveBackgroundThemeId(val);
     if (key === 'introductionMedia') setIntroductionMedia(val as ProfileIntroductionMedia | null);
+    if (key === 'profileVisibility' && (val === 'public' || val === 'private')) setProfileVisibility(val);
+    if (
+      key === 'backgroundType' &&
+      (val === 'default' || val === 'image' || val === 'video' || val === 'occasion')
+    ) {
+      setBackgroundType(val);
+    }
+    if (key === 'customBackgroundImage' && typeof val === 'string') setCustomBackgroundImage(val);
+    if (key === 'customBackgroundVideo' && typeof val === 'string') setCustomBackgroundVideo(val);
+    if (key === 'resumeUrl' && typeof val === 'string') setResumeUrl(val);
+    if (key === 'resumeFileName' && typeof val === 'string') setResumeFileName(val);
   }, []);
 
   // ── Upload Handlers ───────────────────────────────────────────────────────
@@ -1233,15 +1305,8 @@ export function ProfileEditorProvider({
     [onSaveSuccess]
   );
 
-  // ── Switch Profile Persona ────────────────────────────────────────────────
-  const handleSwitchToProfile = useCallback((newProf: ProfileData) => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-    lastSavedProfileRef.current = newProf;
-    setProfile(newProf);
-    setSavedBaseline(newProf);
+  // Hydrate all editor atoms from a canonical ProfileData snapshot
+  const applyProfileAtoms = useCallback((newProf: ProfileData) => {
     setActiveTheme(newProf.theme === 'default' ? 'editorial' : (newProf.theme || 'editorial'));
 
     const fName = newProf.firstName || (newProf.name ? newProf.name.split(' ')[0] : '');
@@ -1279,6 +1344,21 @@ export function ProfileEditorProvider({
     setSocialLinks(buildSocialLinksFromProfile(newProf));
     setCustomFields(Array.isArray(newProf.customFields) ? newProf.customFields : []);
     setDynamicSections(Array.isArray(newProf.dynamicSections) ? newProf.dynamicSections : []);
+    setProfileVisibility(newProf.profileVisibility === 'private' ? 'private' : 'public');
+    setBackgroundType(
+      newProf.backgroundType ||
+        (newProf.customBackgroundVideo
+          ? 'video'
+          : newProf.customBackgroundImage
+          ? 'image'
+          : newProf.activeBackgroundThemeId
+          ? 'occasion'
+          : 'default')
+    );
+    setCustomBackgroundImage(newProf.customBackgroundImage || '');
+    setCustomBackgroundVideo(newProf.customBackgroundVideo || '');
+    setResumeUrl(newProf.resumeUrl || '');
+    setResumeFileName(newProf.resumeFileName || '');
     setSavedBackgroundThemeIds(Array.isArray(newProf.savedBackgroundThemeIds) ? newProf.savedBackgroundThemeIds : []);
     setActiveBackgroundThemeId(newProf.activeBackgroundThemeId || '');
     setIntroductionMedia(newProf.introductionMedia || null);
@@ -1292,6 +1372,18 @@ export function ProfileEditorProvider({
     );
     if (newProf.sharingSettings) setSharingSettings(newProf.sharingSettings);
     setIsConfirmed(false);
+  }, []);
+
+  // Switch Profile Persona
+  const handleSwitchToProfile = useCallback((newProf: ProfileData) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    lastSavedProfileRef.current = newProf;
+    setProfile(newProf);
+    setSavedBaseline(newProf);
+    applyProfileAtoms(newProf);
 
     setStatusMessage({
       type: 'success',
@@ -1300,7 +1392,21 @@ export function ProfileEditorProvider({
     setTimeout(() => {
       setStatusMessage((prev) => (prev?.type === 'success' ? null : prev));
     }, 3500);
-  }, []);
+  }, [applyProfileAtoms]);
+
+  // Discard only unsaved edits and revert atoms back to the last confirmed saved baseline
+  const discardUnsavedChanges = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    const baseline = lastSavedProfileRef.current || savedBaseline;
+    setProfile(baseline);
+    applyProfileAtoms(baseline);
+    setAutosaveStatus('idle');
+    setAutosaveStatusText('');
+    setStatusMessage(null);
+  }, [savedBaseline, applyProfileAtoms]);
 
   // ── Centralized Save Profile with Sequence Counter & Concurrency Guard ──
   const saveProfile = useCallback(async (
@@ -1491,7 +1597,12 @@ export function ProfileEditorProvider({
 
       onSaveSuccess?.(finalProfile);
 
-      setTimeout(() => {
+      if (statusResetTimerRef.current) {
+        clearTimeout(statusResetTimerRef.current);
+      }
+      statusResetTimerRef.current = setTimeout(() => {
+        statusResetTimerRef.current = null;
+        if (typeof window === 'undefined') return;
         setAutosaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
         setAutosaveStatusText((prev) => (prev === 'Saved' ? '' : prev));
         setStatusMessage((prev) => (prev?.type === 'success' ? null : prev));
@@ -1649,6 +1760,10 @@ export function ProfileEditorProvider({
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
       }
+      if (statusResetTimerRef.current) {
+        clearTimeout(statusResetTimerRef.current);
+        statusResetTimerRef.current = null;
+      }
       if (diffProfile(lastSavedProfileRef.current, liveProfileRef.current).hasChanges) {
         saveProfileRef.current?.(undefined, { keepalive: true });
       }
@@ -1727,6 +1842,12 @@ export function ProfileEditorProvider({
       sectionOrder, setSectionOrder,
       sectionVisibility, setSectionVisibility,
       sharingSettings, setSharingSettings,
+      profileVisibility, setProfileVisibility,
+      backgroundType, setBackgroundType,
+      customBackgroundImage, setCustomBackgroundImage,
+      customBackgroundVideo, setCustomBackgroundVideo,
+      resumeUrl, setResumeUrl,
+      resumeFileName, setResumeFileName,
       savedBackgroundThemeIds, setSavedBackgroundThemeIds,
       activeBackgroundThemeId, setActiveBackgroundThemeId,
       introductionMedia, setIntroductionMedia,
@@ -1758,6 +1879,7 @@ export function ProfileEditorProvider({
       handleCopyLink,
       handleSaveChanges,
       handleSwitchToProfile,
+      discardUnsavedChanges,
       handleProfileSectionLiveUpdate,
       handleProfileSectionSaveSuccess,
       currentActiveIdentifier,
@@ -1793,6 +1915,8 @@ export function ProfileEditorProvider({
       skills, services, about, projects, experiences, education,
       socialLinks, customFields, dynamicSections,
       sectionOrder, sectionVisibility, sharingSettings,
+      profileVisibility, backgroundType, customBackgroundImage, customBackgroundVideo,
+      resumeUrl, resumeFileName, savedBackgroundThemeIds, activeBackgroundThemeId, introductionMedia,
       fullName, liveProfile, activeSocialsPayload,
       isUploadingAvatar, isUploadingCover, isSaving, isDirty, isConfirmed, statusMessage, copySuccess,
       activeSection, activeSectionTarget, isDark, toastMessage, _userProfiles, currentIdentifier,

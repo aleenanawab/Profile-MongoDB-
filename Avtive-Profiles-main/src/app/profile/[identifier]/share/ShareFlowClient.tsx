@@ -177,20 +177,20 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
     <div className="w-full max-w-5xl mx-auto my-auto py-6 space-y-6 text-left">
       
       {/* Desktop Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
             <span>Privacy &amp; Sharing Studio</span>
             <span>&middot;</span>
             <span>Step {currentStep} of 4</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-white">
             {currentStep === 1 && 'Select Profile Persona to Share'}
             {currentStep === 2 && 'Privacy Limits & Section Visibility'}
             {currentStep === 3 && 'Reorder Profile Sections'}
             {currentStep === 4 && 'Generate Share Link & QR Code'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             {currentStep === 1 && 'Pick which persona pass you are configuring for sharing.'}
             {currentStep === 2 && 'Toggle off sensitive information to make it strictly private.'}
             {currentStep === 3 && 'Arrange the display order of your public portfolio sections.'}
@@ -204,7 +204,7 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
             <button
               type="button"
               onClick={() => setCurrentStep((s) => (s - 1) as any)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-slate-300 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:border-zinc-800 dark:text-zinc-300 transition-colors"
             >
               Back
             </button>
@@ -215,7 +215,7 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
               type="button"
               onClick={() => handleSave()}
               disabled={isSaving}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
               <span>Save &amp; Continue</span>
@@ -224,7 +224,7 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
           ) : (
             <Link
               href={`/profile/${targetIdentifier}`}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center gap-2"
             >
               <span>View Live Profile</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -243,19 +243,19 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
                 key={r.id}
                 onClick={() => setSelectedProfile(r)}
                 className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                  isSel ? 'bg-cyan-50 dark:bg-cyan-950/20 border-cyan-500 shadow-lg ring-1 ring-cyan-500/40' : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                  isSel ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-md ring-1 ring-black/20 dark:ring-white/25' : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <img src={r.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200'} alt={r.name} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-white/10" />
+                  <img src={r.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200'} alt={r.name} className="w-12 h-12 rounded-full object-cover border border-zinc-200 dark:border-zinc-800" />
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">{r.profileName || r.name}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{r.designation || 'Professional'}</p>
+                    <h3 className="text-sm font-bold text-zinc-950 dark:text-white">{r.profileName || r.name}</h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{r.designation || 'Professional'}</p>
                   </div>
                 </div>
-                <div className="pt-4 mt-3 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs">
-                  <span className="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-bold uppercase">{r.type || 'Individual'}</span>
-                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSel ? 'border-cyan-500 bg-cyan-500 text-white' : 'border-slate-300 dark:border-white/20'}`}>
+                <div className="pt-4 mt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs">
+                  <span className="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 font-bold uppercase">{r.type || 'Individual'}</span>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSel ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black' : 'border-zinc-300 dark:border-zinc-700'}`}>
                     {isSel && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
                 </div>
@@ -387,12 +387,12 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
               <p className="text-xs text-slate-500 dark:text-slate-400">Share this link directly or download your digital QR card.</p>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-200 dark:border-white/10 flex items-center justify-between gap-3">
-              <span className="text-xs font-mono text-cyan-600 dark:text-cyan-300 truncate">{publicUrl}</span>
+            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+              <span className="text-xs font-mono text-zinc-900 dark:text-zinc-200 truncate">{publicUrl}</span>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="px-3 py-1.5 rounded-lg bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-xs font-bold flex items-center gap-1.5 hover:bg-cyan-500/20 dark:hover:bg-cyan-500/30 transition-colors shrink-0"
+                className="px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white text-xs font-bold flex items-center gap-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors shrink-0"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copied!' : 'Copy'}</span>
@@ -459,14 +459,14 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
                     key={r.id}
                     onClick={() => setSelectedProfile(r)}
                     className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isSel ? 'bg-cyan-50 dark:bg-[#151D30] border-cyan-500 dark:border-cyan-400 shadow-xs' : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10'
+                      isSel ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-xs' : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800'
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-bold text-slate-900 dark:text-white">{r.profileName || r.name}</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">{r.designation}</div>
+                      <div className="text-xs font-bold text-zinc-950 dark:text-white">{r.profileName || r.name}</div>
+                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">{r.designation}</div>
                     </div>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSel ? 'border-cyan-500 bg-cyan-500 text-white' : 'border-slate-300 dark:border-zinc-700'}`}>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSel ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black' : 'border-zinc-300 dark:border-zinc-700'}`}>
                       {isSel && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                     </div>
                   </div>
@@ -545,7 +545,7 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
                 <img src={qrCodeDataUrl} alt="QR" className="w-36 h-36" />
               </div>
             )}
-            <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 text-[10px] font-mono text-cyan-600 dark:text-cyan-300 truncate">
+            <div className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] font-mono text-zinc-900 dark:text-zinc-200 truncate">
               {publicUrl}
             </div>
             <div className="grid grid-cols-2 gap-2">

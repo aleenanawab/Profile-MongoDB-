@@ -39,7 +39,7 @@ export const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
         className={`w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border ${
           hasError
             ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500/20'
-            : 'border-slate-200 dark:border-zinc-700/80 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500/20'
+            : 'border-zinc-200 dark:border-zinc-800 focus:border-zinc-900 dark:focus:border-white focus:ring-zinc-900/15'
         } bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 ${className}`}
         onChange={(e) => {
           if (!onChange) return;
@@ -66,7 +66,7 @@ export const FormTextarea = React.forwardRef<HTMLTextAreaElement, FormTextareaPr
         className={`w-full min-h-[44px] p-3.5 text-base sm:text-sm font-normal rounded-xl border ${
           hasError
             ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500/20'
-            : 'border-slate-200 dark:border-zinc-700/80 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500/20'
+            : 'border-zinc-200 dark:border-zinc-800 focus:border-zinc-900 dark:focus:border-white focus:ring-zinc-900/15'
         } bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 transition-all resize-y disabled:opacity-50 ${className}`}
         onChange={(e) => {
           if (!onChange) return;
@@ -137,7 +137,7 @@ export function SectionSaveBar({
           )}
 
           {isSaving && (
-            <span className="text-[11px] font-medium text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 py-1">
+            <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-300 flex items-center gap-1.5 py-1">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>Saving…</span>
             </span>

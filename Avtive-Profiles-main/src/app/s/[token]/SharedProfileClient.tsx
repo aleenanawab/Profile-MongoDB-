@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { ResolveShareLinkResult } from '@/lib/db/shareLinks';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
+import { ProfileBackgroundLayer, resolveBackgroundMode } from '@/components/editor/BackgroundRenderer';
 import { getThemeConfig } from '@/components/ui/themeStyles';
 import { getBackgroundTheme } from '@/data/backgroundThemes';
 import { downloadVCard } from '@/lib/vcard';
@@ -73,8 +74,8 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
 
     const Icon = config.icon;
     return (
-      <main className="min-h-[100dvh] w-full flex items-center justify-center p-4 bg-[#FAFAF9] dark:bg-[#090E1B] text-slate-900 dark:text-white font-sans">
-        <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#11182B] border border-slate-200 dark:border-white/10 p-7 text-center space-y-5 shadow-xl">
+      <main className="min-h-[100dvh] w-full flex items-center justify-center p-4 bg-white dark:bg-black text-zinc-950 dark:text-white font-sans">
+        <div className="w-full max-w-md rounded-3xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-7 text-center space-y-5 shadow-xl">
           <div className={`w-14 h-14 mx-auto rounded-2xl border flex items-center justify-center ${config.tone}`}>
             <Icon className="w-6 h-6" />
           </div>
@@ -83,10 +84,10 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
             <span className={`inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${config.tone}`}>
               {config.badge}
             </span>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-xl font-bold text-zinc-950 dark:text-white">
               {config.title}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
               {config.desc}
             </p>
           </div>
@@ -94,7 +95,7 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
           <div className="pt-2">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center min-h-[42px] px-5 py-2 rounded-xl bg-slate-900 hover:bg-black text-white dark:bg-white dark:hover:bg-slate-200 dark:text-slate-900 text-xs font-bold transition-colors"
+              className="inline-flex items-center justify-center min-h-[42px] px-5 py-2 rounded-xl bg-black hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black text-xs font-bold transition-colors"
             >
               Go to Avtive
             </Link>
@@ -136,12 +137,15 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
     }
   };
 
+  const bgMode = resolveBackgroundMode(profile);
+  const hasCustomBg = bgMode !== 'default';
+
   return (
     <div
       data-theme={activeThemeKey}
-      style={bgTheme ? { ...bgTheme.backgroundStyle, backgroundAttachment: 'fixed' } : undefined}
-      className={`min-h-[100dvh] w-full ${bgTheme ? '' : themeConfig.pageBg} ${themeConfig.textPrimary} font-sans relative`}
+      className={`min-h-[100dvh] w-full ${hasCustomBg ? 'bg-transparent' : themeConfig.pageBg} ${themeConfig.textPrimary} font-sans relative`}
     >
+      <ProfileBackgroundLayer profile={profile} />
       {/* Top Visitor Action Strip */}
       <header className={`sticky top-0 z-30 backdrop-blur-md ${themeConfig.headerBg} border-b ${themeConfig.divider}`}>
         <div className="max-w-3xl mx-auto px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2 flex-wrap">
@@ -153,14 +157,14 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
                   {shareMeta.title}
                 </span>
                 {shareMeta.eventLabel && (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 font-semibold">
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-semibold">
                     <Tag className="w-2.5 h-2.5" />
                     {shareMeta.eventLabel}
                   </span>
                 )}
               </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" />
+              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <ShieldCheck className="w-3 h-3 text-zinc-700 dark:text-zinc-300 shrink-0" />
                 <span>
                   Permission-scoped pass ({shareMeta.selectedFieldsCount} items)
                   {shareMeta.expiryOption === '1_view' ? ' · Single-view link consumed' : ''}
@@ -203,7 +207,7 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
             <button
               type="button"
               onClick={() => setIsConnectOpen(true)}
-              className="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+              className={`min-h-[36px] px-2.5 py-1.5 rounded-xl ${themeConfig.btnPrimary} text-[11px] font-bold flex items-center gap-1 cursor-pointer`}
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Connect</span>
@@ -216,7 +220,7 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
               title="Copy Share Link"
               aria-label="Copy Share Link"
             >
-              {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
+              {copiedUrl ? <Check className="w-3.5 h-3.5 text-zinc-900 dark:text-white" /> : <Share2 className="w-3.5 h-3.5" />}
             </button>
           </div>
         </div>

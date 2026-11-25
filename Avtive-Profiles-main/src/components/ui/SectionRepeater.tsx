@@ -130,7 +130,7 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
             </button>
           ) : (
             canEdit && (
-              <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 opacity-80 hover:opacity-100">
+              <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 opacity-80 hover:opacity-100">
                 Click to edit ↗
               </span>
             )

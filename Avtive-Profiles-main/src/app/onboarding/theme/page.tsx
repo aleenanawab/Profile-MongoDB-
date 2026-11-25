@@ -19,11 +19,11 @@ interface ThemeCardData {
 const THEME_OPTIONS: ThemeCardData[] = [
   {
     id: 'editorial',
-    title: 'Editorial Minimal',
-    previewBg: 'bg-[#FAFAF9]',
-    previewBorder: 'border-stone-300',
-    accentColor: '#C2410C',
-    cardBg: 'bg-white text-stone-900',
+    title: 'Editorial Monochrome',
+    previewBg: 'bg-white',
+    previewBorder: 'border-zinc-300',
+    accentColor: '#09090B',
+    cardBg: 'bg-white text-zinc-950',
   },
   {
     id: 'cyber',
@@ -125,7 +125,7 @@ function ThemeStepContent() {
           <button
             type="button"
             onClick={handleNext}
-            className="min-h-[44px] px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+            className="min-h-[44px] px-6 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center gap-2 cursor-pointer transition-all active:scale-95"
           >
             <span>Continue</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -143,8 +143,8 @@ function ThemeStepContent() {
               onClick={() => handleSelectTheme(item.id)}
               className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden group ${
                 isSelected
-                  ? 'bg-cyan-50/50 dark:bg-cyan-950/20 border-cyan-500 dark:border-cyan-400 shadow-lg ring-2 ring-cyan-500/30'
-                  : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/25 hover:bg-slate-50 dark:hover:bg-[#121B32]'
+                  ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-md ring-1 ring-black/20 dark:ring-white/25'
+                  : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-900/60'
               }`}
             >
               <div>
@@ -159,14 +159,14 @@ function ThemeStepContent() {
                   </div>
                 </div>
 
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                <h2 className="text-base font-bold text-zinc-950 dark:text-white">
                   {item.title}
                 </h2>
               </div>
 
-              <div className="pt-4 mt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-end">
+              <div className="pt-4 mt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end">
                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-                  isSelected ? 'border-cyan-500 bg-cyan-500 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950 font-bold' : 'border-slate-300 dark:border-white/20'
+                  isSelected ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black font-bold' : 'border-zinc-300 dark:border-zinc-700'
                 }`}>
                   {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                 </div>
@@ -214,8 +214,8 @@ function ThemeStepContent() {
                 onClick={() => handleSelectTheme(item.id)}
                 className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                   isSelected
-                    ? 'bg-cyan-50/50 dark:bg-[#151D30] border-cyan-500 dark:border-cyan-400 shadow-xs ring-2 ring-cyan-500/30'
-                    : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                    ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-xs ring-1 ring-black/20 dark:ring-white/25'
+                    : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -223,7 +223,7 @@ function ThemeStepContent() {
                   <div 
                     className={`w-12 h-10 rounded-lg p-1.5 flex flex-col justify-between shrink-0 border ${
                       item.id === 'editorial'
-                        ? 'bg-[#FAFAF9] border-stone-200 text-stone-900'
+                        ? 'bg-white border-zinc-200 text-zinc-950'
                         : item.id === 'cyber'
                         ? 'bg-[#09090B] border-emerald-500/40 text-emerald-400'
                         : 'bg-[#180D15] border-rose-500/40 text-rose-300'
@@ -233,7 +233,7 @@ function ThemeStepContent() {
                     <div className="w-6 h-1 rounded-2xs bg-current opacity-50" />
                   </div>
 
-                  <h2 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  <h2 className="text-xs font-bold text-zinc-950 dark:text-white truncate">
                     {item.title}
                   </h2>
                 </div>
@@ -241,8 +241,8 @@ function ThemeStepContent() {
                 <div
                   className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                     isSelected
-                      ? 'border-cyan-500 bg-cyan-500 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950 font-bold'
-                      : 'border-slate-300 dark:border-zinc-700 bg-transparent'
+                      ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black font-bold'
+                      : 'border-zinc-300 dark:border-zinc-700 bg-transparent'
                   }`}
                 >
                   {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -257,14 +257,14 @@ function ThemeStepContent() {
         <button
           type="button"
           onClick={handleSkip}
-          className="min-h-[44px] py-2.5 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center"
+          className="min-h-[44px] py-2.5 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold transition-colors cursor-pointer flex items-center justify-center"
         >
           Skip
         </button>
         <button
           type="button"
           onClick={handleNext}
-          className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+          className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
         >
           <span>Continue</span>
           <ArrowRight className="w-3.5 h-3.5" />

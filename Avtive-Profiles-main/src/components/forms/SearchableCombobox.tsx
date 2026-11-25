@@ -237,9 +237,9 @@ export function SearchableCombobox({
           hasError
             ? 'border-rose-400 dark:border-rose-500 ring-1 ring-rose-500/20'
             : isOpen
-            ? 'border-cyan-500 dark:border-cyan-400 ring-2 ring-cyan-500/20'
-            : 'border-slate-200 dark:border-zinc-700/80 hover:border-slate-300 dark:hover:border-zinc-600'
-        } bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 flex flex-wrap items-center gap-1.5 transition-all cursor-text ${
+            ? 'border-zinc-900 dark:border-white ring-2 ring-zinc-900/15 dark:ring-white/15'
+            : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+        } bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 flex flex-wrap items-center gap-1.5 transition-all cursor-text ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
@@ -251,14 +251,14 @@ export function SearchableCombobox({
             return (
               <span
                 key={val}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/50 shadow-2xs animate-in fade-in zoom-in-95"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 shadow-2xs animate-in fade-in zoom-in-95"
               >
                 <span>{displayLabel}</span>
                 <button
                   type="button"
                   onClick={(e) => handleRemoveChip(val, e)}
                   disabled={disabled}
-                  className="p-0.5 hover:bg-cyan-200/50 dark:hover:bg-cyan-800/50 rounded-full transition-colors cursor-pointer text-cyan-600 dark:text-cyan-400"
+                  className="p-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full transition-colors cursor-pointer text-zinc-600 dark:text-zinc-300"
                   title={`Remove ${displayLabel}`}
                 >
                   <X className="w-3 h-3" />
@@ -334,17 +334,17 @@ export function SearchableCombobox({
                 onMouseEnter={() => setHighlightedIndex(0)}
                 className={`px-3 py-2 flex items-center justify-between gap-2 cursor-pointer transition-colors ${
                   highlightedIndex === 0
-                    ? 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300'
-                    : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-700/40'
+                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white'
+                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/60'
                 }`}
               >
                 <div className="flex items-center gap-1.5 font-medium">
-                  <Plus className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                  <Plus className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
                   <span>
-                    Add custom: <strong className="font-semibold text-cyan-600 dark:text-cyan-400">&ldquo;{searchQuery.trim()}&rdquo;</strong>
+                    Add custom: <strong className="font-semibold text-zinc-950 dark:text-white">&ldquo;{searchQuery.trim()}&rdquo;</strong>
                   </span>
                 </div>
-                <span className="text-[10px] font-mono uppercase text-cyan-600/70 dark:text-cyan-400/70">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 dark:text-zinc-400">
                   Enter ↵
                 </span>
               </li>
@@ -368,20 +368,20 @@ export function SearchableCombobox({
                     onMouseEnter={() => setHighlightedIndex(itemIndex)}
                     className={`px-3 py-2 flex items-center justify-between gap-2 cursor-pointer transition-colors ${
                       isHighlighted
-                        ? 'bg-slate-100 dark:bg-zinc-700/70 text-slate-900 dark:text-zinc-100'
+                        ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white'
                         : isSelected
-                        ? 'bg-cyan-50/50 dark:bg-cyan-950/20 text-slate-900 dark:text-zinc-100'
-                        : 'text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-700/40'
+                        ? 'bg-zinc-100/70 dark:bg-zinc-800/70 text-zinc-950 dark:text-white'
+                        : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {opt.icon && <span className="shrink-0">{opt.icon}</span>}
                       <div className="truncate">
-                        <span className={`font-medium ${isSelected ? 'text-cyan-600 dark:text-cyan-400 font-semibold' : ''}`}>
+                        <span className={`font-medium ${isSelected ? 'text-zinc-950 dark:text-white font-semibold' : ''}`}>
                           {opt.label}
                         </span>
                         {opt.sublabel && (
-                          <span className="text-[11px] text-slate-400 dark:text-zinc-500 ml-1.5 font-normal">
+                          <span className="text-[11px] text-zinc-400 dark:text-zinc-500 ml-1.5 font-normal">
                             ({opt.sublabel})
                           </span>
                         )}
@@ -390,11 +390,11 @@ export function SearchableCombobox({
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       {opt.badge && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-700 text-slate-500 dark:text-zinc-400">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
                           {opt.badge}
                         </span>
                       )}
-                      {isSelected && <Check className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-zinc-950 dark:text-white shrink-0" />}
                     </div>
                   </li>
                 );

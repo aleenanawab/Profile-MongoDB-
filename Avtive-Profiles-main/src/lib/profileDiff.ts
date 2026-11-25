@@ -61,6 +61,10 @@ export const FIELD_CLASSIFICATIONS = {
   connectionsCount: 'primitive',
   industry: 'primitive',
   headline: 'primitive',
+  profileVisibility: 'primitive',
+  backgroundType: 'primitive',
+  customBackgroundImage: 'primitive',
+  customBackgroundVideo: 'primitive',
   activeBackgroundThemeId: 'primitive',
 
   // Nested Plain Objects (diffed with dot-paths)

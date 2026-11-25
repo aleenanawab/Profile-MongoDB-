@@ -201,6 +201,14 @@ export function mapDocToProfileData(doc: any): ProfileData {
     interests: Array.isArray(doc.interests) ? doc.interests : [],
     savedBackgroundThemeIds: Array.isArray(doc.savedBackgroundThemeIds) ? doc.savedBackgroundThemeIds : [],
     activeBackgroundThemeId: doc.activeBackgroundThemeId || '',
+    profileVisibility: doc.profileVisibility === 'private' ? 'private' : 'public',
+    backgroundType: (doc.backgroundType === 'image' || doc.backgroundType === 'video' || doc.backgroundType === 'occasion')
+      ? doc.backgroundType
+      : (doc.customBackgroundVideo ? 'video' : doc.customBackgroundImage ? 'image' : doc.activeBackgroundThemeId ? 'occasion' : 'default'),
+    customBackgroundImage: doc.customBackgroundImage || '',
+    customBackgroundVideo: doc.customBackgroundVideo || '',
+    resumeUrl: doc.resumeUrl || '',
+    resumeFileName: doc.resumeFileName || '',
     introductionMedia: doc.introductionMedia && typeof doc.introductionMedia === 'object' && doc.introductionMedia.url ? {
       type: doc.introductionMedia.type || 'link',
       url: doc.introductionMedia.url || '',
@@ -241,10 +249,84 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
     return profile;
   }
 
-  const settings = profile.sharingSettings || DEFAULT_SHARING_SETTINGS;
-  const visibility = profile.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
   // Deep clone to ensure purity so caller's object is never mutated in-place
   const sanitized: ProfileData = JSON.parse(JSON.stringify(profile));
+
+  // Enforce Private profile visibility: non-owners see ONLY basic display name
+  if (profile.profileVisibility === 'private') {
+    return {
+      id: sanitized.id,
+      _id: sanitized._id,
+      slug: sanitized.slug,
+      type: sanitized.type,
+      name: sanitized.name || 'Private Profile',
+      firstName: sanitized.firstName || undefined,
+      lastName: sanitized.lastName || undefined,
+      profileVisibility: 'private',
+      theme: sanitized.theme || 'editorial',
+      backgroundType: 'default',
+      activeBackgroundThemeId: '',
+      customBackgroundImage: '',
+      customBackgroundVideo: '',
+      savedBackgroundThemeIds: [],
+      avatar: '',
+      coverImage: undefined,
+      designation: '',
+      professionalTitle: '',
+      headline: '',
+      tagline: '',
+      company: '',
+      location: '',
+      country: '',
+      officeAddress: '',
+      bio: '',
+      about: '',
+      shortBio: '',
+      fullBio: '',
+      email: '',
+      phone: '',
+      whatsapp: '',
+      website: '',
+      websites: [],
+      customContacts: [],
+      skills: [],
+      services: [],
+      projects: [],
+      experiences: [],
+      experience: [],
+      education: [],
+      certifications: [],
+      recommendations: [],
+      languages: [],
+      customFields: [],
+      dynamicSections: [],
+      featured: [],
+      honorsAwards: [],
+      publications: [],
+      patents: [],
+      courses: [],
+      testScores: [],
+      organizations: [],
+      interests: [],
+      volunteerExperiences: [],
+      volunteer: [],
+      teamMembers: [],
+      socials: [],
+      socialLinks: [],
+      introductionMedia: null,
+      resumeUrl: '',
+      resumeFileName: '',
+      openToWork: undefined,
+      companyInfo: undefined,
+      fieldPrivacy: {},
+      sharingSettings: { ...DEFAULT_SHARING_SETTINGS },
+      sectionVisibility: { ...DEFAULT_SECTION_VISIBILITY },
+      sectionOrder: []
+    };
+  }
+
+  const settings = profile.sharingSettings || DEFAULT_SHARING_SETTINGS;
+  const visibility = profile.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
 
   if (settings.photo === false || !isCanonicalSectionVisible(visibility, settings, 'profile') || visibility['photo'] === false) {
     sanitized.avatar = '';
@@ -509,6 +591,14 @@ export async function createProfileForUser(
     interests: Array.isArray(data.interests) ? data.interests : [],
     volunteerExperiences: data.volunteerExperiences || (data as any).volunteer || [],
     volunteer: data.volunteerExperiences || (data as any).volunteer || [],
+    savedBackgroundThemeIds: Array.isArray(data.savedBackgroundThemeIds) ? data.savedBackgroundThemeIds : [],
+    activeBackgroundThemeId: data.activeBackgroundThemeId || '',
+    profileVisibility: data.profileVisibility === 'private' ? 'private' : 'public',
+    backgroundType: data.backgroundType || (data.customBackgroundVideo ? 'video' : data.customBackgroundImage ? 'image' : data.activeBackgroundThemeId ? 'occasion' : 'default'),
+    customBackgroundImage: data.customBackgroundImage || '',
+    customBackgroundVideo: data.customBackgroundVideo || '',
+    resumeUrl: data.resumeUrl || '',
+    resumeFileName: data.resumeFileName || '',
     sharingSettings: data.sharingSettings || { ...DEFAULT_SHARING_SETTINGS },
     sectionVisibility: data.sectionVisibility || { ...DEFAULT_SECTION_VISIBILITY },
     sectionOrder: data.sectionOrder || [...DEFAULT_SECTION_ORDER],
@@ -721,8 +811,14 @@ export async function updateProfile(
       continue;
     }
 
-    // 2. Reject blob: or data: URLs in avatar/coverImage
-    if ((key === 'avatar' || key === 'coverImage') && typeof value === 'string') {
+    // 2. Reject blob: or data: URLs in avatar/coverImage/customBackgroundImage/customBackgroundVideo
+    if (
+      (key === 'avatar' ||
+        key === 'coverImage' ||
+        key === 'customBackgroundImage' ||
+        key === 'customBackgroundVideo') &&
+      typeof value === 'string'
+    ) {
       if (value.startsWith('blob:') || value.startsWith('data:')) {
         skippedKeys.push(key);
         continue;

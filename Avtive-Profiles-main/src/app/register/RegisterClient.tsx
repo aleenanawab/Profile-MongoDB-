@@ -157,12 +157,12 @@ export default function RegisterClient() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Aleena Nawab"
-              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all box-border min-w-0"
+              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-sm text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all box-border min-w-0"
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
+            <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Email Address</label>
             <input
               type="email"
               required
@@ -170,7 +170,7 @@ export default function RegisterClient() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. aleena@example.com"
-              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all box-border min-w-0"
+              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-sm text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all box-border min-w-0"
             />
           </div>
 
@@ -184,12 +184,12 @@ export default function RegisterClient() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="w-full pl-3.5 pr-11 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all box-border min-w-0"
+                className="w-full pl-3.5 pr-11 py-2.5 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-sm text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all box-border min-w-0"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer"
                 aria-label="Toggle password visibility"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -199,7 +199,7 @@ export default function RegisterClient() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Confirm Password</label>
+            <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Confirm Password</label>
             <div className="relative w-full">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -208,12 +208,12 @@ export default function RegisterClient() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Repeat your password"
-                className="w-full pl-3.5 pr-11 py-2.5 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all box-border min-w-0"
+                className="w-full pl-3.5 pr-11 py-2.5 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-sm text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all box-border min-w-0"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer"
                 aria-label="Toggle confirm password visibility"
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -224,7 +224,7 @@ export default function RegisterClient() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full min-h-[44px] py-2.5 sm:py-3 px-6 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-98"
+            className="w-full min-h-[44px] py-2.5 sm:py-3 px-6 rounded-xl font-bold text-xs sm:text-sm bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 active:scale-98"
           >
             {isLoading ? (
               <>
@@ -271,9 +271,9 @@ export default function RegisterClient() {
       </div>
 
       {/* Already Registered Link Card */}
-      <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-400 text-center w-full min-w-0 box-border">
+      <div className="p-3.5 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 text-center w-full min-w-0 box-border">
         Already registered?{' '}
-        <Link href="/login" className="font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 underline underline-offset-4 ml-1 min-h-[44px] inline-flex items-center">
+        <Link href="/login" className="font-bold text-zinc-950 dark:text-white hover:opacity-80 underline underline-offset-4 ml-1 min-h-[44px] inline-flex items-center">
           Sign in to existing account
         </Link>
       </div>
@@ -289,21 +289,21 @@ export default function RegisterClient() {
       <div className="space-y-3">
         {/* Mobile Centered Brand Header */}
         <div className="flex flex-col items-center justify-center pt-1 pb-1 text-center">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-[10px] font-semibold mb-2">
-            <Sparkles className="w-3 h-3 text-cyan-500 dark:text-cyan-400" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-[10px] font-semibold mb-2">
+            <Sparkles className="w-3 h-3 text-zinc-800 dark:text-zinc-200" />
             <span>Avtive Mobile Pass</span>
           </div>
 
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-extrabold text-white text-lg shadow-lg shadow-cyan-500/25 mb-1.5">
+          <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white flex items-center justify-center font-extrabold text-white dark:text-black text-lg shadow-xs mb-1.5">
             A
           </div>
-          <span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Create Your Account</span>
-          <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">Instant Digital Persona &amp; NFC Profile</p>
+          <span className="text-lg font-extrabold tracking-tight text-zinc-950 dark:text-white">Create Your Account</span>
+          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">Instant Digital Persona &amp; NFC Profile</p>
 
           {/* Micro Trust Pills */}
           <div className="flex items-center justify-center gap-2 mt-2">
-            <span className="inline-flex items-center gap-1 text-[9px] font-medium text-cyan-700 dark:text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
-              <ShieldCheck className="w-2.5 h-2.5 text-cyan-600 dark:text-cyan-400" />
+            <span className="inline-flex items-center gap-1 text-[9px] font-medium text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-2 py-0.5 rounded-full">
+              <ShieldCheck className="w-2.5 h-2.5 text-zinc-700 dark:text-zinc-300" />
               <span>Encrypted</span>
             </span>
             <span className="inline-flex items-center gap-1 text-[9px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
@@ -322,10 +322,10 @@ export default function RegisterClient() {
         )}
 
         {/* Mobile Form Card */}
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 shadow-lg space-y-3">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-3">
           <form onSubmit={handleRegister} className="space-y-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Full Name</label>
+              <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 ml-0.5">Full Name</label>
               <input
                 type="text"
                 required
@@ -333,12 +333,12 @@ export default function RegisterClient() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Aleena Nawab"
-                className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Email Address</label>
+              <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 ml-0.5">Email Address</label>
               <input
                 type="email"
                 required
@@ -346,12 +346,12 @@ export default function RegisterClient() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="e.g. aleena@example.com"
-                className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                className="w-full px-3 py-2 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Password</label>
+              <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 ml-0.5">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -360,7 +360,7 @@ export default function RegisterClient() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 8 characters"
-                  className="w-full pl-3 pr-11 py-2 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                  className="w-full pl-3 pr-11 py-2 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                 />
                 <button
                   type="button"
@@ -384,12 +384,12 @@ export default function RegisterClient() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat your password"
-                  className="w-full pl-3 pr-11 py-2 min-h-[44px] rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                  className="w-full pl-3 pr-11 py-2 min-h-[44px] rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black focus:ring-1 focus:ring-black dark:focus:border-white dark:focus:ring-white transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-zinc-700 dark:hover:text-white cursor-pointer"
                   aria-label="Toggle confirm password visibility"
                 >
                   {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -400,7 +400,7 @@ export default function RegisterClient() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
               {isLoading ? (
                 <>
@@ -448,9 +448,9 @@ export default function RegisterClient() {
       </div>
 
       {/* Footer Link */}
-      <div className="pt-3 pb-1 text-center text-xs text-slate-500 dark:text-slate-400">
+      <div className="pt-3 pb-1 text-center text-xs text-zinc-500 dark:text-zinc-400">
         <span>Already have an account? </span>
-        <Link href="/login" className="font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 underline underline-offset-4 ml-1 min-h-[44px] inline-flex items-center">
+        <Link href="/login" className="font-bold text-zinc-950 dark:text-white hover:opacity-80 underline underline-offset-4 ml-1 min-h-[44px] inline-flex items-center">
           Log in
         </Link>
       </div>
@@ -470,23 +470,23 @@ export default function RegisterClient() {
 
       {registeredRecoveryCode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md max-h-[85dvh] overflow-y-auto p-6 rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 shadow-2xl text-left space-y-4">
+          <div className="w-full max-w-md max-h-[85dvh] overflow-y-auto p-6 rounded-3xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 shadow-2xl text-left space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-2xl bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-white flex items-center justify-center shrink-0">
                 <KeyRound className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Save Your Recovery Code</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Account created successfully</p>
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white">Save Your Recovery Code</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">Account created successfully</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
               Avtive uses secure in-app recovery. If you ever forget your password, you will need this recovery code to reset it.
             </p>
 
-            <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-black/50 border border-slate-300 dark:border-white/15 flex items-center justify-between gap-3">
-              <span className="font-mono font-bold text-base tracking-widest text-cyan-600 dark:text-cyan-400 selection:bg-cyan-500/20">
+            <div className="p-3.5 rounded-2xl bg-zinc-100 dark:bg-black/50 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3">
+              <span className="font-mono font-bold text-base tracking-widest text-zinc-950 dark:text-white selection:bg-zinc-900/20">
                 {registeredRecoveryCode}
               </span>
               <button
@@ -496,7 +496,7 @@ export default function RegisterClient() {
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className="px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-white dark:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/20 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                className="px-3.5 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-white dark:bg-zinc-900 text-zinc-800 dark:text-white border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -518,7 +518,7 @@ export default function RegisterClient() {
               onClick={() => {
                 window.location.href = redirectDestination || '/onboarding/role';
               }}
-              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <span>I have saved my code — Continue to Setup</span>
               <ArrowRight className="w-3.5 h-3.5" />

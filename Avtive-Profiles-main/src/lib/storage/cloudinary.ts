@@ -75,7 +75,8 @@ export async function uploadToCloudinary(
     const cleanPublicId = filename.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
 
     const isAudioOrVideo = mimeType.startsWith('audio/') || mimeType.startsWith('video/');
-    const resType = isAudioOrVideo ? 'video' : 'auto';
+    const isRawDoc = mimeType === 'application/pdf';
+    const resType = isAudioOrVideo ? 'video' : isRawDoc ? 'raw' : 'auto';
 
     const result = await cloudinary.uploader.upload(base64Data, {
       folder: `avtive/${folder}`,

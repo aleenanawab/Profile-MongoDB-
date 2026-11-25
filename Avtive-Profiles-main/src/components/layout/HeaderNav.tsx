@@ -172,7 +172,7 @@ export function HeaderNav({
                   title="Cancel and discard changes"
                   aria-label="Cancel Changes"
                 >
-                  <X className="w-4 h-4 text-rose-500" />
+                  <X className="w-4 h-4 text-zinc-900 dark:text-white" />
                 </button>
               )}
               {onSaveEdits && (
@@ -205,7 +205,7 @@ export function HeaderNav({
               aria-label="Toggle Theme"
             >
               {isDark ? (
-                <Sun className="w-4 h-4 text-amber-400" />
+                <Sun className="w-4 h-4 text-white" />
               ) : (
                 <Moon className={`w-4 h-4 ${theme.accentText}`} />
               )}
@@ -230,7 +230,7 @@ export function HeaderNav({
             <button
               type="button"
               onClick={onLogout}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer flex items-center justify-center"
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl border ${theme.cardBorder} ${theme.cardBg} hover:opacity-85 ${theme.textPrimary} font-bold text-xs shadow-2xs transition-all active:scale-95 shrink-0 cursor-pointer flex items-center justify-center`}
               title="Sign Out"
               aria-label="Logout"
             >

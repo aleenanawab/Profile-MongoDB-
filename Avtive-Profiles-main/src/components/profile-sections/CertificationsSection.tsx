@@ -287,7 +287,7 @@ export function CertificationsSection({
             <button
               type="button"
               onClick={handleAddCert}
-              className={`w-full py-2 border border-dashed border-cyan-500/30 rounded-xl text-xs font-semibold ${theme.accentText} hover:bg-cyan-500/5 transition-colors flex items-center justify-center gap-1.5 cursor-pointer`}
+              className={`w-full py-2 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold ${theme.accentText} hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer`}
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Another Certificate</span>
@@ -296,7 +296,7 @@ export function CertificationsSection({
         </div>
       ) : (
         isEditing ? (
-          <div className={`p-5 rounded-2xl ${theme.cardBg} border border-dashed border-cyan-500/30 text-center space-y-2.5`}>
+          <div className={`p-5 rounded-2xl ${theme.cardBg} border border-dashed border-zinc-300 dark:border-zinc-700 text-center space-y-2.5`}>
             <p className={`text-xs ${theme.textMuted}`}>
               No certifications added yet.
             </p>

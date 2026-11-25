@@ -56,9 +56,9 @@ export function middleware(request: NextRequest) {
 
   // 3b. Allow public company profile viewing (/api/company/[slug] via GET, excluding /me or /members)
   if (
-    pathname.startsWith('/api/company/') && 
-    request.method === 'GET' && 
-    !pathname.endsWith('/me') && 
+    pathname.startsWith('/api/company/') &&
+    request.method === 'GET' &&
+    !pathname.endsWith('/me') &&
     !pathname.includes('/members')
   ) {
     return NextResponse.next();

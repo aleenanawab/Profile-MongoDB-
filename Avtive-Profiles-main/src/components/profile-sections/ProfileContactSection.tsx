@@ -242,7 +242,7 @@ export function ProfileContactSection({
                 <select
                   value={contactDraft.phoneType}
                   onChange={(e) => handleUpdateContactField('phoneType', e.target.value)}
-                  className="w-full min-h-[44px] h-11 px-2.5 text-xs font-normal rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800/90 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 cursor-pointer"
+                  className="w-full min-h-[44px] h-11 px-2.5 text-xs font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
                 >
                   <option value="Mobile">Mobile</option>
                   <option value="Work">Work</option>
@@ -412,8 +412,8 @@ export function ProfileContactSection({
               href={`tel:${profile.phone.replace(/[^0-9+]/g, '')}`}
               className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
             >
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                <Phone className="w-3.5 h-3.5 text-blue-500" />
+              <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                <Phone className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
               </div>
               <div className="min-w-0 flex-1">
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
@@ -500,8 +500,8 @@ export function ProfileContactSection({
                 rel="noopener noreferrer"
                 className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
               >
-                <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                  <Globe className="w-3.5 h-3.5 text-indigo-500" />
+                <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                  <Globe className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
@@ -520,8 +520,8 @@ export function ProfileContactSection({
               rel="noopener noreferrer"
               className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
             >
-              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                <Globe className="w-3.5 h-3.5 text-indigo-500" />
+              <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                <Globe className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
               </div>
               <div className="min-w-0 flex-1">
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>

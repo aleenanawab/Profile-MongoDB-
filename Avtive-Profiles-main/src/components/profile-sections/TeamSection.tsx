@@ -143,7 +143,7 @@ export function TeamSection({
               <button
                 type="button"
                 onClick={() => onSelectSection?.('teamMembers')}
-                className="px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-[11px] font-bold border border-cyan-500/20 cursor-pointer flex items-center gap-1 transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-[11px] font-bold border border-zinc-200 dark:border-zinc-800 cursor-pointer flex items-center gap-1 transition-colors"
               >
                 <span>+ Add Member</span>
               </button>

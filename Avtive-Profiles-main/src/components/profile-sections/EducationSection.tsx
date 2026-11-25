@@ -16,8 +16,8 @@ interface EducationSectionProps {
   onSelectSection?: (sectionKey: string, fieldKey?: string) => void;
 }
 
-export function EducationSection({ 
-  profile, 
+export function EducationSection({
+  profile,
   theme = getThemeConfig(profile.theme || 'elegant'),
   canEdit = false,
   isEditing = false,
@@ -110,11 +110,10 @@ export function EducationSection({
   };
 
   return (
-    <section 
+    <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('education')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-        canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
-      }`}
+      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
+        }`}
     >
       <div className="flex items-center justify-between">
         <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
@@ -131,7 +130,7 @@ export function EducationSection({
           </button>
         ) : (
           canEdit && onSelectSection && (
-            <span className="text-[10px] text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded font-medium">
+            <span className="text-[10px] text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded font-medium">
               Click to edit
             </span>
           )

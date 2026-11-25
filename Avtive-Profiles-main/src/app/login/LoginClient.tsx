@@ -49,11 +49,11 @@ export default function LoginClient() {
       case 'editorial':
       default:
         return {
-          gradient: 'from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500',
-          gradientBadge: 'from-cyan-500 to-blue-600',
-          textLink: 'text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300',
-          ringFocus: 'focus:ring-cyan-500/50 focus:border-cyan-500',
-          shadowPill: 'shadow-cyan-600/20 dark:shadow-black/20',
+          gradient: 'from-zinc-900 to-black hover:from-zinc-800 hover:to-zinc-900',
+          gradientBadge: 'from-zinc-900 to-black',
+          textLink: 'text-zinc-900 hover:text-zinc-700 dark:text-zinc-200 dark:hover:text-white',
+          ringFocus: 'focus:ring-zinc-900/20 focus:border-zinc-900 dark:focus:ring-white/25 dark:focus:border-white',
+          shadowPill: 'shadow-black/15 dark:shadow-black/40',
         };
     }
   }, [theme]);
@@ -365,9 +365,9 @@ export default function LoginClient() {
               )}
 
               {forgotResetUrl && (
-                <div className="p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-slate-800 dark:text-slate-100 text-xs space-y-2.5">
-                  <div className="flex items-center gap-2 font-bold text-cyan-700 dark:text-cyan-300">
-                    <ShieldCheck className="w-4 h-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs space-y-2.5">
+                  <div className="flex items-center gap-2 font-bold text-zinc-950 dark:text-white">
+                    <ShieldCheck className="w-4 h-4 shrink-0 text-zinc-800 dark:text-zinc-200" />
                     <span>One-Time Direct Reset Link</span>
                   </div>
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -510,7 +510,7 @@ export default function LoginClient() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 dark:border-white/20 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                  className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-black focus:ring-zinc-900 cursor-pointer"
                 />
                 <span>Remember me</span>
               </label>
@@ -587,9 +587,9 @@ export default function LoginClient() {
             )}
 
             {forgotResetUrl && (
-              <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-slate-800 dark:text-slate-100 text-xs space-y-2 box-border">
-                <div className="flex items-center gap-1.5 font-bold text-xs text-cyan-700 dark:text-cyan-300">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+              <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs space-y-2 box-border">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-zinc-950 dark:text-white">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-zinc-800 dark:text-zinc-200" />
                   <span>One-Time Direct Reset Link</span>
                 </div>
                 <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-tight">
@@ -729,7 +729,7 @@ export default function LoginClient() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-slate-300 dark:border-white/20 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
+                    className="w-3.5 h-3.5 rounded border-zinc-300 dark:border-zinc-700 text-black focus:ring-zinc-900 cursor-pointer"
                   />
                   <span>Remember me</span>
                 </label>

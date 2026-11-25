@@ -184,7 +184,7 @@ export function LanguagesSection({
                         <select
                           value={lang.proficiency || 'Professional Working'}
                           onChange={(e) => handleUpdateLanguage(idx, { proficiency: e.target.value })}
-                          className={`w-full h-10 px-3 text-xs font-medium rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-cyan-500`}
+                          className={`w-full h-10 px-3 text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-zinc-900/15`}
                         >
                           {LANGUAGE_PROFICIENCY_LEVELS.map((lvl) => (
                             <option key={lvl} value={lvl}>

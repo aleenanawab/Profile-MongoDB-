@@ -205,11 +205,11 @@ export function CustomFieldsSection({
       >
         <div className="flex items-center gap-2">
           <h3 className={`text-xs font-bold uppercase tracking-wider font-mono ${theme.textMuted} flex items-center gap-1.5`}>
-            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+            <Sparkles className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
             <span>Custom Fields</span>
           </h3>
           {canEdit && !isEditing && (
-            <span className="opacity-0 group/cfheader:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+            <span className="opacity-0 group/cfheader:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
               <Pencil className="w-2.5 h-2.5" />
               Edit All
             </span>
@@ -219,7 +219,7 @@ export function CustomFieldsSection({
           <button
             type="button"
             onClick={handleAddField}
-            className="min-h-[44px] text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="min-h-[44px] text-[11px] font-semibold text-zinc-900 dark:text-zinc-100 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Field</span>
@@ -250,7 +250,7 @@ export function CustomFieldsSection({
                   <select
                     value={field.type || 'text'}
                     onChange={(e) => handleUpdateFieldItem(field.id, { type: e.target.value as any })}
-                    className={`h-11 min-h-[44px] text-xs px-3 rounded-xl border border-slate-300 dark:border-zinc-700 ${theme.textPrimary} bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer flex-1 sm:flex-none`}
+                    className={`h-11 min-h-[44px] text-xs px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 ${theme.textPrimary} bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer flex-1 sm:flex-none`}
                   >
                     <option value="text">Text</option>
                     <option value="link">Link</option>
@@ -297,7 +297,7 @@ export function CustomFieldsSection({
           <button
             type="button"
             onClick={handleAddField}
-            className="w-full min-h-[44px] py-2.5 border border-dashed border-purple-500/30 rounded-xl text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-500/5 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full min-h-[44px] py-2.5 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Another Custom Field</span>
@@ -329,7 +329,7 @@ export function CustomFieldsSection({
                 className={`p-3 rounded-xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-start gap-2.5 transition-all hover:border-black/10 dark:hover:border-white/20 ${
                   isMultiLine ? 'sm:col-span-2' : ''
                 } ${
-                  canEdit ? 'cursor-pointer group/cfitem hover:ring-2 hover:ring-purple-500/40 hover:bg-purple-500/[0.04] dark:hover:bg-purple-500/10' : ''
+                  canEdit ? 'cursor-pointer group/cfitem hover:ring-2 hover:ring-zinc-900/20 dark:hover:ring-white/25 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
                 }`}
                 title={canEdit ? `Click to edit "${title}" in Studio` : undefined}
               >
@@ -345,7 +345,7 @@ export function CustomFieldsSection({
                       {title}
                     </span>
                     {canEdit && (
-                      <span className="opacity-0 group/cfitem:opacity-100 transition-opacity text-[9px] font-mono text-purple-600 dark:text-purple-400 font-bold flex items-center gap-0.5">
+                      <span className="opacity-0 group/cfitem:opacity-100 transition-opacity text-[9px] font-mono text-zinc-600 dark:text-zinc-400 font-bold flex items-center gap-0.5">
                         <Pencil className="w-2.5 h-2.5" />
                         Edit
                       </span>

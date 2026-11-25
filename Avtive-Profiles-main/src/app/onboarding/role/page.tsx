@@ -66,7 +66,7 @@ function RoleStepContent() {
         <button
           type="button"
           onClick={handleNext}
-          className="min-h-[44px] px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+          className="min-h-[44px] px-6 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center gap-2 cursor-pointer transition-all active:scale-95"
         >
           <span>Continue</span>
           <ArrowRight className="w-4 h-4" />
@@ -84,23 +84,23 @@ function RoleStepContent() {
               onClick={() => setSelectedRole(role.id)}
               className={`p-6 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between items-start gap-4 relative ${
                 isSelected
-                  ? 'bg-cyan-50/50 dark:bg-cyan-950/20 border-cyan-500 dark:border-cyan-400 shadow-md ring-2 ring-cyan-500/30'
-                  : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/25 hover:bg-slate-50 dark:hover:bg-[#121B32]'
+                  ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-md ring-1 ring-black/20 dark:ring-white/25'
+                  : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-900/60'
               }`}
             >
               <div className="flex items-center justify-between w-full">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                  isSelected ? 'bg-cyan-500 text-white dark:text-slate-950 shadow-sm' : 'bg-slate-100 dark:bg-white/5 text-cyan-600 dark:text-cyan-400 border border-slate-200 dark:border-white/10'
+                  isSelected ? 'bg-black text-white dark:bg-white dark:text-black shadow-sm' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800'
                 }`}>
                   <Icon className="w-6 h-6" />
                 </div>
                 <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all ${
-                  isSelected ? 'border-cyan-500 bg-cyan-500 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950 font-bold' : 'border-slate-300 dark:border-white/20'
+                  isSelected ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black font-bold' : 'border-zinc-300 dark:border-zinc-700'
                 }`}>
                   {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
                 </div>
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h2 className="text-lg font-bold text-zinc-950 dark:text-white">
                 {role.title}
               </h2>
             </div>
@@ -114,7 +114,7 @@ function RoleStepContent() {
   const mobileView = (
     <div className="w-full max-w-md mx-auto px-4 py-4 flex-1 flex flex-col justify-between text-left">
       <div className="space-y-5">
-        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-xl font-bold tracking-tight text-zinc-950 dark:text-white">
           Choose Your Role
         </h1>
 
@@ -129,25 +129,25 @@ function RoleStepContent() {
                 onClick={() => setSelectedRole(role.id)}
                 className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                   isSelected
-                    ? 'bg-cyan-50/50 dark:bg-[#151D30] border-cyan-500 dark:border-cyan-400 shadow-xs ring-2 ring-cyan-500/30'
-                    : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                    ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-xs ring-1 ring-black/20 dark:ring-white/25'
+                    : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    isSelected ? 'bg-cyan-500 text-white dark:text-slate-950' : 'bg-slate-100 dark:bg-white/10 text-cyan-600 dark:text-cyan-400'
+                    isSelected ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100'
                   }`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-sm font-bold text-zinc-950 dark:text-white">
                     {role.title}
                   </h2>
                 </div>
 
                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                   isSelected
-                    ? 'border-cyan-500 bg-cyan-500 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950'
-                    : 'border-slate-300 dark:border-zinc-700 bg-transparent'
+                    ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                    : 'border-zinc-300 dark:border-zinc-700 bg-transparent'
                 }`}>
                   {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                 </div>
@@ -161,7 +161,7 @@ function RoleStepContent() {
         <button
           type="button"
           onClick={handleNext}
-          className="w-full min-h-[44px] py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+          className="w-full min-h-[44px] py-3 px-4 rounded-xl font-bold text-sm bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
         >
           <span>Continue</span>
           <ArrowRight className="w-4 h-4" />

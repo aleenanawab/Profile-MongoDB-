@@ -114,7 +114,7 @@ export async function compressImageFile(
  */
 export async function uploadImageToStorage(
   fileOrDataUrl: File | string,
-  bucket: 'avatars' | 'profiles' | 'links' = 'profiles',
+  bucket: 'avatars' | 'profiles' | 'links' | 'backgrounds' = 'profiles',
   options: { profileId?: string; field?: 'avatar' | 'coverImage' } = {}
 ): Promise<string> {
   // If already a remote CDN URL, no upload needed

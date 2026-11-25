@@ -236,10 +236,10 @@ function DetailsStepContent() {
             </div>
 
             <div className="pb-1">
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
                 {fullName || 'Your Name'}
               </h2>
-              <p className="text-xs text-cyan-600 dark:text-cyan-400 font-medium">{professionalTitle}</p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">{professionalTitle}</p>
             </div>
           </div>
 
@@ -250,7 +250,7 @@ function DetailsStepContent() {
               onClick={handleBack}
               aria-label="Back"
               title="Back"
-              className="p-2.5 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 dark:text-slate-400 dark:hover:text-white dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 transition-colors cursor-pointer"
+              className="p-2.5 rounded-xl text-zinc-600 hover:text-black bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 dark:text-zinc-400 dark:hover:text-white dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:border-zinc-800 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -261,7 +261,7 @@ function DetailsStepContent() {
               disabled={isLoading}
               aria-label="Save Profile"
               title="Save Profile"
-              className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center justify-center cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+              className="p-2.5 rounded-xl bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center justify-center cursor-pointer transition-all active:scale-95 disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -281,13 +281,13 @@ function DetailsStepContent() {
         )}
 
         {/* Minimalist Details Form Fields */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 space-y-4 shadow-xs">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <Tag className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                <Tag className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
                 <span>Persona</span>
               </div>
               <input
@@ -295,13 +295,13 @@ function DetailsStepContent() {
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 placeholder="e.g. MERN Developer"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <User className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                <User className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
                 <span>Full Name</span>
               </div>
               <input
@@ -309,7 +309,7 @@ function DetailsStepContent() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
               />
             </div>
 
@@ -318,8 +318,8 @@ function DetailsStepContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <Briefcase className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                <Briefcase className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
                 <span>Title</span>
               </div>
               <input
@@ -327,13 +327,13 @@ function DetailsStepContent() {
                 value={professionalTitle}
                 onChange={(e) => setProfessionalTitle(e.target.value)}
                 placeholder="Lead Systems Engineer"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <Building2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                <Building2 className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
                 <span>Company</span>
               </div>
               <input
@@ -341,15 +341,15 @@ function DetailsStepContent() {
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
                 placeholder="Company Name"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
               />
             </div>
 
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-              <FileText className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+              <FileText className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
               <span>Bio</span>
             </div>
             <textarea
@@ -357,7 +357,7 @@ function DetailsStepContent() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell others about yourself..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 resize-none transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white resize-none transition-colors"
             />
           </div>
 
@@ -473,7 +473,7 @@ function DetailsStepContent() {
           disabled={isLoading}
           aria-label="Create Profile"
           title="Create Profile"
-          className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+          className="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
           {isLoading ? (
             <>

@@ -101,7 +101,7 @@ export function AboutSection({
     <section 
       onClick={() => canEdit && !isEditing && onSelectSection?.('about', 'about')}
       className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
-        canEdit && !isEditing ? 'cursor-pointer group/about hover:bg-purple-500/[0.04] dark:hover:bg-purple-500/10' : ''
+        canEdit && !isEditing ? 'cursor-pointer group/about hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
       }`}
       title={canEdit && !isEditing ? 'Click to edit Story & Bio' : undefined}
     >
@@ -110,7 +110,7 @@ export function AboutSection({
           About
         </h2>
         {canEdit && !isEditing && (
-          <span className="opacity-0 group-hover/about:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+          <span className="opacity-0 group-hover/about:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
             <Pencil className="w-2.5 h-2.5" />
             Edit Story
           </span>

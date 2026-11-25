@@ -2,24 +2,24 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Palette, 
-  Check, 
-  Eye, 
-  Trash2, 
-  Bookmark, 
-  BookmarkCheck, 
-  Sparkles, 
-  RotateCcw, 
+import {
+  Palette,
+  Check,
+  Eye,
+  Trash2,
+  Bookmark,
+  BookmarkCheck,
+  Sparkles,
+  RotateCcw,
   LayoutGrid,
   CalendarDays,
   Flame,
   PartyPopper
 } from 'lucide-react';
-import { 
-  BACKGROUND_THEMES, 
-  BackgroundTheme, 
-  getBackgroundTheme 
+import {
+  BACKGROUND_THEMES,
+  BackgroundTheme,
+  getBackgroundTheme
 } from '@/data/backgroundThemes';
 import { ProfileData } from '@/types/profile';
 import { ThemeConfig } from '@/components/ui/themeStyles';
@@ -162,8 +162,8 @@ export function BackgroundThemeGallery({
   const dividerClass = theme?.divider || 'border-border';
 
   return (
-    <div 
-      id="section-backgrounds" 
+    <div
+      id="section-backgrounds"
       data-section="backgrounds"
       className={`px-4 sm:px-6 md:px-8 py-5 border-t ${dividerClass} ${cardBgClass} transition-colors`}
     >
@@ -206,11 +206,10 @@ export function BackgroundThemeGallery({
               key={cat.id}
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
-              className={`h-9 px-3 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0 select-none text-xs font-semibold ${
-                isSelected
-                  ? 'bg-primary text-primary-foreground shadow-xs'
-                  : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
-              }`}
+              className={`h-9 px-3 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0 select-none text-xs font-semibold ${isSelected
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
+                }`}
               title={cat.label}
               aria-label={cat.label}
             >
@@ -242,11 +241,10 @@ export function BackgroundThemeGallery({
                   <div
                     onClick={() => handleSetActive(savedTheme.id)}
                     style={savedTheme.backgroundStyle}
-                    className={`w-20 h-13 rounded-lg border cursor-pointer relative overflow-hidden transition-all shadow-2xs ${
-                      isActive
-                        ? 'border-primary ring-2 ring-primary/40 shadow-sm'
-                        : 'border-border hover:border-foreground/40'
-                    }`}
+                    className={`w-20 h-13 rounded-lg border cursor-pointer relative overflow-hidden transition-all shadow-2xs ${isActive
+                      ? 'border-primary ring-2 ring-primary/40 shadow-sm'
+                      : 'border-border hover:border-foreground/40'
+                      }`}
                     title={`Apply ${savedTheme.name}`}
                     role="button"
                     tabIndex={0}
@@ -306,18 +304,17 @@ export function BackgroundThemeGallery({
               whileHover={{ y: -2 }}
               transition={{ duration: 0.15 }}
               onClick={() => handleSetActive(themeItem.id)}
-              className={`group rounded-xl border transition-all overflow-hidden flex flex-col justify-between cursor-pointer select-none ${
-                isActive
-                  ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/40 shadow-xs'
-                  : `border-border hover:border-foreground/30 ${cardBgClass}`
-              }`}
+              className={`group rounded-xl border transition-all overflow-hidden flex flex-col justify-between cursor-pointer select-none ${isActive
+                ? 'border-primary bg-primary/[0.04] ring-1 ring-primary/40 shadow-xs'
+                : `border-border hover:border-foreground/30 ${cardBgClass}`
+                }`}
               title={`Click to apply ${themeItem.name}`}
               role="button"
               tabIndex={0}
               aria-label={`Apply ${themeItem.name} background`}
             >
               {/* Thumbnail Swatch */}
-              <div 
+              <div
                 className="w-full aspect-[16/10] relative overflow-hidden border-b border-border/40"
                 style={themeItem.backgroundStyle}
               >
@@ -331,7 +328,7 @@ export function BackgroundThemeGallery({
                       <Check className="w-3 h-3 stroke-[3]" />
                     </span>
                   ) : isPreviewing ? (
-                    <span className="w-5 h-5 rounded-full bg-cyan-500 text-white flex items-center justify-center shadow-sm">
+                    <span className="w-5 h-5 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black flex items-center justify-center shadow-sm">
                       <Eye className="w-3 h-3" />
                     </span>
                   ) : (
@@ -353,7 +350,7 @@ export function BackgroundThemeGallery({
                     onClick={(e) => handlePreview(themeItem, e)}
                     className={`w-7 h-7 rounded-lg border transition-all flex items-center justify-center cursor-pointer ${
                       isPreviewing
-                        ? 'bg-cyan-500/15 border-cyan-500 text-cyan-600 dark:text-cyan-400 font-bold'
+                        ? 'bg-zinc-900/10 dark:bg-white/15 border-zinc-900 dark:border-white text-zinc-950 dark:text-white font-bold'
                         : 'border-border/60 hover:bg-muted text-muted-foreground hover:text-foreground'
                     }`}
                     title={isPreviewing ? "Close preview" : "Preview live"}
@@ -369,11 +366,10 @@ export function BackgroundThemeGallery({
                       e.stopPropagation();
                       handleToggleSave(themeItem.id);
                     }}
-                    className={`w-7 h-7 rounded-lg border transition-all flex items-center justify-center cursor-pointer ${
-                      isSaved
-                        ? 'bg-primary/10 border-primary/40 text-primary'
-                        : 'border-border/60 hover:bg-muted text-muted-foreground hover:text-foreground'
-                    }`}
+                    className={`w-7 h-7 rounded-lg border transition-all flex items-center justify-center cursor-pointer ${isSaved
+                      ? 'bg-primary/10 border-primary/40 text-primary'
+                      : 'border-border/60 hover:bg-muted text-muted-foreground hover:text-foreground'
+                      }`}
                     title={isSaved ? "Remove from collection" : "Save to collection"}
                     aria-label={`Save ${themeItem.name} to collection`}
                   >

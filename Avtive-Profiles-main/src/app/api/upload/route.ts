@@ -38,7 +38,14 @@ const ALLOWED_VIDEO_MIMES = [
 const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov'];
 const MAX_VIDEO_SIZE = 25 * 1024 * 1024; // 25MB
 
+const ALLOWED_DOCUMENT_MIMES = ['application/pdf'];
+const ALLOWED_DOCUMENT_EXTENSIONS = ['.pdf'];
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB
+
 function hasValidMediaSignature(buffer: Buffer, mimeType: string): boolean {
+  if (mimeType === 'application/pdf') {
+    return buffer.length >= 4 && buffer.toString('ascii', 0, 4) === '%PDF';
+  }
   if (mimeType.startsWith('image/')) {
     if (mimeType === 'image/jpeg') {
       return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
@@ -90,13 +97,19 @@ function getExtension(mimeType: string, originalName?: string): string {
     const extMatch = originalName.match(/\.([a-zA-Z0-9]+)$/);
     if (extMatch && extMatch[1]) {
       const ext = `.${extMatch[1].toLowerCase()}`;
-      const allExts = [...ALLOWED_IMAGE_EXTENSIONS, ...ALLOWED_AUDIO_EXTENSIONS, ...ALLOWED_VIDEO_EXTENSIONS];
+      const allExts = [
+        ...ALLOWED_IMAGE_EXTENSIONS,
+        ...ALLOWED_AUDIO_EXTENSIONS,
+        ...ALLOWED_VIDEO_EXTENSIONS,
+        ...ALLOWED_DOCUMENT_EXTENSIONS
+      ];
       if (allExts.includes(ext)) {
         if (ext === '.heic' || ext === '.heif') return '.jpg';
         return ext;
       }
     }
   }
+  if (mimeType === 'application/pdf') return '.pdf';
   if (mimeType.includes('png')) return '.png';
   if (mimeType.includes('webp')) return '.webp';
   if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return '.mp3';
@@ -194,6 +207,10 @@ export async function POST(request: NextRequest) {
         requestedBucket = 'avatars';
       } else if (formBucket === 'media' || formBucket === 'video' || formBucket === 'audio' || formBucket === 'intro') {
         requestedBucket = 'media';
+      } else if (formBucket === 'backgrounds' || formBucket === 'background') {
+        requestedBucket = 'backgrounds';
+      } else if (formBucket === 'documents' || formBucket === 'document' || formBucket === 'resume' || formBucket === 'cv') {
+        requestedBucket = 'documents';
       }
 
       profileId = (formData.get('profileId') as string) || undefined;
@@ -202,6 +219,10 @@ export async function POST(request: NextRequest) {
 
       if (field === 'introductionMedia') {
         requestedBucket = 'media';
+      } else if (field === 'customBackgroundImage' || field === 'customBackgroundVideo') {
+        requestedBucket = 'backgrounds';
+      } else if (field === 'resumeUrl') {
+        requestedBucket = 'documents';
       }
 
       const file = (formData.get('file') || formData.get('image') || formData.get('avatar') || formData.get('media')) as File | string | null;
@@ -228,8 +249,9 @@ export async function POST(request: NextRequest) {
 
       const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
       const isVideo = ALLOWED_VIDEO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
-      const maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
-      const sizeLabel = isVideo ? '25MB' : isAudio ? '10MB' : '5MB';
+      const isDoc = ALLOWED_DOCUMENT_MIMES.some(prefix => mimeType.toLowerCase() === prefix);
+      const maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : isDoc ? MAX_DOCUMENT_SIZE : isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
+      const sizeLabel = isVideo ? '25MB' : (isAudio || isDoc) ? '10MB' : '5MB';
 
       if (file.size > maxAllowedSize) {
         return NextResponse.json(
@@ -254,8 +276,9 @@ export async function POST(request: NextRequest) {
     const isImage = ALLOWED_IMAGE_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
     const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
     const isVideo = ALLOWED_VIDEO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
-    const maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
-    const sizeLabel = isVideo ? '25MB' : isAudio ? '10MB' : '5MB';
+    const isDoc = ALLOWED_DOCUMENT_MIMES.some(prefix => mimeType.toLowerCase() === prefix);
+    const maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : isDoc ? MAX_DOCUMENT_SIZE : isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
+    const sizeLabel = isVideo ? '25MB' : (isAudio || isDoc) ? '10MB' : '5MB';
 
     if (buffer.length > maxAllowedSize) {
       return NextResponse.json(
@@ -267,12 +290,13 @@ export async function POST(request: NextRequest) {
     const isAllowedExt = originalName ? [
       ...ALLOWED_IMAGE_EXTENSIONS,
       ...ALLOWED_AUDIO_EXTENSIONS,
-      ...ALLOWED_VIDEO_EXTENSIONS
+      ...ALLOWED_VIDEO_EXTENSIONS,
+      ...ALLOWED_DOCUMENT_EXTENSIONS
     ].some(ext => originalName.toLowerCase().endsWith(ext)) : false;
 
-    if (!isImage && !isAudio && !isVideo && !isAllowedExt) {
+    if (!isImage && !isAudio && !isVideo && !isDoc && !isAllowedExt) {
       return NextResponse.json(
-        { error: 'Invalid file type. Supported formats: JPG, PNG, WebP, MP3, WAV, OGG, M4A, MP4, WebM, MOV.' },
+        { error: 'Invalid file type. Supported formats: JPG, PNG, WebP, MP3, WAV, OGG, M4A, MP4, WebM, MOV, PDF.' },
         { status: 400 }
       );
     }

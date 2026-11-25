@@ -479,13 +479,13 @@ export function ProfileIntroductionMediaSection({
             <div className={`flex items-center gap-1.5 font-semibold ${theme?.textPrimary || 'text-slate-700 dark:text-slate-200'}`}>
               {media.type === 'voice' && (
                 <>
-                  <Mic className="w-3.5 h-3.5 text-cyan-500" />
+                  <Mic className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
                   <span>Voice Introduction</span>
                 </>
               )}
               {media.type === 'video' && (
                 <>
-                  <Video className="w-3.5 h-3.5 text-purple-500" />
+                  <Video className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
                   <span>Video Introduction</span>
                 </>
               )}
@@ -536,7 +536,7 @@ export function ProfileIntroductionMediaSection({
                 <button
                   type="button"
                   onClick={togglePlayAudio}
-                  className="w-10 h-10 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center shrink-0 shadow-md transition-all active:scale-95 cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black flex items-center justify-center shrink-0 shadow-xs transition-all active:scale-95 cursor-pointer"
                   title={isPlayingAudio ? "Pause" : "Play Voice Introduction"}
                 >
                   {isPlayingAudio ? (
@@ -547,14 +547,14 @@ export function ProfileIntroductionMediaSection({
                 </button>
 
                 {/* Animated Audio Waveform Bars */}
-                <div className={`flex-1 flex items-center gap-1 h-8 px-2 rounded-xl border overflow-hidden ${theme ? `${theme.subCardBg} ${theme.subCardBorder}` : 'bg-white/60 dark:bg-black/30 border-slate-200/60 dark:border-white/5'
+                <div className={`flex-1 flex items-center gap-1 h-8 px-2 rounded-xl border overflow-hidden ${theme ? `${theme.subCardBg} ${theme.subCardBorder}` : 'bg-white/60 dark:bg-black/30 border-zinc-200 dark:border-zinc-800'
                   }`}>
                   {[24, 45, 78, 60, 90, 40, 70, 85, 30, 55, 95, 65, 35, 75, 50, 80, 45, 65, 90, 30, 50, 85, 60, 40].map((h, idx) => (
                     <span
                       key={idx}
                       className={`flex-1 rounded-full transition-all duration-200 ${isPlayingAudio
-                          ? 'bg-cyan-500 animate-pulse'
-                          : 'bg-slate-300 dark:bg-slate-700'
+                          ? 'bg-zinc-900 dark:bg-white animate-pulse'
+                          : 'bg-zinc-300 dark:bg-zinc-700'
                         }`}
                       style={{
                         height: isPlayingAudio ? `${Math.max(15, (h * (idx % 2 === 0 ? 1 : 0.7)))}%` : `${h * 0.4}%`,
@@ -608,8 +608,8 @@ export function ProfileIntroductionMediaSection({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-center p-4 text-center">
-                        <Sparkles className="w-8 h-8 text-cyan-400 mb-2 opacity-80" />
+                      <div className="w-full h-full bg-zinc-950 flex flex-col items-center justify-center p-4 text-center">
+                        <Sparkles className="w-8 h-8 text-white mb-2 opacity-80" />
                         <p className="text-xs font-semibold text-white drop-shadow-md">
                           {media.title || 'Click to Play Introduction Video'}
                         </p>
@@ -643,10 +643,10 @@ export function ProfileIntroductionMediaSection({
         <button
           type="button"
           onClick={() => setIsEditorOpen(true)}
-          className="w-full py-2.5 px-3 rounded-2xl border border-dashed border-cyan-500/40 hover:border-cyan-500 hover:bg-cyan-500/5 transition-all text-xs font-semibold text-cyan-600 dark:text-cyan-400 flex items-center justify-center gap-2 cursor-pointer group"
+          className="w-full py-2.5 px-3 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-white hover:bg-zinc-100/70 dark:hover:bg-white/[0.04] transition-all text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center justify-center gap-2 cursor-pointer group"
         >
-          <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Mic className="w-3.5 h-3.5 text-cyan-500" />
+          <div className="w-6 h-6 rounded-lg bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Mic className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
           </div>
           <span>Add Profile Introduction (Voice, Video, or YouTube Link)</span>
         </button>
@@ -657,12 +657,12 @@ export function ProfileIntroductionMediaSection({
       {/* ─────────────────────────────────────────────────────────────────────── */}
       {isEditorOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-[#0B1222] border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
+          <div className="w-full max-w-lg bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-500" />
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-zinc-900 dark:text-white" />
                   <span>Profile Introduction Media</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -704,7 +704,7 @@ export function ProfileIntroductionMediaSection({
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                     }`}
                 >
-                  <Mic className="w-3.5 h-3.5 text-cyan-500" />
+                  <Mic className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
                   <span>Voice Intro</span>
                 </button>
 
@@ -715,11 +715,11 @@ export function ProfileIntroductionMediaSection({
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'video'
-                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      ? 'bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950'
                     }`}
                 >
-                  <Video className="w-3.5 h-3.5 text-purple-500" />
+                  <Video className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
                   <span>Upload Video</span>
                 </button>
 
@@ -770,21 +770,21 @@ export function ProfileIntroductionMediaSection({
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            <div className="w-16 h-16 mx-auto rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                            <div className="w-16 h-16 mx-auto rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white flex items-center justify-center">
                               <Mic className="w-8 h-8" />
                             </div>
                             <div>
-                              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                              <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">
                                 Record a brief 30–60s voice introduction
                               </p>
-                              <p className="text-[11px] text-slate-500 mt-0.5">
+                              <p className="text-[11px] text-zinc-500 mt-0.5">
                                 Say hi, introduce your background, or share what you&apos;re passionate about.
                               </p>
                             </div>
                             <button
                               type="button"
                               onClick={startVoiceRecording}
-                              className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 mx-auto"
+                              className="px-5 py-2.5 rounded-xl bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black font-bold text-xs shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 mx-auto"
                             >
                               <Mic className="w-4 h-4" />
                               <span>Start Recording</span>
@@ -819,7 +819,7 @@ export function ProfileIntroductionMediaSection({
                             type="button"
                             disabled={isSubmitting}
                             onClick={handleSaveVoiceIntro}
-                            className="px-4 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                            className="px-4 py-1.5 rounded-xl bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                           >
                             {isSubmitting ? (
                               <>
@@ -854,9 +854,9 @@ export function ProfileIntroductionMediaSection({
                   {!videoFile ? (
                     <div
                       onClick={() => videoInputRef.current?.click()}
-                      className="border-2 border-dashed border-slate-300 dark:border-white/10 hover:border-purple-500 dark:hover:border-purple-400 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-slate-50/50 dark:bg-white/[0.02]"
+                      className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-white rounded-2xl p-6 text-center cursor-pointer transition-colors bg-zinc-50 dark:bg-white/[0.02]"
                     >
-                      <div className="w-12 h-12 mx-auto rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-2">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white flex items-center justify-center mb-2">
                         <Upload className="w-6 h-6" />
                       </div>
                       <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -897,7 +897,7 @@ export function ProfileIntroductionMediaSection({
                           type="button"
                           disabled={isSubmitting}
                           onClick={handleSaveVideoIntro}
-                          className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                          className="px-4 py-1.5 rounded-xl bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                         >
                           {isSubmitting ? (
                             <>

@@ -52,7 +52,7 @@ const THEME_OPTIONS: { id: ProfileTheme; label: string; description: string; pre
     id: 'editorial',
     label: 'Editorial',
     description: 'Clean modern typography with balanced contrast & executive feel',
-    previewClass: 'bg-white dark:bg-[#0E1528] border-cyan-500'
+    previewClass: 'bg-white dark:bg-[#111111] border-zinc-900 dark:border-white'
   },
   {
     id: 'cyber',
@@ -274,19 +274,19 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
       <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
 
       {/* Header & Step Tracker */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider mb-1">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Create Profile Studio</span>
             <span>&middot;</span>
             <span>Step {step} of 2</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 dark:text-white">
             {step === 1 && 'Profile Type & Theme Aesthetics'}
             {step === 2 && 'Complete Profile Pass Details'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             {step === 1 && 'Choose between individual digital identity or team organization pass and select your visual theme.'}
             {step === 2 && 'Provide your name, designation, contact info, bio, and skills to populate your brand new live pass.'}
           </p>
@@ -298,7 +298,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:border-white/10 dark:text-slate-300 transition-colors cursor-pointer flex items-center justify-center"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:border-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer flex items-center justify-center"
             >
               Back
             </button>
@@ -308,7 +308,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center gap-2 cursor-pointer transition-all"
             >
               <span>Continue to Details</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -318,7 +318,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
               type="button"
               onClick={() => handleSubmit()}
               disabled={isLoading}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-md shadow-cyan-500/25 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl text-xs font-bold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>Finish &amp; View Pass</span>
@@ -339,7 +339,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
         <div className="space-y-6">
           {/* Identity Pass Type */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono mb-3">
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono mb-3">
               1. Choose Profile Pass Type
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -347,24 +347,24 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                 onClick={() => setProfileType('individual')}
                 className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                   profileType === 'individual'
-                    ? 'bg-cyan-50/60 dark:bg-cyan-950/20 border-cyan-500 dark:border-cyan-400 shadow-lg ring-1 ring-cyan-500/40'
-                    : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-xs'
+                    ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-md ring-1 ring-black/20 dark:ring-white/25'
+                    : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 shadow-xs'
                 }`}
               >
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/15 flex items-center justify-center text-cyan-600 dark:text-cyan-400 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-white mb-3">
                     <User className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Individual Profile</h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">Individual Profile</h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
                     Personal verified portfolio and identity card for professionals, developers, and creators.
                   </p>
                 </div>
-                <div className="pt-3 mt-3 border-t border-slate-200 dark:border-white/10 flex justify-end">
+                <div className="pt-3 mt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
                   <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                     profileType === 'individual'
-                      ? 'border-cyan-500 bg-cyan-500 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950'
-                      : 'border-slate-300 dark:border-white/20'
+                      ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                      : 'border-zinc-300 dark:border-zinc-700'
                   }`}>
                     {profileType === 'individual' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
@@ -375,24 +375,24 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                 onClick={() => setProfileType('team')}
                 className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
                   profileType === 'team'
-                    ? 'bg-cyan-50/60 dark:bg-cyan-950/20 border-cyan-500 dark:border-cyan-400 shadow-lg ring-1 ring-cyan-500/40'
-                    : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-xs'
+                    ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-md ring-1 ring-black/20 dark:ring-white/25'
+                    : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 shadow-xs'
                 }`}
               >
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-900 dark:text-white mb-3">
                     <Users className="w-5 h-5" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Team / Organization</h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">Team / Organization</h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
                     Collaborative team pass, organizational roster, shared services, and company showcase.
                   </p>
                 </div>
-                <div className="pt-3 mt-3 border-t border-slate-200 dark:border-white/10 flex justify-end">
+                <div className="pt-3 mt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
                   <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
                     profileType === 'team'
-                      ? 'border-cyan-500 bg-cyan-500 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950'
-                      : 'border-slate-300 dark:border-white/20'
+                      ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                      : 'border-zinc-300 dark:border-zinc-700'
                   }`}>
                     {profileType === 'team' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
@@ -403,7 +403,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
 
           {/* Theme Palette Selection */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono mb-3">
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono mb-3">
               2. Select Visual Theme &amp; Atmosphere
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -415,22 +415,22 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                     onClick={() => setTheme(th.id)}
                     className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                       isSelected
-                        ? 'bg-cyan-50/70 dark:bg-cyan-950/30 border-cyan-500 dark:border-cyan-400 shadow-md ring-1 ring-cyan-500/30'
-                        : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                        ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white shadow-md ring-1 ring-black/20 dark:ring-white/25'
+                        : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                     }`}
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <Palette className="w-4 h-4 text-cyan-500" />
-                        <span className="text-sm font-bold text-slate-900 dark:text-white">{th.label}</span>
+                        <Palette className="w-4 h-4 text-zinc-900 dark:text-white" />
+                        <span className="text-sm font-bold text-zinc-950 dark:text-white">{th.label}</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 pr-2">{th.description}</p>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pr-2">{th.description}</p>
                     </div>
 
                     <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
                       isSelected
-                        ? 'border-cyan-500 bg-cyan-500 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950'
-                        : 'border-slate-300 dark:border-white/20'
+                        ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black'
+                        : 'border-zinc-300 dark:border-zinc-700'
                     }`}>
                       {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                     </div>
@@ -446,8 +446,8 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
       {step === 2 && (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Avatar Photo Picker */}
-          <div className="md:col-span-4 p-5 rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 flex flex-col items-center justify-center text-center space-y-4 shadow-xs">
-            <div className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-cyan-500 dark:border-cyan-400 group shadow-lg">
+          <div className="md:col-span-4 p-5 rounded-3xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-center space-y-4 shadow-xs">
+            <div className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-zinc-900 dark:border-white group shadow-lg">
               {avatar ? (
                 <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -485,7 +485,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                       type="button"
                       onClick={() => setAvatar(presetUrl)}
                       className={`w-8 h-8 rounded-full overflow-hidden border transition-all cursor-pointer ${
-                        avatar === presetUrl ? 'ring-2 ring-cyan-500 border-white' : 'border-transparent opacity-70 hover:opacity-100'
+                        avatar === presetUrl ? 'ring-2 ring-black dark:ring-white border-white' : 'border-transparent opacity-70 hover:opacity-100'
                       }`}
                     >
                       <img src={presetUrl} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" />
@@ -497,11 +497,11 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
           </div>
 
           {/* Form Fields */}
-          <div className="md:col-span-8 p-6 rounded-3xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 space-y-4 shadow-xs">
+          <div className="md:col-span-8 p-6 rounded-3xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
             {/* Identity Group */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   Profile Persona Name <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -510,12 +510,12 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
                   placeholder="e.g. MERN Developer, Product Lead"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 font-semibold"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white font-semibold"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                   Full Name <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -524,7 +524,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Aleena Nawab"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 font-semibold"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white font-semibold"
                 />
               </div>
             </div>
@@ -532,8 +532,8 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             {/* Role, Company, Location */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <Briefcase className="w-3 h-3 text-cyan-500" />
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                  <Briefcase className="w-3 h-3 text-zinc-900 dark:text-white" />
                   <span>Role / Designation</span>
                 </label>
                 <input
@@ -541,12 +541,12 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={professionalTitle}
                   onChange={(e) => setProfessionalTitle(e.target.value)}
                   placeholder="e.g. Full Stack Developer"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
                   <span>Organization</span>
                 </label>
                 <input
@@ -554,13 +554,13 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="e.g. Avtive Network"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-cyan-500" />
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-zinc-900 dark:text-white" />
                   <span>Location</span>
                 </label>
                 <input
@@ -568,7 +568,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g. San Francisco, CA"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
             </div>
@@ -576,8 +576,8 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             {/* Contact & Social Links */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-cyan-500" />
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-zinc-900 dark:text-white" />
                   <span>Phone / WhatsApp</span>
                 </label>
                 <input
@@ -588,13 +588,13 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                     if (!whatsapp) setWhatsapp(e.target.value);
                   }}
                   placeholder="+1 (555) 000-0000"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <Mail className="w-3 h-3 text-cyan-500" />
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                  <Mail className="w-3 h-3 text-zinc-900 dark:text-white" />
                   <span>Contact Email</span>
                 </label>
                 <input
@@ -602,13 +602,13 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="user@avtive.app"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                  <Globe className="w-3 h-3 text-cyan-500" />
+                <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-zinc-900 dark:text-white" />
                   <span>Website / Portfolio</span>
                 </label>
                 <input
@@ -616,14 +616,14 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
                   placeholder="https://myportfolio.dev"
-                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                 />
               </div>
             </div>
 
             {/* Bio */}
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 Short Bio / Persona Headline
               </label>
               <textarea
@@ -631,13 +631,13 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="A brief engaging headline for your pass card..."
-                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500 resize-none"
+                className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white resize-none"
               />
             </div>
 
             {/* Skills & Quick Suggestions */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 Core Skills &amp; Competencies
               </label>
               
@@ -653,12 +653,12 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                     }
                   }}
                   placeholder="Type a skill &amp; press Enter..."
-                  className="flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-cyan-500"
+                  className="flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-black dark:focus:border-white"
                 />
                 <button
                   type="button"
                   onClick={() => handleAddSkill(skillInput)}
-                  className="min-h-[44px] px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add</span>
@@ -670,7 +670,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                 {skillsList.map((skill) => (
                   <span
                     key={skill}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-medium"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs font-medium"
                   >
                     <span>{skill}</span>
                     <button
@@ -736,8 +736,8 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             onClick={() => setActiveMobileViewTab('preview')}
             className={`min-h-[44px] px-3.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer flex items-center ${
               activeMobileViewTab === 'preview'
-                ? 'bg-cyan-500 text-white shadow-2xs'
-                : 'text-slate-500 dark:text-slate-400'
+                ? 'bg-black text-white dark:bg-white dark:text-black shadow-2xs'
+                : 'text-zinc-500 dark:text-zinc-400'
             }`}
           >
             <Eye className="w-3.5 h-3.5 inline mr-1" />
@@ -745,7 +745,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
           </button>
         </div>
 
-        <span className="text-[11px] font-mono font-bold text-cyan-600 dark:text-cyan-400">
+        <span className="text-[11px] font-mono font-bold text-zinc-600 dark:text-zinc-400">
           Step {step} of 2
         </span>
       </div>
@@ -789,41 +789,41 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   onClick={() => setProfileType('individual')}
                   className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                     profileType === 'individual'
-                      ? 'bg-cyan-50/70 dark:bg-cyan-950/30 border-cyan-500 text-slate-900 dark:text-white'
-                      : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10'
+                      ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white text-zinc-950 dark:text-white'
+                      : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <User className="w-4 h-4 text-cyan-500" />
+                    <User className="w-4 h-4 text-zinc-900 dark:text-white" />
                     <div>
                       <div className="text-xs font-bold">Individual Pass</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Personal identity &amp; portfolio</div>
+                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Personal identity &amp; portfolio</div>
                     </div>
                   </div>
-                  {profileType === 'individual' && <Check className="w-4 h-4 text-cyan-500 stroke-[3]" />}
+                  {profileType === 'individual' && <Check className="w-4 h-4 text-zinc-950 dark:text-white stroke-[3]" />}
                 </div>
 
                 <div
                   onClick={() => setProfileType('team')}
                   className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
                     profileType === 'team'
-                      ? 'bg-purple-50/70 dark:bg-purple-950/30 border-purple-500 text-slate-900 dark:text-white'
-                      : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10'
+                      ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white text-zinc-950 dark:text-white'
+                      : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Users className="w-4 h-4 text-purple-500" />
+                    <Users className="w-4 h-4 text-zinc-900 dark:text-white" />
                     <div>
                       <div className="text-xs font-bold">Team / Organization</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Company &amp; team showcase</div>
+                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Company &amp; team showcase</div>
                     </div>
                   </div>
-                  {profileType === 'team' && <Check className="w-4 h-4 text-purple-500 stroke-[3]" />}
+                  {profileType === 'team' && <Check className="w-4 h-4 text-zinc-950 dark:text-white stroke-[3]" />}
                 </div>
               </div>
 
               <div className="pt-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-mono mb-2">
                   Theme Palette
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -834,12 +834,12 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                       onClick={() => setTheme(th.id)}
                       className={`min-h-[44px] p-2 rounded-xl border text-left cursor-pointer transition-all ${
                         theme === th.id
-                          ? 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-500'
-                          : 'bg-white dark:bg-[#0E1528] border-slate-200 dark:border-white/10'
+                          ? 'bg-zinc-100 dark:bg-zinc-900 border-black dark:border-white'
+                          : 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800'
                       }`}
                     >
-                      <div className="text-xs font-bold text-slate-900 dark:text-white">{th.label}</div>
-                      <div className="text-[9px] text-slate-500 dark:text-slate-400 truncate">{th.id}</div>
+                      <div className="text-xs font-bold text-zinc-950 dark:text-white">{th.label}</div>
+                      <div className="text-[9px] text-zinc-500 dark:text-zinc-400 truncate">{th.id}</div>
                     </button>
                   ))}
                 </div>
@@ -851,9 +851,9 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
           {step === 2 && (
             <div className="space-y-3">
               {/* Photo Avatar Row */}
-              <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white dark:bg-[#0E1528] border border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white dark:bg-[#111111] border border-zinc-200 dark:border-zinc-800">
                 <div
-                  className="relative group cursor-pointer w-12 h-12 rounded-full overflow-hidden border-2 border-cyan-500 shrink-0"
+                  className="relative group cursor-pointer w-12 h-12 rounded-full overflow-hidden border-2 border-zinc-900 dark:border-white shrink-0"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
@@ -862,12 +862,12 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-slate-900 dark:text-white truncate">{fullName || 'Your Name'}</div>
-                  <div className="text-[10px] text-cyan-600 dark:text-cyan-400 truncate">{professionalTitle || 'Role Title'}</div>
+                  <div className="text-xs font-bold text-zinc-950 dark:text-white truncate">{fullName || 'Your Name'}</div>
+                  <div className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">{professionalTitle || 'Role Title'}</div>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="min-h-[44px] py-1 text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer font-medium inline-flex items-center"
+                    className="min-h-[44px] py-1 text-xs text-zinc-900 dark:text-zinc-100 hover:underline cursor-pointer font-medium inline-flex items-center"
                   >
                     Change photo
                   </button>
@@ -875,57 +875,57 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Persona Name</label>
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">Persona Name</label>
                 <input
                   type="text"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
                   placeholder="e.g. MERN Developer"
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">Full Name</label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Full Name"
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Role / Title</label>
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">Role / Title</label>
                 <input
                   type="text"
                   value={professionalTitle}
                   onChange={(e) => setProfessionalTitle(e.target.value)}
                   placeholder="e.g. Full Stack Developer"
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Company</label>
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">Company</label>
                 <input
                   type="text"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="Organization"
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Short Bio</label>
+                <label className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">Short Bio</label>
                 <textarea
                   rows={2}
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Brief summary..."
-                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#070D18] border border-slate-300 dark:border-white/10 text-base sm:text-xs text-slate-900 dark:text-white resize-none"
+                  className="w-full min-h-[44px] px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-base sm:text-xs text-zinc-950 dark:text-white resize-none"
                 />
               </div>
             </div>
@@ -934,12 +934,12 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
       )}
 
       {/* Mobile Footer Actions */}
-      <div className="pt-2 mt-2 border-t border-slate-200 dark:border-white/10 shrink-0">
+      <div className="pt-2 mt-2 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
         {step < 2 ? (
           <button
             type="button"
             onClick={() => setStep(2)}
-            className="w-full min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>Continue to Details</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -949,7 +949,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer flex items-center justify-center"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-bold text-xs cursor-pointer flex items-center justify-center"
             >
               Back
             </button>
@@ -957,7 +957,7 @@ export function CreateProfileClient({ user }: CreateProfileClientProps) {
               type="button"
               onClick={() => handleSubmit()}
               disabled={isLoading}
-              className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="flex-1 min-h-[44px] py-2.5 px-4 rounded-xl font-bold text-xs bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <>

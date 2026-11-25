@@ -645,7 +645,13 @@ export interface ProfileData {
   createdAt?: string;
   updatedAt?: string;
 
+  // Profile Privacy
+  profileVisibility?: 'public' | 'private';
+
   // Background Customization
+  backgroundType?: 'default' | 'image' | 'video' | 'occasion';
+  customBackgroundImage?: string;
+  customBackgroundVideo?: string;
   savedBackgroundThemeIds?: string[];
   activeBackgroundThemeId?: string;
 

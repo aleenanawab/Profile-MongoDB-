@@ -151,8 +151,8 @@ export function ProfileSwitcher({
     return {
       label: isTeam ? 'Team' : 'Personal',
       bg: isTeam 
-        ? 'bg-purple-500/10 border-purple-500/30 text-purple-400'
-        : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
+        ? 'bg-zinc-900/10 dark:bg-white/10 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white'
+        : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300',
       icon: isTeam ? <Users className="w-3 h-3" /> : <User className="w-3 h-3" />
     };
   };
@@ -289,7 +289,7 @@ export function ProfileSwitcher({
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 text-xs bg-gradient-to-tr from-cyan-500/20 to-blue-500/20">
+                          <div className="w-full h-full flex items-center justify-center font-bold text-zinc-700 dark:text-zinc-200 text-xs bg-zinc-100 dark:bg-zinc-800">
                             {(p.profileName || p.name || 'U').charAt(0).toUpperCase()}
                           </div>
                         )}

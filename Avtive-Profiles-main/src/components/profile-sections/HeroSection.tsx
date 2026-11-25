@@ -364,24 +364,24 @@ export function HeroSection({
 
   const defaultStats = normalizedType === 'team'
     ? [
-        { value: profile.highlights?.[0]?.value || '15+', label: profile.highlights?.[0]?.label || 'Team' },
-        { value: profile.highlights?.[1]?.value || '25+', label: profile.highlights?.[1]?.label || 'Projects' },
-        { value: profile.highlights?.[2]?.value || '4+', label: profile.highlights?.[2]?.label || 'Years' }
-      ]
+      { value: profile.highlights?.[0]?.value || '15+', label: profile.highlights?.[0]?.label || 'Team' },
+      { value: profile.highlights?.[1]?.value || '25+', label: profile.highlights?.[1]?.label || 'Projects' },
+      { value: profile.highlights?.[2]?.value || '4+', label: profile.highlights?.[2]?.label || 'Years' }
+    ]
     : [
-        { value: profile.highlights?.[0]?.value || '5', label: profile.highlights?.[0]?.label || 'Projects' },
-        { value: profile.highlights?.[1]?.value || '3', label: profile.highlights?.[1]?.label || 'Credentials' },
-        { value: profile.highlights?.[2]?.value || '2+', label: profile.highlights?.[2]?.label || 'Years' }
-      ];
+      { value: profile.highlights?.[0]?.value || '5', label: profile.highlights?.[0]?.label || 'Projects' },
+      { value: profile.highlights?.[1]?.value || '3', label: profile.highlights?.[1]?.label || 'Credentials' },
+      { value: profile.highlights?.[2]?.value || '2+', label: profile.highlights?.[2]?.label || 'Years' }
+    ];
 
   // Dynamic Social Links strictly preserving user dragged & saved order
   const rawSocials = (Array.isArray(profile.socials) && profile.socials.length > 0)
     ? profile.socials
     : (Array.isArray(profile.socialLinks) && profile.socialLinks.length > 0)
-    ? profile.socialLinks
-    : (profile.socials && typeof profile.socials === 'object')
-    ? Object.entries(profile.socials).map(([platform, url]) => ({ platform: platform as any, url: String(url) }))
-    : [];
+      ? profile.socialLinks
+      : (profile.socials && typeof profile.socials === 'object')
+        ? Object.entries(profile.socials).map(([platform, url]) => ({ platform: platform as any, url: String(url) }))
+        : [];
 
   const socials: SocialLink[] = rawSocials.filter((s: any) => s && s.url && typeof s.url === 'string' && s.url.trim() !== '');
 
@@ -390,7 +390,7 @@ export function HeroSection({
       case 'github':
         return <GithubIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
       case 'linkedin':
-        return <LinkedInIcon className="w-4 h-4 text-blue-500" />;
+        return <LinkedInIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
       case 'twitter':
       case 'x':
         return <TwitterXIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
@@ -428,7 +428,7 @@ export function HeroSection({
       />
 
       {/* 1. Cover Image Banner */}
-      <div 
+      <div
         onClick={() => {
           if (isEditing) {
             coverInputRef.current?.click();
@@ -436,9 +436,8 @@ export function HeroSection({
             onOpenEdit?.();
           }
         }}
-        className={`relative ${(sharing as any).coverImage === false && !isEditing && !canEdit ? `h-20 sm:h-24 ${theme.coverFallback}` : 'h-36 sm:h-48 md:h-60 lg:h-72 bg-slate-900'} w-full overflow-hidden ${
-          canEdit || isEditing ? 'cursor-pointer group/cover hover:brightness-105 transition-all' : ''
-        }`}
+        className={`relative ${(sharing as any).coverImage === false && !isEditing && !canEdit ? `h-20 sm:h-24 ${theme.coverFallback}` : 'h-36 sm:h-48 md:h-60 lg:h-72 bg-slate-900'} w-full overflow-hidden ${canEdit || isEditing ? 'cursor-pointer group/cover hover:brightness-105 transition-all' : ''
+          }`}
         title={isEditing ? 'Click to change cover image' : canEdit ? 'Click to edit profile' : undefined}
       >
         {((sharing as any).coverImage !== false || isEditing || canEdit) && (
@@ -471,7 +470,7 @@ export function HeroSection({
                 className="flex px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black/95 text-white border border-white/20 shadow-lg items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer text-xs font-semibold select-none group"
                 title="Open Sections navigation slider"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-90 transition-transform duration-200" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-300 group-hover:rotate-90 transition-transform duration-200" />
                 <span>Sections</span>
               </button>
             )}
@@ -489,7 +488,7 @@ export function HeroSection({
                 className="flex px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black/95 text-white border border-white/20 shadow-lg items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer text-xs font-semibold select-none group"
                 title="Open Sections navigation slider"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-90 transition-transform duration-200" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-300 group-hover:rotate-90 transition-transform duration-200" />
                 <span>Sections</span>
               </button>
             )}
@@ -508,7 +507,7 @@ export function HeroSection({
                   className="flex lg:hidden px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black/95 text-white border border-white/20 shadow-lg items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer text-xs font-semibold select-none group"
                   title="Open Sections navigation slider"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-90 transition-transform duration-200" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-300 group-hover:rotate-90 transition-transform duration-200" />
                   <span>Sections</span>
                 </button>
 
@@ -523,7 +522,7 @@ export function HeroSection({
                   className="hidden lg:flex px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black/95 text-white border border-white/20 shadow-lg items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer text-xs font-semibold select-none group"
                   title="Open Sections navigation slider"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-90 transition-transform duration-200" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-300 group-hover:rotate-90 transition-transform duration-200" />
                   <span>Sections</span>
                 </button>
               </>
@@ -542,7 +541,7 @@ export function HeroSection({
                 className="flex px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black/95 text-white border border-white/20 shadow-lg items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer text-xs font-semibold select-none group"
                 title="Open Sections navigation slider"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-90 transition-transform duration-200" />
+                <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-300 group-hover:rotate-90 transition-transform duration-200" />
                 <span>Sections</span>
               </button>
             )}
@@ -551,9 +550,8 @@ export function HeroSection({
 
         {/* Cover Edit Overlay Badge */}
         {(isEditing || canEdit) && (
-          <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 transition-opacity ${
-            isEditing ? 'opacity-95 hover:opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
-          }`}>
+          <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 transition-opacity ${isEditing ? 'opacity-95 hover:opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
+            }`}>
             <button
               type="button"
               disabled={isUploadingCover}
@@ -569,12 +567,12 @@ export function HeroSection({
             >
               {isUploadingCover ? (
                 <>
-                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-white animate-spin" />
                   <span>Uploading...</span>
                 </>
               ) : (
                 <>
-                  <Camera className="w-4 h-4 text-cyan-400" />
+                  <Camera className="w-4 h-4 text-white" />
                   <span>{isEditing ? 'Change Cover' : 'Edit Cover'}</span>
                 </>
               )}
@@ -621,7 +619,7 @@ export function HeroSection({
         {sharing.photo !== false && (
           isCompany ? (
             /* Corporate Logo Frame */
-            <div 
+            <div
               onClick={() => {
                 if (isEditing) {
                   avatarInputRef.current?.click();
@@ -629,9 +627,8 @@ export function HeroSection({
                   onOpenEdit?.();
                 }
               }}
-              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${
-                canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-blue-500/50 transition-all' : ''
-              }`}
+              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-blue-500/50 transition-all' : ''
+                }`}
               title={isEditing ? 'Click to change logo' : canEdit ? 'Click to edit profile' : undefined}
             >
               <img
@@ -643,17 +640,16 @@ export function HeroSection({
                 className="w-full h-full object-contain rounded-xl sm:rounded-2xl"
               />
               {(canEdit || isEditing) && (
-                <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded-2xl sm:rounded-3xl transition-opacity ${
-                  isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
-                }`}>
+                <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded-2xl sm:rounded-3xl transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
+                  }`}>
                   {isUploadingAvatar ? (
                     <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
                       <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
                     </>
                   ) : (
                     <>
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300" />
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
                       <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Logo' : 'Edit Logo'}</span>
                     </>
                   )}
@@ -662,7 +658,7 @@ export function HeroSection({
             </div>
           ) : (
             /* Individual Circular Headshot */
-            <div 
+            <div
               onClick={() => {
                 if (isEditing) {
                   avatarInputRef.current?.click();
@@ -670,9 +666,8 @@ export function HeroSection({
                   onOpenEdit?.();
                 }
               }}
-              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white dark:border-[#18181B] shadow-md bg-slate-100 dark:bg-zinc-800 shrink-0 ${
-                canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-cyan-500/50 transition-all' : ''
-              }`}
+              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white dark:border-[#18181B] shadow-md bg-zinc-100 dark:bg-zinc-800 shrink-0 ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
+                }`}
               title={isEditing ? 'Click to change photo' : canEdit ? 'Click to edit profile' : undefined}
             >
               <img
@@ -684,17 +679,16 @@ export function HeroSection({
                 className="w-full h-full object-cover"
               />
               {(canEdit || isEditing) && (
-                <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${
-                  isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
-                }`}>
+                <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
+                  }`}>
                   {isUploadingAvatar ? (
                     <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
                       <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
                     </>
                   ) : (
                     <>
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-cyan-300" />
+                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
                       <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Photo' : 'Edit Photo'}</span>
                     </>
                   )}
@@ -722,7 +716,7 @@ export function HeroSection({
           <div className="space-y-2 pt-1">
             <div className="flex items-center gap-2">
               {isCompany ? (
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800">
                   <Building2 className="w-3.5 h-3.5" />
                   <span>Company · Organization</span>
                 </div>
@@ -970,7 +964,7 @@ export function HeroSection({
               </div>
             ) : (
               <>
-                <div 
+                <div
                   onClick={() => canEdit && onOpenEdit?.()}
                   className={`space-y-0.5 ${canEdit ? 'cursor-pointer group/name hover:opacity-85 transition-opacity' : ''}`}
                   title={canEdit ? 'Click to edit name' : undefined}
@@ -991,7 +985,7 @@ export function HeroSection({
                     )}
                   </div>
                   {(profile.username || profile.slug) && (
-                    <p className="text-xs font-mono text-cyan-600 dark:text-cyan-400 font-semibold">
+                    <p className="text-xs font-mono text-zinc-600 dark:text-zinc-400 font-semibold">
                       @{profile.username || profile.slug}
                     </p>
                   )}
@@ -1014,7 +1008,7 @@ export function HeroSection({
 
                 {/* Headline (distinct from title & bio) */}
                 {profile.headline && (
-                  <p 
+                  <p
                     onClick={() => canEdit && onOpenEdit?.()}
                     className={`text-sm sm:text-base font-semibold ${theme.textPrimary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                     title={canEdit ? 'Click to edit headline' : undefined}
@@ -1024,7 +1018,7 @@ export function HeroSection({
                 )}
 
                 {(sharing as any).title !== false && (
-                  <p 
+                  <p
                     onClick={() => canEdit && onOpenEdit?.()}
                     className={`text-sm sm:text-base font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                     title={canEdit ? 'Click to edit title' : undefined}
@@ -1055,7 +1049,7 @@ export function HeroSection({
                 {isCompany && (
                   <div className="flex items-center gap-2 pt-1 flex-wrap text-xs">
                     {profile.companyInfo?.industry && (
-                      <span 
+                      <span
                         onClick={() => canEdit && onOpenEdit?.()}
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                         title={canEdit ? 'Click to edit company details' : undefined}
@@ -1064,7 +1058,7 @@ export function HeroSection({
                       </span>
                     )}
                     {profile.companyInfo?.employeeCount && (
-                      <span 
+                      <span
                         onClick={() => canEdit && onOpenEdit?.()}
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                         title={canEdit ? 'Click to edit company details' : undefined}
@@ -1078,10 +1072,10 @@ export function HeroSection({
                         e.stopPropagation();
                         onSelectSection ? onSelectSection('teamMembers') : null;
                       }}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                       title="View organization team"
                     >
-                      <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <Users className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
                       <span>{activeMemberCount} {activeMemberCount === 1 ? 'Team Member' : 'Team Members'}</span>
                     </button>
                   </div>
@@ -1089,7 +1083,7 @@ export function HeroSection({
 
                 {/* Tagline */}
                 {profile.tagline && (
-                  <p 
+                  <p
                     onClick={() => canEdit && onOpenEdit?.()}
                     className={`text-xs sm:text-sm font-medium ${theme.textSecondary} italic pt-0.5 break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                     title={canEdit ? 'Click to edit tagline' : undefined}
@@ -1100,7 +1094,7 @@ export function HeroSection({
 
                 {/* Location & Country */}
                 {(profile.location || profile.country) && (
-                  <p 
+                  <p
                     onClick={() => canEdit && onOpenEdit?.()}
                     className={`text-xs sm:text-sm ${theme.textMuted} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                     title={canEdit ? 'Click to edit location' : undefined}
@@ -1113,9 +1107,8 @@ export function HeroSection({
                 {sharing.bio !== false && getShortBio(profile) && (
                   <div
                     onClick={() => canEdit && onOpenEdit?.()}
-                    className={`${
-                      canEdit ? 'cursor-pointer group/bio rounded-2xl p-2 -ml-2 hover:bg-cyan-500/[0.04] dark:hover:bg-cyan-500/10 transition-all' : ''
-                    }`}
+                    className={`${canEdit ? 'cursor-pointer group/bio rounded-2xl p-2 -ml-2 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04] transition-all' : ''
+                      }`}
                   >
                     <p className={`text-xs sm:text-sm md:text-base ${theme.textSecondary} leading-relaxed max-w-2xl break-words`}>
                       {getShortBio(profile)}
@@ -1157,10 +1150,10 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={() => onSelectSection ? onSelectSection('teamMembers') : onOpenEdit?.()}
-                  className="flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none"
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                   title="Manage Team Members"
                 >
-                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-white" />
+                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Manage Team</span>
                 </button>
 
@@ -1273,15 +1266,14 @@ export function HeroSection({
 
         {/* Direct Social Icon Bar: Respects exact drag-and-drop order from socials (hidden in Edit Mode) */}
         {!isEditing && sharing.socialLinks !== false && (
-          <div 
+          <div
             onClick={(e) => {
               if (canEdit && onSelectSection && (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('edit-socials-trigger'))) {
                 onSelectSection('socials');
               }
             }}
-            className={`flex items-center gap-2.5 pt-2 text-slate-600 dark:text-zinc-300 flex-wrap relative ${
-              canEdit ? 'group/socials rounded-xl p-1.5 -ml-1.5 hover:bg-purple-500/[0.06] dark:hover:bg-purple-500/10 hover:ring-1 hover:ring-purple-500/30 transition-all' : ''
-            }`}
+            className={`flex items-center gap-2.5 pt-2 text-zinc-600 dark:text-zinc-300 flex-wrap relative ${canEdit ? 'group/socials rounded-xl p-1.5 -ml-1.5 hover:bg-zinc-100/80 dark:hover:bg-white/[0.04] hover:ring-1 hover:ring-zinc-300 dark:hover:ring-zinc-700 transition-all' : ''
+              }`}
             title={canEdit ? 'Click to edit Socials & Links in Studio' : undefined}
           >
             {/* Direct WhatsApp (if sharing enabled and not duplicate) */}
@@ -1342,7 +1334,7 @@ export function HeroSection({
                   e.stopPropagation();
                   onSelectSection?.('socials');
                 }}
-                className="edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity ml-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 flex items-center gap-1 cursor-pointer"
+                className="edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity ml-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1 cursor-pointer"
               >
                 <Pencil className="w-2.5 h-2.5" />
                 <span>Edit Links</span>

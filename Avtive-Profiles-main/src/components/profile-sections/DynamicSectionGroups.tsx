@@ -162,10 +162,10 @@ function SectionReorderCard({
       dragControls={dragControls}
       className={`p-3 sm:p-3.5 rounded-2xl border transition-all duration-150 flex items-center gap-2.5 sm:gap-3 select-none ${
         isArmed
-          ? 'bg-cyan-50/80 dark:bg-cyan-950/40 border-cyan-400 dark:border-cyan-500 shadow-md scale-[1.01]'
+          ? 'bg-zinc-100 dark:bg-zinc-900 border-zinc-900 dark:border-white shadow-md scale-[1.01]'
           : isVisibleGroup
-          ? 'bg-white dark:bg-[#181B24] border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-xs'
-          : 'bg-slate-50/70 dark:bg-white/[0.03] border-slate-200/60 dark:border-white/5 opacity-75 hover:opacity-100'
+          ? 'bg-white dark:bg-[#111111] border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
+          : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200/70 dark:border-zinc-800/70 opacity-75 hover:opacity-100'
       }`}
     >
       {/* Drag Handle with 200ms Long-Press & Move Threshold Protection */}
@@ -174,10 +174,10 @@ function SectionReorderCard({
         {...dragHandleProps}
         className={`p-1.5 rounded-lg shrink-0 transition-all cursor-grab active:cursor-grabbing ${
           isArmed
-            ? 'text-cyan-600 dark:text-cyan-400 bg-cyan-100/80 dark:bg-cyan-900/40 scale-105'
+            ? 'text-zinc-950 dark:text-white bg-zinc-200 dark:bg-zinc-800 scale-105'
             : isPressing
-            ? 'text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-white/10'
-            : 'text-slate-400 hover:text-slate-700 dark:hover:text-white'
+            ? 'text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900'
+            : 'text-zinc-400 hover:text-zinc-800 dark:hover:text-white'
         }`}
         title="Press and hold (200ms) to drag and reorder"
         aria-label={`Press and hold to drag and reorder ${section.label}`}

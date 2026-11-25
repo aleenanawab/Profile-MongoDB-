@@ -117,6 +117,22 @@ async function handleProfileUpdate(request: NextRequest) {
         delete rawData.coverImage;
       }
     }
+    if (
+      rawData.customBackgroundImage === null ||
+      (typeof rawData.customBackgroundImage === 'string' && rawData.customBackgroundImage.startsWith('blob:'))
+    ) {
+      if (!clearFields.includes('customBackgroundImage')) {
+        delete rawData.customBackgroundImage;
+      }
+    }
+    if (
+      rawData.customBackgroundVideo === null ||
+      (typeof rawData.customBackgroundVideo === 'string' && rawData.customBackgroundVideo.startsWith('blob:'))
+    ) {
+      if (!clearFields.includes('customBackgroundVideo')) {
+        delete rawData.customBackgroundVideo;
+      }
+    }
 
     // Process and auto-upload any base64 images to Cloudinary
     if (rawData.avatar && typeof rawData.avatar === 'string' && rawData.avatar.startsWith('data:')) {
@@ -124,6 +140,13 @@ async function handleProfileUpdate(request: NextRequest) {
     }
     if (rawData.coverImage && typeof rawData.coverImage === 'string' && rawData.coverImage.startsWith('data:')) {
       rawData.coverImage = await ensureCloudinaryAssetUrl(rawData.coverImage, 'profiles');
+    }
+    if (
+      rawData.customBackgroundImage &&
+      typeof rawData.customBackgroundImage === 'string' &&
+      rawData.customBackgroundImage.startsWith('data:')
+    ) {
+      rawData.customBackgroundImage = await ensureCloudinaryAssetUrl(rawData.customBackgroundImage, 'backgrounds');
     }
     if (Array.isArray(rawData.projects)) {
       const processedProjects = [...rawData.projects];

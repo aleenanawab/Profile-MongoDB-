@@ -167,7 +167,7 @@ export function InPersonShareView({
 
   const nfcStatusLabel: Record<NfcState, { text: string; badgeClass: string }> = {
     ready: { text: 'Ready to tap', badgeClass: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25' },
-    connecting: { text: 'Connecting...', badgeClass: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/25' },
+    connecting: { text: 'Connecting...', badgeClass: 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-800' },
     transferring: { text: 'Hold near target device/tag...', badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25' },
     completed: { text: 'NFC link written', badgeClass: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' },
     failed: { text: 'Transfer failed', badgeClass: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/25' },

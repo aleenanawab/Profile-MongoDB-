@@ -52,7 +52,7 @@ export function PhonePreview({
           className="w-full flex items-center justify-between pb-2 px-3 text-xs font-bold text-slate-500 dark:text-zinc-400 transition-all"
         >
           <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] truncate font-mono">
-            <Smartphone className="w-3.5 h-3.5 shrink-0 text-cyan-500" />
+            <Smartphone className="w-3.5 h-3.5 shrink-0 text-zinc-700 dark:text-zinc-300" />
             <span className="truncate">{headerTitle}</span>
           </span>
           <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold shrink-0">

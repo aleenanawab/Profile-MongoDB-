@@ -215,10 +215,10 @@ export function ShareTemplatesTab({
                 key={tpl.id}
                 className={`rounded-2xl border p-4 space-y-3 transition-all ${
                   isSelected
-                    ? 'border-cyan-500/60 bg-cyan-500/[0.04] dark:bg-cyan-500/10'
+                    ? 'border-black dark:border-white bg-zinc-100 dark:bg-zinc-900'
                     : tpl.isBuiltIn && tpl.presetKey === 'general'
-                    ? 'border-slate-800/80 dark:border-white/15 bg-slate-900 text-white dark:bg-[#171F33]'
-                    : 'border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03]'
+                    ? 'border-zinc-900 dark:border-zinc-700 bg-black text-white dark:bg-zinc-950'
+                    : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-white/[0.03]'
                 }`}
               >
                 {(() => {
@@ -420,8 +420,8 @@ export function ShareTemplatesTab({
           className="p-4 rounded-2xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-white/[0.03] space-y-3"
         >
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-cyan-500" />
+            <h4 className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
               <span>Save Current Selection as Custom Template</span>
             </h4>
           </div>
@@ -467,8 +467,8 @@ export function ShareTemplatesTab({
           onClick={() => setIsCreating(true)}
           className="w-full p-4 rounded-2xl border border-dashed border-slate-300 dark:border-white/20 hover:border-slate-400 dark:hover:border-white/35 text-left transition-all cursor-pointer bg-slate-50/50 dark:bg-white/[0.02]"
         >
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
-            <Plus className="w-4 h-4 text-cyan-500" />
+          <div className="flex items-center gap-2 text-xs font-bold text-zinc-950 dark:text-white">
+            <Plus className="w-4 h-4 text-zinc-900 dark:text-white" />
             <span>Create a custom template</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">

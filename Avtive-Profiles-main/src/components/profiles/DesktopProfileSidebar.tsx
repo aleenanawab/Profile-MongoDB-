@@ -135,14 +135,14 @@ function DesktopSidebarReorderItem({
       dragControls={dragControls}
       className={`w-full flex items-center justify-between px-2.5 py-1.5 min-h-[38px] h-[38px] rounded-xl text-xs font-semibold transition-all relative select-none group ${
         isArmed
-          ? 'bg-cyan-100/70 dark:bg-cyan-950/60 border border-cyan-400 dark:border-cyan-500 shadow-md'
+          ? 'bg-zinc-200 dark:bg-zinc-800 border border-zinc-900 dark:border-white shadow-md'
           : isActive
-          ? 'bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-400/50 dark:border-cyan-500/40 text-cyan-950 dark:text-white font-bold shadow-2xs'
-          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent'
+          ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-white font-bold shadow-2xs'
+          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/[0.04] border border-transparent'
       }`}
     >
       {isActive && (
-        <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-cyan-500 dark:bg-cyan-400 shadow-sm shadow-cyan-400/80" />
+        <span className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-zinc-950 dark:bg-white" />
       )}
 
       {/* Drag Handle with 200ms Long-Press */}
@@ -154,10 +154,10 @@ function DesktopSidebarReorderItem({
           aria-label={`Press and hold to drag and reorder ${sec.label}`}
           className={`p-1 rounded shrink-0 transition-colors cursor-grab active:cursor-grabbing touch-none ${
             isArmed
-              ? 'text-cyan-600 dark:text-cyan-400 bg-cyan-200/50 dark:bg-cyan-900/50'
+              ? 'text-zinc-950 dark:text-white bg-zinc-300/60 dark:bg-zinc-800'
               : isPressing
-              ? 'text-slate-800 dark:text-slate-200 bg-slate-200/60 dark:bg-white/10'
-              : 'text-slate-400 hover:text-cyan-600 dark:text-slate-600 dark:hover:text-cyan-400'
+              ? 'text-zinc-800 dark:text-zinc-200 bg-zinc-200/60 dark:bg-white/10'
+              : 'text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-white'
           }`}
         >
           <GripVertical className="w-3.5 h-3.5" />
@@ -197,9 +197,9 @@ function DesktopSidebarReorderItem({
         className="flex-1 flex items-center gap-2 min-w-0 px-1 py-0.5 text-left cursor-pointer"
       >
         <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
-          isActive ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-slate-200'
+          isActive ? 'text-zinc-950 dark:text-white' : 'text-zinc-500 group-hover:text-zinc-800 dark:text-zinc-400 dark:group-hover:text-zinc-200'
         }`} />
-        <span className={`truncate text-xs ${!isVisible ? 'line-through text-slate-400 dark:text-slate-600' : ''}`}>
+        <span className={`truncate text-xs ${!isVisible ? 'line-through text-zinc-400 dark:text-zinc-600' : ''}`}>
           {sec.label}
         </span>
       </button>
@@ -209,8 +209,8 @@ function DesktopSidebarReorderItem({
         {badge !== undefined && (
           <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md ${
             isActive 
-              ? 'bg-cyan-100 text-cyan-800 border border-cyan-300 dark:bg-cyan-500/30 dark:text-cyan-200 dark:border-cyan-400/30' 
-              : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-white/5 dark:text-slate-400 dark:border-white/10'
+              ? 'bg-zinc-950 text-white border border-zinc-950 dark:bg-white dark:text-black dark:border-white' 
+              : 'bg-zinc-100 text-zinc-600 border border-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:border-white/10'
           }`}>
             {badge}
           </span>
@@ -227,12 +227,12 @@ function DesktopSidebarReorderItem({
             title={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
             aria-label={isVisible ? `Hide ${sec.label}` : `Show ${sec.label}`}
             aria-pressed={isVisible}
-            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
           >
             {isVisible ? (
-              <Eye className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300" />
+              <Eye className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
             ) : (
-              <EyeOff className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-400" />
+              <EyeOff className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300" />
             )}
           </button>
         )}
@@ -440,17 +440,17 @@ export function DesktopProfileSidebar({
           className="flex items-center gap-2.5 group"
           title="Return to Public Profile"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#6C4CF1] to-cyan-500 flex items-center justify-center shadow-md shadow-[#6C4CF1]/25 group-hover:scale-105 transition-transform">
-            <AvtiveLogoIcon className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-xl bg-black dark:bg-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+            <AvtiveLogoIcon className="w-4 h-4 text-white dark:text-black" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">avtive</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#6C4CF1]/15 text-[#6C4CF1] dark:text-[#a594fd] font-mono font-bold border border-[#6C4CF1]/30">
+              <span className="text-sm font-extrabold text-zinc-950 dark:text-white tracking-tight">avtive</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-mono font-bold border border-zinc-200 dark:border-zinc-800">
                 {isPublicView ? 'SECTIONS' : 'STUDIO'}
               </span>
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400">
+            <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
               {isPublicView ? 'Profile Navigation' : 'Desktop Profile Editor'}
             </span>
           </div>
@@ -463,7 +463,7 @@ export function DesktopProfileSidebar({
             onClick={onClose}
             aria-label="Close navigation panel"
             title="Close panel"
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -471,9 +471,9 @@ export function DesktopProfileSidebar({
       </div>
 
       {/* 2. User Profile Summary Card / Persona Switcher */}
-      <div className="px-3.5 py-3 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] shrink-0">
+      <div className="px-3.5 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-white/[0.02] shrink-0">
         <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-full border-2 border-[#6C4CF1]/40 overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0 shadow-sm">
+          <div className="relative w-10 h-10 rounded-full border-2 border-zinc-300 dark:border-zinc-700 overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0 shadow-sm">
             <img 
               src={profile.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop'} 
               alt={profile.name}
@@ -482,12 +482,12 @@ export function DesktopProfileSidebar({
               }}
               className="w-full h-full object-cover"
             />
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#080D1A]" />
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-zinc-900 dark:bg-white ring-2 ring-white dark:ring-black" />
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-1">
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+              <h3 className="text-xs font-bold text-zinc-950 dark:text-white truncate">
                 {profile.name || 'Your Profile'}
               </h3>
               {userProfiles && userProfiles.length > 1 && (
@@ -499,10 +499,10 @@ export function DesktopProfileSidebar({
               )}
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                 {profile.professionalTitle || profile.designation || 'Professional'}
               </p>
-              <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-[#6C4CF1]/10 text-[#6C4CF1] dark:text-[#a594fd] border border-[#6C4CF1]/20 font-mono">
+              <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-800 font-mono">
                 Professional Plan
               </span>
             </div>
@@ -515,9 +515,9 @@ export function DesktopProfileSidebar({
         
         {/* Group 1: Core Profile Sections with Drag & Drop Reordering */}
         <div>
-          <div className="flex items-center justify-between px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
+          <div className="flex items-center justify-between px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500 font-mono">
             <span>{isPublicView ? 'Profile Sections' : 'Section Navigation'}</span>
-            {!isPublicView && <span className="text-[9px] text-[#6C4CF1]/80 lowercase">drag to reorder</span>}
+            {!isPublicView && <span className="text-[9px] text-zinc-500 dark:text-zinc-400 lowercase">drag to reorder</span>}
           </div>
 
           <Reorder.Group 
@@ -559,12 +559,12 @@ export function DesktopProfileSidebar({
 
       {/* 4. Bottom Sticky Action Footer */}
       {!isPublicView && (
-        <div className="p-3.5 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#080D1A] space-y-2 shrink-0 transition-colors">
+        <div className="p-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-black space-y-2 shrink-0 transition-colors">
           <button
             type="button"
             onClick={handleSaveClick}
             disabled={isSaving || !isDirty}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px] rounded-xl text-xs font-bold bg-[#6C4CF1] hover:bg-[#5b3de0] text-white shadow-md shadow-[#6C4CF1]/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px] rounded-xl text-xs font-bold bg-black hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-black shadow-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
           >
             {isSaving ? (
               <>
@@ -595,10 +595,10 @@ export function DesktopProfileSidebar({
             href={`/profile/${currentIdentifier}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 min-h-[44px] rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors shadow-2xs"
+            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 min-h-[44px] rounded-xl text-xs font-semibold text-zinc-700 hover:text-black dark:text-zinc-300 dark:hover:text-white bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors shadow-2xs"
             title="Open Public Card in New Tab"
           >
-            <ExternalLink className="w-3 h-3 text-[#6C4CF1] dark:text-cyan-400" />
+            <ExternalLink className="w-3 h-3 text-zinc-900 dark:text-white" />
             <span>View Public Profile</span>
           </Link>
         </div>

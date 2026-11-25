@@ -181,14 +181,14 @@ export function SkillsSection({
       data-section="skills"
       onClick={() => canEdit && !isEditing && onSelectSection?.('skills', 'skills')}
       className={`px-4 sm:px-6 md:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
-        canEdit && !isEditing ? 'cursor-pointer group/skills hover:bg-purple-500/[0.04] dark:hover:bg-purple-500/10' : ''
+        canEdit && !isEditing ? 'cursor-pointer group/skills hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
       }`}
       title={canEdit && !isEditing ? 'Click to edit Skills in Studio' : undefined}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary} flex items-center gap-1.5`}>
-            <Code className="w-4 h-4 text-cyan-500" />
+            <Code className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
             <span>Skills</span>
           </h2>
           {hasSkills && (
@@ -197,7 +197,7 @@ export function SkillsSection({
             </span>
           )}
           {canEdit && !isEditing && (
-            <span className="opacity-0 group/skills:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+            <span className="opacity-0 group/skills:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
               <Pencil className="w-2.5 h-2.5" />
               Edit
             </span>
@@ -457,14 +457,14 @@ export function ServicesSection({
       data-section="services"
       onClick={() => canEdit && !isEditing && onSelectSection?.('services', 'services')}
       className={`px-4 sm:px-6 md:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
-        canEdit && !isEditing ? 'cursor-pointer group/services hover:bg-purple-500/[0.04] dark:hover:bg-purple-500/10' : ''
+        canEdit && !isEditing ? 'cursor-pointer group/services hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
       }`}
       title={canEdit && !isEditing ? 'Click to edit Services in Studio' : undefined}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary} flex items-center gap-1.5`}>
-            <Sparkles className="w-4 h-4 text-purple-500" />
+            <Sparkles className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
             <span>Services</span>
           </h2>
           {hasServices && (
@@ -473,7 +473,7 @@ export function ServicesSection({
             </span>
           )}
           {canEdit && !isEditing && (
-            <span className="opacity-0 group/services:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+            <span className="opacity-0 group/services:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
               <Pencil className="w-2.5 h-2.5" />
               Edit
             </span>
@@ -483,7 +483,7 @@ export function ServicesSection({
           <button
             type="button"
             onClick={handleAddService}
-            className="min-h-[44px] flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+            className="min-h-[44px] flex items-center gap-1 text-xs font-bold text-zinc-900 dark:text-white hover:underline cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Service</span>

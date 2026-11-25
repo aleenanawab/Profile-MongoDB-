@@ -8,10 +8,10 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { 
-  BACKGROUND_THEMES, 
-  BACKGROUND_THEME_CATEGORIES, 
-  getBackgroundTheme 
+import {
+  BACKGROUND_THEMES,
+  BACKGROUND_THEME_CATEGORIES,
+  getBackgroundTheme
 } from '../src/data/backgroundThemes';
 import { parseExternalVideoUrl } from '../src/components/profile-sections/ProfileIntroductionMedia';
 import { diffProfile, isProfileDirty } from '../src/lib/profileDiff';
@@ -21,7 +21,7 @@ import { ProfileData, ProfileIntroductionMedia } from '../src/types/profile';
 describe('Background Theme Collection', () => {
   it('should have predefined categories and presets covering all required styles', () => {
     assert.ok(BACKGROUND_THEMES.length >= 25, 'Expected at least 25 background presets');
-    
+
     const categories = new Set(BACKGROUND_THEMES.map(t => t.category));
     assert.ok(categories.has('occasions'), 'Expected occasions category');
     assert.ok(categories.has('festivals'), 'Expected festivals category');

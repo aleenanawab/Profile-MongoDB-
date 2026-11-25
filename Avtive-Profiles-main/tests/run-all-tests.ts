@@ -18,7 +18,8 @@ const testFiles = [
   'tests/section-visibility.test.ts',
   'tests/contact-and-revert-persistence.test.ts',
   'tests/oauth-and-stabilization.test.ts',
-  'tests/background-and-media-features.test.ts'
+  'tests/background-and-media-features.test.ts',
+  'tests/phase1-sharing-system.test.ts'
 ];
 
 console.log('\n===============================================================');

@@ -1,33 +1,33 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Mic, 
-  Video, 
-  Link2, 
-  Play, 
-  Pause, 
-  Square, 
-  Trash2, 
-  RotateCcw, 
-  Upload, 
-  Check, 
-  AlertCircle, 
-  Loader2, 
-  ExternalLink, 
-  Volume2, 
-  Sparkles, 
-  Eye, 
-  EyeOff, 
+import {
+  Mic,
+  Video,
+  Link2,
+  Play,
+  Pause,
+  Square,
+  Trash2,
+  RotateCcw,
+  Upload,
+  Check,
+  AlertCircle,
+  Loader2,
+  ExternalLink,
+  Volume2,
+  Sparkles,
+  Eye,
+  EyeOff,
   X,
   Radio,
   Pencil
 } from 'lucide-react';
-import { 
-  ProfileData, 
-  ProfileIntroductionMedia, 
-  ProfileIntroductionMediaType, 
-  ExternalMediaProvider 
+import {
+  ProfileData,
+  ProfileIntroductionMedia,
+  ProfileIntroductionMediaType,
+  ExternalMediaProvider
 } from '@/types/profile';
 import { ThemeConfig } from '@/components/ui/themeStyles';
 
@@ -468,13 +468,12 @@ export function ProfileIntroductionMediaSection({
       {/* VIEW / PLAYBACK DISPLAY                                                 */}
       {/* ─────────────────────────────────────────────────────────────────────── */}
       {media && (
-        <div className={`relative rounded-2xl border transition-all overflow-hidden ${
-          !isVisible 
-            ? 'border-dashed border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20' 
-            : theme 
-              ? `${theme.subCardBg} ${theme.subCardBorder}` 
+        <div className={`relative rounded-2xl border transition-all overflow-hidden ${!isVisible
+            ? 'border-dashed border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
+            : theme
+              ? `${theme.subCardBg} ${theme.subCardBorder}`
               : 'border-slate-200/90 dark:border-white/10 bg-slate-50/90 dark:bg-white/[0.04]'
-        }`}>
+          }`}>
           {/* Header Strip with Type Indicator & Edit Controls */}
           <div className={`px-3.5 py-2 flex items-center justify-between border-b ${theme?.divider || 'border-slate-200/60 dark:border-white/5'} text-xs`}>
             <div className={`flex items-center gap-1.5 font-semibold ${theme?.textPrimary || 'text-slate-700 dark:text-slate-200'}`}>
@@ -548,17 +547,15 @@ export function ProfileIntroductionMediaSection({
                 </button>
 
                 {/* Animated Audio Waveform Bars */}
-                <div className={`flex-1 flex items-center gap-1 h-8 px-2 rounded-xl border overflow-hidden ${
-                  theme ? `${theme.subCardBg} ${theme.subCardBorder}` : 'bg-white/60 dark:bg-black/30 border-slate-200/60 dark:border-white/5'
-                }`}>
+                <div className={`flex-1 flex items-center gap-1 h-8 px-2 rounded-xl border overflow-hidden ${theme ? `${theme.subCardBg} ${theme.subCardBorder}` : 'bg-white/60 dark:bg-black/30 border-slate-200/60 dark:border-white/5'
+                  }`}>
                   {[24, 45, 78, 60, 90, 40, 70, 85, 30, 55, 95, 65, 35, 75, 50, 80, 45, 65, 90, 30, 50, 85, 60, 40].map((h, idx) => (
                     <span
                       key={idx}
-                      className={`flex-1 rounded-full transition-all duration-200 ${
-                        isPlayingAudio 
-                          ? 'bg-cyan-500 animate-pulse' 
+                      className={`flex-1 rounded-full transition-all duration-200 ${isPlayingAudio
+                          ? 'bg-cyan-500 animate-pulse'
                           : 'bg-slate-300 dark:bg-slate-700'
-                      }`}
+                        }`}
                       style={{
                         height: isPlayingAudio ? `${Math.max(15, (h * (idx % 2 === 0 ? 1 : 0.7)))}%` : `${h * 0.4}%`,
                         animationDelay: `${idx * 40}ms`
@@ -600,13 +597,13 @@ export function ProfileIntroductionMediaSection({
                   />
                 ) : (
                   // Lazy Load Facade: zero external tracking scripts until user clicks Play!
-                  <div 
+                  <div
                     onClick={() => setIsPlayingExternal(true)}
                     className="w-full h-full relative cursor-pointer group flex items-center justify-center overflow-hidden"
                   >
                     {media.thumbnailUrl ? (
-                      <img 
-                        src={media.thumbnailUrl} 
+                      <img
+                        src={media.thumbnailUrl}
                         alt="Video thumbnail"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
                       />
@@ -702,11 +699,10 @@ export function ProfileIntroductionMediaSection({
                     setActiveTab('voice');
                     setErrorMessage(null);
                   }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    activeTab === 'voice'
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'voice'
                       ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <Mic className="w-3.5 h-3.5 text-cyan-500" />
                   <span>Voice Intro</span>
@@ -718,11 +714,10 @@ export function ProfileIntroductionMediaSection({
                     setActiveTab('video');
                     setErrorMessage(null);
                   }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    activeTab === 'video'
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'video'
                       ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <Video className="w-3.5 h-3.5 text-purple-500" />
                   <span>Upload Video</span>
@@ -734,11 +729,10 @@ export function ProfileIntroductionMediaSection({
                     setActiveTab('external');
                     setErrorMessage(null);
                   }}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    activeTab === 'external'
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'external'
                       ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <Link2 className="w-3.5 h-3.5 text-rose-500" />
                   <span>External Link</span>
@@ -858,7 +852,7 @@ export function ProfileIntroductionMediaSection({
                   />
 
                   {!videoFile ? (
-                    <div 
+                    <div
                       onClick={() => videoInputRef.current?.click()}
                       className="border-2 border-dashed border-slate-300 dark:border-white/10 hover:border-purple-500 dark:hover:border-purple-400 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-slate-50/50 dark:bg-white/[0.02]"
                     >

@@ -10,7 +10,10 @@ export const COLLECTIONS = {
   COMPANIES: 'companies',
   COMPANY_MEMBERS: 'company_members',
   CONNECTIONS: 'connections',
-  SESSIONS: 'sessions'
+  SESSIONS: 'sessions',
+  SHARE_LINKS: 'share_links',
+  SHARE_TEMPLATES: 'share_templates',
+  SHARE_EVENTS: 'share_events'
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

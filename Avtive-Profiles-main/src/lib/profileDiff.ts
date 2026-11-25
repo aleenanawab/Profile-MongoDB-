@@ -69,6 +69,7 @@ export const FIELD_CLASSIFICATIONS = {
   companyInfo: 'nested_object',
   nfcCard: 'nested_object',
   sharingSettings: 'nested_object',
+  fieldPrivacy: 'nested_object',
   sectionVisibility: 'nested_object',
   openToWork: 'nested_object',
   introductionMedia: 'nested_object',

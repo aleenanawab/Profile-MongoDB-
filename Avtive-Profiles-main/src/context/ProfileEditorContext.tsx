@@ -107,6 +107,7 @@ export const LIVE_PROFILE_ATOM_KEYS: (keyof ProfileData)[] = [
   'sectionOrder',
   'sectionVisibility',
   'sharingSettings',
+  'fieldPrivacy',
   'industry',
   'headline',
   'openToWork',
@@ -132,8 +133,8 @@ export function buildSocialLinksFromProfile(p: ProfileData): DraggableLinkItem[]
     Array.isArray(p.socials) && p.socials.length > 0
       ? p.socials
       : Array.isArray(p.socialLinks) && p.socialLinks.length > 0
-      ? p.socialLinks
-      : null;
+        ? p.socialLinks
+        : null;
 
   if (safeSocials && safeSocials.length > 0) {
     return safeSocials.map((s: { id?: string; platform?: string; label?: string; title?: string; url?: string; visible?: boolean }, idx: number) => {
@@ -351,131 +352,131 @@ const FALLBACK_PROFILE_DATA: ProfileData = {
 const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   profile: FALLBACK_PROFILE_DATA,
   savedBaseline: FALLBACK_PROFILE_DATA,
-  setProfile: () => {},
+  setProfile: () => { },
   userProfiles: [],
   currentActiveIdentifier: 'default',
   publicProfileUrl: '',
-  handleSwitchToProfile: () => {},
-  handleSwitchPersona: () => {},
+  handleSwitchToProfile: () => { },
+  handleSwitchPersona: () => { },
   activeSection: 'profile',
-  setActiveSection: () => {},
+  setActiveSection: () => { },
   activeSectionTarget: null,
-  setActiveSectionTarget: () => {},
+  setActiveSectionTarget: () => { },
   activeTheme: 'editorial',
-  setActiveTheme: () => {},
+  setActiveTheme: () => { },
   isDark: true,
-  setIsDark: () => {},
+  setIsDark: () => { },
   currentIdentifier: 'default',
   saveProfile: async () => ({ ok: false, error: 'Context uninitialized' }),
-  updateField: () => {},
-  updateProfilePartial: () => {},
+  updateField: () => { },
+  updateProfilePartial: () => { },
   toastMessage: null,
-  showToast: () => {},
+  showToast: () => { },
   expandedSections: { profile: true },
-  setExpandedSections: () => {},
-  toggleSectionExpanded: () => {},
-  toggleAllSections: () => {},
+  setExpandedSections: () => { },
+  toggleSectionExpanded: () => { },
+  toggleAllSections: () => { },
   autosaveStatus: 'idle',
   autosaveStatusText: '',
   flushAutosave: async () => ({ ok: true }),
   retryAutosave: async () => ({ ok: false, error: 'Context uninitialized' }),
   canonicalSectionOrder: [],
   phone: '',
-  setPhone: () => {},
+  setPhone: () => { },
   whatsapp: '',
-  setWhatsapp: () => {},
+  setWhatsapp: () => { },
   email: '',
-  setEmail: () => {},
+  setEmail: () => { },
   website: '',
-  setWebsite: () => {},
+  setWebsite: () => { },
   country: '',
-  setCountry: () => {},
+  setCountry: () => { },
   officeAddress: '',
-  setOfficeAddress: () => {},
+  setOfficeAddress: () => { },
   customContacts: [],
-  setCustomContacts: () => {},
+  setCustomContacts: () => { },
   contactOrder: [],
-  setContactOrder: () => {},
+  setContactOrder: () => { },
   username: '',
-  setUsername: () => {},
+  setUsername: () => { },
   fullName: '',
   firstName: '',
-  setFirstName: () => {},
+  setFirstName: () => { },
   secondName: '',
-  setSecondName: () => {},
+  setSecondName: () => { },
   professionalTitle: '',
-  setProfessionalTitle: () => {},
+  setProfessionalTitle: () => { },
   bio: '',
-  setBio: () => {},
+  setBio: () => { },
   about: '',
-  setAbout: () => {},
+  setAbout: () => { },
   company: '',
-  setCompany: () => {},
+  setCompany: () => { },
   location: '',
-  setLocation: () => {},
+  setLocation: () => { },
   tagline: '',
-  setTagline: () => {},
+  setTagline: () => { },
   avatar: '',
-  setAvatar: () => {},
+  setAvatar: () => { },
   coverImage: '',
-  setCoverImage: () => {},
+  setCoverImage: () => { },
   skills: [],
-  setSkills: () => {},
+  setSkills: () => { },
   services: [],
-  setServices: () => {},
+  setServices: () => { },
   isDirty: false,
   projects: [],
-  setProjects: () => {},
+  setProjects: () => { },
   experiences: [],
-  setExperiences: () => {},
+  setExperiences: () => { },
   education: [],
-  setEducation: () => {},
+  setEducation: () => { },
   socialLinks: [],
-  setSocialLinks: () => {},
+  setSocialLinks: () => { },
   customFields: [],
-  setCustomFields: () => {},
+  setCustomFields: () => { },
   dynamicSections: [],
-  setDynamicSections: () => {},
+  setDynamicSections: () => { },
   sectionOrder: [],
-  setSectionOrder: () => {},
+  setSectionOrder: () => { },
   sectionVisibility: {},
-  setSectionVisibility: () => {},
+  setSectionVisibility: () => { },
   sharingSettings: {},
-  setSharingSettings: () => {},
+  setSharingSettings: () => { },
   savedBackgroundThemeIds: [],
-  setSavedBackgroundThemeIds: () => {},
+  setSavedBackgroundThemeIds: () => { },
   activeBackgroundThemeId: '',
-  setActiveBackgroundThemeId: () => {},
+  setActiveBackgroundThemeId: () => { },
   introductionMedia: null,
-  setIntroductionMedia: () => {},
+  setIntroductionMedia: () => { },
   liveProfile: FALLBACK_PROFILE_DATA,
   activeSocialsPayload: [],
   isUploadingAvatar: false,
   isUploadingCover: false,
   isSaving: false,
   isConfirmed: false,
-  setIsConfirmed: () => {},
+  setIsConfirmed: () => { },
   statusMessage: null,
   copySuccess: false,
-  handleAvatarUpload: async () => {},
-  handleCoverUpload: async () => {},
-  handleAddLinkItem: () => {},
-  handleUpdateLink: () => {},
-  handleDeleteLink: () => {},
-  handleMoveLink: () => {},
-  handleAddCustomField: () => {},
-  handleUpdateCustomField: () => {},
-  handleDeleteCustomField: () => {},
-  handleMoveCustomField: () => {},
-  handleMoveSection: () => {},
+  handleAvatarUpload: async () => { },
+  handleCoverUpload: async () => { },
+  handleAddLinkItem: () => { },
+  handleUpdateLink: () => { },
+  handleDeleteLink: () => { },
+  handleMoveLink: () => { },
+  handleAddCustomField: () => { },
+  handleUpdateCustomField: () => { },
+  handleDeleteCustomField: () => { },
+  handleMoveCustomField: () => { },
+  handleMoveSection: () => { },
   isSectionVisible: () => true,
-  handleToggleSectionVisibility: () => {},
-  handleInstantToggleSection: () => {},
-  toggleVisibilityField: () => {},
-  handleCopyLink: async () => {},
-  handleSaveChanges: async () => {},
-  handleProfileSectionLiveUpdate: () => {},
-  handleProfileSectionSaveSuccess: () => {},
+  handleToggleSectionVisibility: () => { },
+  handleInstantToggleSection: () => { },
+  toggleVisibilityField: () => { },
+  handleCopyLink: async () => { },
+  handleSaveChanges: async () => { },
+  handleProfileSectionLiveUpdate: () => { },
+  handleProfileSectionSaveSuccess: () => { },
 };
 
 const ProfileEditorContext = createContext<ProfileEditorContextValue | undefined>(undefined);
@@ -583,8 +584,8 @@ export function ProfileEditorProvider({
   );
   const [secondName, setSecondName] = useState(
     initialProfile.secondName ||
-      initialProfile.lastName ||
-      (initialProfile.name ? initialProfile.name.split(' ').slice(1).join(' ') : '')
+    initialProfile.lastName ||
+    (initialProfile.name ? initialProfile.name.split(' ').slice(1).join(' ') : '')
   );
   const [username, setUsername] = useState(
     initialProfile.username || initialProfile.slug || ''
@@ -594,8 +595,8 @@ export function ProfileEditorProvider({
   );
   const [bio, setBio] = useState(
     initialProfile.bio ||
-      initialProfile.shortBio ||
-      ''
+    initialProfile.shortBio ||
+    ''
   );
   const [tagline, setTagline] = useState(
     initialProfile.tagline || ''
@@ -630,8 +631,8 @@ export function ProfileEditorProvider({
   );
   const [about, setAbout] = useState(
     initialProfile.about ||
-      initialProfile.fullBio ||
-      ''
+    initialProfile.fullBio ||
+    ''
   );
 
   // ── Projects / Experience / Education ─────────────────────────────────────
@@ -700,8 +701,8 @@ export function ProfileEditorProvider({
   const [copySuccess, setCopySuccess] = useState(false);
 
   // ── Derived values ────────────────────────────────────────────────────────
-  const fullName = (firstName.trim() || secondName.trim()) 
-    ? `${firstName.trim()} ${secondName.trim()}`.trim() 
+  const fullName = (firstName.trim() || secondName.trim())
+    ? `${firstName.trim()} ${secondName.trim()}`.trim()
     : (firstName === '' && secondName === '' ? '' : (profile.name || '').trim());
 
   const activeSocialsPayload = useMemo<SocialLink[]>(
@@ -1218,7 +1219,7 @@ export function ProfileEditorProvider({
         if (savedProfile.id) localStorage.setItem(`avtive_profile_${savedProfile.id}`, JSON.stringify(savedProfile));
         localStorage.setItem('avtive_last_saved_profile', JSON.stringify(savedProfile));
         window.dispatchEvent(new CustomEvent('avtive_profile_updated', { detail: savedProfile }));
-      } catch {}
+      } catch { }
 
       setStatusMessage({
         type: 'success',
@@ -1686,7 +1687,7 @@ export function ProfileEditorProvider({
     return profile.slug || profile.id || initialProfile.slug || initialProfile.id || '';
   }, [profile.slug, profile.id, initialProfile.slug, initialProfile.id]);
 
-    const isDirty = useMemo(() => isProfileDirty(liveProfile, savedBaseline), [liveProfile, savedBaseline]);
+  const isDirty = useMemo(() => isProfileDirty(liveProfile, savedBaseline), [liveProfile, savedBaseline]);
 
   // ── Context value ─────────────────────────────────────────────────────────
   const value = useMemo<ProfileEditorContextValue>(

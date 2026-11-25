@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ProfileData, 
-  ProfileTheme, 
+import {
+  ProfileData,
+  ProfileTheme,
   UserSession,
   ProjectItem,
-  ProfileType 
+  ProfileType
 } from '@/types/profile';
 import { HeaderNav } from '@/components/layout/HeaderNav';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
@@ -29,12 +29,14 @@ import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
 import { getBackgroundTheme, BackgroundTheme } from '@/data/backgroundThemes';
+import { SharePresetKey } from '@/types/sharing';
 
 export interface PublicProfileClientProps {
   initialProfile: ProfileData;
   session: UserSession | null;
   isOwner: boolean;
   initialIsEditing?: boolean;
+  initialIsSharing?: boolean;
   userProfiles?: ProfileData[];
 }
 
@@ -43,6 +45,7 @@ export function PublicProfileClient({
   session,
   isOwner,
   initialIsEditing = false,
+  initialIsSharing = false,
   userProfiles = []
 }: PublicProfileClientProps) {
   return (
@@ -52,6 +55,7 @@ export function PublicProfileClient({
         session={session}
         isOwner={isOwner}
         initialIsEditing={initialIsEditing}
+        initialIsSharing={initialIsSharing}
         userProfiles={userProfiles}
       />
     </ProfileEditorProvider>
@@ -63,6 +67,7 @@ function PublicProfileClientInner({
   session,
   isOwner,
   initialIsEditing = false,
+  initialIsSharing = false,
   userProfiles = []
 }: PublicProfileClientProps) {
   const router = useRouter();
@@ -80,7 +85,10 @@ function PublicProfileClientInner({
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const closeTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const isTouchRef = React.useRef(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(Boolean(initialIsSharing && isOwner));
+  const [shareTargetProfileId, setShareTargetProfileId] = useState<string>(initialProfile.id);
+  const [shareDraftSelections, setShareDraftSelections] = useState<Record<string, string[]>>({});
+  const [shareDraftPresets, setShareDraftPresets] = useState<Record<string, SharePresetKey | 'custom'>>({});
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
@@ -444,10 +452,14 @@ function PublicProfileClientInner({
     const syncFromUrl = () => {
       const params = new URLSearchParams(window.location.search);
       const isEditParam = params.get('edit') === 'true' || params.get('edit') === '1';
+      const isShareParam = params.get('share') === 'true' || params.get('share') === '1';
       if (isEditParam && isOwner) {
         setIsEditing(true);
       } else if (!isEditParam) {
         setIsEditing(false);
+      }
+      if (isShareParam && isOwner && !isEditParam) {
+        setIsShareModalOpen(true);
       }
     };
 
@@ -476,7 +488,7 @@ function PublicProfileClientInner({
             if (parsed.theme) setActiveTheme(parsed.theme);
           }
         }
-      } catch {}
+      } catch { }
     }
 
     const handleProfileUpdate = (e: Event) => {
@@ -498,7 +510,7 @@ function PublicProfileClientInner({
             setProfile(updated);
             if (updated.theme) setActiveTheme(updated.theme);
           }
-        } catch {}
+        } catch { }
       }
     };
 
@@ -521,7 +533,7 @@ function PublicProfileClientInner({
             setCurrentUser(data.user);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [currentUser]);
 
@@ -541,7 +553,7 @@ function PublicProfileClientInner({
     } finally {
       try {
         sessionStorage.removeItem('avtive_active_session');
-      } catch {}
+      } catch { }
       setCurrentUser(null);
       window.location.replace('/login');
     }
@@ -631,7 +643,7 @@ function PublicProfileClientInner({
         if (targetSlug && typeof window !== 'undefined') {
           window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
         }
-      } catch {}
+      } catch { }
       showToast('Profile saved successfully!');
     } catch (err: any) {
       console.error('Update profile error:', err);
@@ -726,7 +738,7 @@ function PublicProfileClientInner({
         localStorage.setItem(`avtive_profile_${updated.id}`, JSON.stringify(updated));
         localStorage.setItem('avtive_last_saved_profile', JSON.stringify(updated));
         window.dispatchEvent(new CustomEvent('avtive_profile_updated', { detail: updated }));
-      } catch {}
+      } catch { }
       showToast('Changes saved successfully!');
       return updated;
     } catch (err: any) {
@@ -786,7 +798,7 @@ function PublicProfileClientInner({
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && isEditing) {
-        flushAutosave(undefined, { keepalive: true }).catch(() => {});
+        flushAutosave(undefined, { keepalive: true }).catch(() => { });
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -957,7 +969,7 @@ function PublicProfileClientInner({
 
       {/* Main Responsive Profile Container + Mobile 80/20 Docked Panel */}
       <div className="flex-1 min-h-0 w-full flex flex-row overflow-hidden relative">
-        <div 
+        <div
           id="profile-scroll-panel"
           onClick={() => {
             if (desktopOpen) handleCloseDesktop();
@@ -967,11 +979,10 @@ function PublicProfileClientInner({
           style={activeBackgroundTheme ? { ...activeBackgroundTheme.backgroundStyle, backgroundAttachment: 'local' } : undefined}
           className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
-          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${
-            activeBackgroundTheme 
-              ? 'backdrop-blur-md shadow-2xl' 
+          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${activeBackgroundTheme
+              ? 'backdrop-blur-md shadow-2xl'
               : 'shadow-none sm:shadow-xl'
-          } overflow-hidden relative`}>
+            } overflow-hidden relative`}>
             <AvtiveDigitalCard
               profile={cardProfile}
               canEdit={isOwner}
@@ -1055,8 +1066,8 @@ function PublicProfileClientInner({
       </div>
 
       <div className="flex-1 w-full min-h-0 flex flex-row overflow-hidden relative">
-        <div 
-          id="mobile-profile-scroll-panel" 
+        <div
+          id="mobile-profile-scroll-panel"
           onClick={() => {
             if (mobileOpen) handleCloseMobile();
             if (isSidebarOpen) handleCloseSidebar();
@@ -1135,11 +1146,10 @@ function PublicProfileClientInner({
                           handleSectionSelect(section.key);
                           handleCloseSidebar();
                         }}
-                        className={`min-h-[42px] h-[44px] w-full max-w-[68px] rounded-xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer select-none active:scale-95 ${
-                          isActive
+                        className={`min-h-[42px] h-[44px] w-full max-w-[68px] rounded-xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer select-none active:scale-95 ${isActive
                             ? 'bg-[#6C4CF1]/15 text-[#6C4CF1] dark:bg-cyan-500/20 dark:text-cyan-300 border border-[#6C4CF1]/30 dark:border-cyan-400/30 font-bold shadow-xs'
                             : 'text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/10'
-                        }`}
+                          }`}
                         title={section.label}
                         aria-label={section.label}
                       >
@@ -1191,15 +1201,14 @@ function PublicProfileClientInner({
   );
 
   return (
-    <div 
+    <div
       data-theme={activeTheme}
-      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${
-        activeBackgroundTheme ? 'bg-transparent' : activeThemeConfig.pageBg
-      } ${activeThemeConfig.textPrimary} transition-all duration-300 font-sans relative`}
+      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${activeBackgroundTheme ? 'bg-transparent' : activeThemeConfig.pageBg
+        } ${activeThemeConfig.textPrimary} transition-all duration-300 font-sans relative`}
     >
       {/* Visual Background Theme Layer (At the very back of the complete profile) */}
       {activeBackgroundTheme && (
-        <div 
+        <div
           className="fixed inset-0 pointer-events-none z-0 transition-all duration-700 ease-in-out"
           style={{ ...activeBackgroundTheme.backgroundStyle, zIndex: 0 }}
           aria-hidden="true"
@@ -1234,12 +1243,40 @@ function PublicProfileClientInner({
         />
       )}
 
-      {/* Share Modal */}
+      {/* Unified Share Sheet */}
       {isShareModalOpen && (
         <ShareModal
           isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
+          onClose={() => {
+            setIsShareModalOpen(false);
+            if (typeof window !== 'undefined' && window.location.search.includes('share=')) {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('share');
+              window.history.replaceState(null, '', url.pathname + url.search);
+            }
+          }}
           profile={profile}
+          userProfiles={userProfiles}
+          selectedProfileId={shareTargetProfileId}
+          onSelectProfileId={setShareTargetProfileId}
+          draftSelectionsByProfile={shareDraftSelections}
+          onUpdateDraftSelection={(pid, fields) =>
+            setShareDraftSelections((prev) => ({ ...prev, [pid]: fields }))
+          }
+          draftPresetByProfile={shareDraftPresets}
+          onUpdateDraftPreset={(pid, preset) =>
+            setShareDraftPresets((prev) => ({ ...prev, [pid]: preset }))
+          }
+          isOwner={isOwner}
+          isDark={isDark}
+          onCopySuccess={() => showToast('Secure link copied!')}
+          onUpdateProfile={(updated) => {
+            if (updated.id === profile.id) {
+              setProfile(updated);
+              setCurrentDraft(updated);
+              updateProfilePartial(updated);
+            }
+          }}
         />
       )}
 

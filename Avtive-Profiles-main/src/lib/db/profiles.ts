@@ -214,6 +214,7 @@ export function mapDocToProfileData(doc: any): ProfileData {
     volunteerExperiences: volunteer,
     volunteer,
     sharingSettings: doc.sharingSettings || { ...DEFAULT_SHARING_SETTINGS },
+    fieldPrivacy: (doc.fieldPrivacy && typeof doc.fieldPrivacy === 'object') ? doc.fieldPrivacy : {},
     sectionVisibility: doc.sectionVisibility || { ...DEFAULT_SECTION_VISIBILITY },
     sectionOrder: doc.sectionOrder || [...DEFAULT_SECTION_ORDER],
     createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : (doc.createdAt || new Date().toISOString()),
@@ -231,7 +232,7 @@ export function setProfileResponseCookies(response: any, profile: ProfileData): 
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 30
       });
-    } catch {}
+    } catch { }
   }
 }
 
@@ -354,8 +355,69 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
   if (!isCanonicalSectionVisible(visibility, settings, 'customFields')) {
     sanitized.customFields = [];
   } else if (Array.isArray(sanitized.customFields)) {
-    sanitized.customFields = sanitized.customFields.filter((f) => f && f.visible !== false);
+    const neverShareCustomPattern = /\b(bank|iban|swift|bic|routing|account\s*(?:no|num|number)|sort\s*code|credit\s*card|debit\s*card|cvv|ssn|social\s*security|passport|national\s*id|cnic|aadhaar|tin|tax\s*id|driver.?s?\s*licen[cs]e|pin\s*code|secret\s*key|private\s*key|api\s*key|recovery\s*code|password|confidential|salary)\b/i;
+    sanitized.customFields = sanitized.customFields.filter((f) => {
+      if (!f || f.visible === false) return false;
+      const cfKey = `custom-field-${f.id}`;
+      const fp = profile.fieldPrivacy?.[cfKey];
+      if (f.privacy === 'never_share' || fp === 'never_share' || f.privacy === 'private' || fp === 'private') return false;
+      if (neverShareCustomPattern.test(f.label || (f as any).title || '')) return false;
+      return true;
+    });
   }
+
+  // Enforce fieldPrivacy restrictions on public profile views
+  const fieldPrivacy = profile.fieldPrivacy || {};
+  if (fieldPrivacy.photo === 'never_share' || fieldPrivacy.photo === 'private') {
+    sanitized.avatar = '';
+  }
+  if (fieldPrivacy.coverImage === 'never_share' || fieldPrivacy.coverImage === 'private' || (settings as any).coverImage === false) {
+    sanitized.coverImage = undefined;
+  }
+  if (fieldPrivacy.phone === 'never_share' || fieldPrivacy.phone === 'private') {
+    sanitized.phone = '';
+    sanitized.whatsapp = '';
+    sanitized.phoneType = '';
+  }
+  if (fieldPrivacy.email === 'never_share' || fieldPrivacy.email === 'private') {
+    sanitized.email = '';
+  }
+  if (fieldPrivacy.website === 'never_share' || fieldPrivacy.website === 'private') {
+    sanitized.website = '';
+    sanitized.websites = [];
+  }
+  if (fieldPrivacy.location === 'never_share' || fieldPrivacy.location === 'private') {
+    sanitized.location = '';
+    sanitized.country = '';
+    sanitized.officeAddress = '';
+    sanitized.googleMapsUrl = '';
+  }
+  if (fieldPrivacy.resume === 'never_share' || fieldPrivacy.resume === 'private' || settings.resume === false) {
+    sanitized.resumeUrl = undefined;
+    sanitized.resumeFileName = undefined;
+  }
+  if (fieldPrivacy.birthday === 'never_share') sanitized.birthday = undefined;
+  if (fieldPrivacy.pronouns === 'never_share') sanitized.pronouns = undefined;
+  if (fieldPrivacy.bio === 'never_share' || fieldPrivacy.bio === 'private') {
+    sanitized.bio = '';
+    sanitized.shortBio = '';
+    sanitized.about = '';
+    sanitized.fullBio = '';
+  }
+  if (fieldPrivacy.introductionMedia === 'never_share' || fieldPrivacy.introductionMedia === 'private') {
+    sanitized.introductionMedia = null;
+  }
+
+  // Strip internal hardware/account fields
+  if (sanitized.nfcCard) {
+    sanitized.nfcCard = {
+      cardNumber: sanitized.nfcCard.cardNumber,
+      chipId: '',
+      finish: sanitized.nfcCard.finish
+    };
+  }
+  delete sanitized.avatarPublicId;
+  delete sanitized.coverImagePublicId;
 
   sanitized.username = profile.username || profile.slug;
   sanitized.sectionOrder = profile.sectionOrder || DEFAULT_SECTION_ORDER;
@@ -643,6 +705,7 @@ export async function updateProfile(
     'companyInfo',
     'sectionVisibility',
     'sharingSettings',
+    'fieldPrivacy',
     'customThemeColors',
     'customCta',
     'nfcCard',

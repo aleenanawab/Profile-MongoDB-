@@ -12,7 +12,7 @@ interface ResumeViewerModalProps {
 }
 
 export function ResumeViewerModal({ isOpen, onClose, profile }: ResumeViewerModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen || profile.sharingSettings?.resume === false) return null;
   const theme = getThemeConfig(profile.theme || 'elegant');
 
   const handleDownload = () => {

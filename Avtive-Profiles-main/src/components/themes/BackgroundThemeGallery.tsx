@@ -206,21 +206,19 @@ export function BackgroundThemeGallery({
               key={cat.id}
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer shrink-0 select-none ${
+              className={`h-9 px-3 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0 select-none text-xs font-semibold ${
                 isSelected
-                  ? 'bg-primary text-primary-foreground shadow-xs ring-2 ring-primary/30'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
                   : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
               }`}
               title={cat.label}
               aria-label={cat.label}
             >
-              <IconComp className="w-4 h-4 shrink-0" />
+              <IconComp className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-xs">{cat.label}</span>
             </button>
           );
         })}
-        <span className="text-[11px] font-medium text-muted-foreground ml-1.5 capitalize select-none shrink-0">
-          {CATEGORY_FILTERS.find(c => c.id === selectedCategory)?.label}
-        </span>
       </div>
 
       {/* ── 3. Saved Themes (Compact Horizontal Thumbnails) ────────────────── */}

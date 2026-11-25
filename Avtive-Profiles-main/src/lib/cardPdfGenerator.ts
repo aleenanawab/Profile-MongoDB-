@@ -2,7 +2,11 @@ import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { ProfileData } from '@/types/profile';
 
-export async function generateCardPdf(profile: ProfileData, isDark = false): Promise<void> {
+export async function generateCardPdf(
+  profile: ProfileData,
+  isDark = false,
+  customQrUrl?: string
+): Promise<void> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -128,9 +132,11 @@ export async function generateCardPdf(profile: ProfileData, isDark = false): Pro
   doc.text('AVTIVE DIGITAL IDENTITY', backX + 5, backY + 7);
 
   // Generate QR Code image data
-  const profileUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/profile/${encodeURIComponent(profile.slug || profile.id)}`
-    : `https://www.avtive.app/profile/${profile.slug || profile.id}`;
+  const profileUrl =
+    customQrUrl ||
+    (typeof window !== 'undefined'
+      ? `${window.location.origin}/profile/${encodeURIComponent(profile.slug || profile.id)}`
+      : `https://www.avtive.app/profile/${profile.slug || profile.id}`);
 
   try {
     const qrDataUrl = await QRCode.toDataURL(profileUrl, {

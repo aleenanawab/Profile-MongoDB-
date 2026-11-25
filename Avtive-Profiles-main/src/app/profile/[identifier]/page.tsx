@@ -47,6 +47,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   const { identifier } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const isInitialEdit = resolvedSearchParams?.edit === 'true' || resolvedSearchParams?.edit === '1';
+  const isInitialShare = resolvedSearchParams?.share === 'true' || resolvedSearchParams?.share === '1';
 
   let session: any = null;
   try {
@@ -91,6 +92,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
 
   const onboarded = isUserOnboarded(session, profile);
   const shouldOpenInEdit = Boolean(isOwner && isInitialEdit);
+  const shouldOpenShare = Boolean(isOwner && isInitialShare && !shouldOpenInEdit);
 
   return (
     <PublicProfileClient
@@ -98,6 +100,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
       session={session}
       isOwner={isOwner}
       initialIsEditing={shouldOpenInEdit}
+      initialIsSharing={shouldOpenShare}
       userProfiles={userProfiles}
     />
   );

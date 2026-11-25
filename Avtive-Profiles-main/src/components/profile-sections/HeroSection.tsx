@@ -436,20 +436,24 @@ export function HeroSection({
             onOpenEdit?.();
           }
         }}
-        className={`relative h-36 sm:h-48 md:h-60 lg:h-72 w-full overflow-hidden bg-slate-900 ${
+        className={`relative ${(sharing as any).coverImage === false && !isEditing && !canEdit ? `h-20 sm:h-24 ${theme.coverFallback}` : 'h-36 sm:h-48 md:h-60 lg:h-72 bg-slate-900'} w-full overflow-hidden ${
           canEdit || isEditing ? 'cursor-pointer group/cover hover:brightness-105 transition-all' : ''
         }`}
         title={isEditing ? 'Click to change cover image' : canEdit ? 'Click to edit profile' : undefined}
       >
-        <img
-          src={coverUrl}
-          alt={`${profile.name} Cover`}
-          onError={(e) => {
-            e.currentTarget.src = DEFAULT_COVER;
-          }}
-          className="w-full h-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+        {((sharing as any).coverImage !== false || isEditing || canEdit) && (
+          <>
+            <img
+              src={coverUrl}
+              alt={`${profile.name} Cover`}
+              onError={(e) => {
+                e.currentTarget.src = DEFAULT_COVER;
+              }}
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+          </>
+        )}
 
         {/* Stitch-style Sections Slider Buttons - STRICTLY EDIT MODE ONLY */}
         {isEditing && (
@@ -1019,17 +1023,19 @@ export function HeroSection({
                   </p>
                 )}
 
-                <p 
-                  onClick={() => canEdit && onOpenEdit?.()}
-                  className={`text-sm sm:text-base font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-                  title={canEdit ? 'Click to edit title' : undefined}
-                >
-                  {[
-                    getTitle(profile) || profile.profileName || (isCompany ? 'Organization' : 'Professional'),
-                    !isCompany && profile.department,
-                    profile.industry
-                  ].filter(Boolean).join(' • ')}
-                </p>
+                {(sharing as any).title !== false && (
+                  <p 
+                    onClick={() => canEdit && onOpenEdit?.()}
+                    className={`text-sm sm:text-base font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                    title={canEdit ? 'Click to edit title' : undefined}
+                  >
+                    {[
+                      getTitle(profile) || profile.profileName || (isCompany ? 'Organization' : 'Professional'),
+                      !isCompany && profile.department,
+                      profile.industry
+                    ].filter(Boolean).join(' • ')}
+                  </p>
+                )}
 
                 {/* Custom CTA Button */}
                 {profile.customCta?.url && profile.customCta?.label && (

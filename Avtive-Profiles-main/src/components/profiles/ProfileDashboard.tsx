@@ -459,7 +459,7 @@ export function ProfileDashboard({ initialProfiles, user }: ProfileDashboardProp
           <Users className="w-4 h-4" />
           <span className="text-[10px]">Profiles</span>
         </Link>
-        <Link href={`/profile/${activeProfile?.slug || activeProfile?.id || ''}/share`} className="min-w-[44px] min-h-[44px] px-2 py-1 flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
+        <Link href={`/profile/${activeProfile?.slug || activeProfile?.id || ''}?share=true`} className="min-w-[44px] min-h-[44px] px-2 py-1 flex flex-col items-center justify-center gap-0.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
           <Share2 className="w-4 h-4" />
           <span className="text-[10px]">Share</span>
         </Link>

@@ -23,15 +23,15 @@ export function normalizeProfileType(type?: string): ProfileType {
   return 'individual';
 }
 
-export type ProfileTheme = 
-  | 'editorial' 
-  | 'cyber' 
-  | 'luxe' 
-  | 'default' 
-  | 'dark' 
-  | 'minimal' 
-  | 'professional' 
-  | 'elegant' 
+export type ProfileTheme =
+  | 'editorial'
+  | 'cyber'
+  | 'luxe'
+  | 'default'
+  | 'dark'
+  | 'minimal'
+  | 'professional'
+  | 'elegant'
   | 'modern'
   | 'gradient'
   | 'soft';
@@ -45,13 +45,20 @@ export interface ProfileLink {
   order?: number;
 }
 
+export type PrivacyTier = 'normal' | 'private' | 'never_share';
+
 export interface SharingSettings {
   photo?: boolean;
+  coverImage?: boolean;
   nameAndTitle?: boolean;
+  name?: boolean;
+  title?: boolean;
   bio?: boolean;
   contactInfo?: boolean;
   email?: boolean;
   phone?: boolean;
+  website?: boolean;
+  location?: boolean;
   links?: boolean;
   socialLinks?: boolean;
   skills?: boolean;
@@ -68,6 +75,7 @@ export interface SharingSettings {
   customFields?: boolean;
   pronouns?: boolean;
   birthday?: boolean;
+  resume?: boolean;
   featured?: boolean;
   honorsAwards?: boolean;
   publications?: boolean;
@@ -81,11 +89,16 @@ export interface SharingSettings {
 
 export const DEFAULT_SHARING_SETTINGS: SharingSettings = {
   photo: true,
+  coverImage: true,
   nameAndTitle: true,
+  name: true,
+  title: true,
   bio: true,
   contactInfo: true,
   email: true,
   phone: true,
+  website: true,
+  location: true,
   links: true,
   socialLinks: true,
   skills: true,
@@ -98,6 +111,7 @@ export const DEFAULT_SHARING_SETTINGS: SharingSettings = {
   companySection: true,
   nfcCard: true,
   customFields: true,
+  resume: true,
   pronouns: false,
   birthday: false,
   featured: true,
@@ -494,6 +508,7 @@ export interface CustomFieldItem {
   icon?: string;
   visible?: boolean;
   order?: number;
+  privacy?: PrivacyTier;
 }
 
 export interface DynamicSection<T = React.ReactNode> {
@@ -518,7 +533,7 @@ export interface ProfileData {
   username?: string;
   companyId?: string;
   companyName?: string;
-  
+
   // Linktree-Style Links and Button Styling
   links?: ProfileLink[];
   buttonRadius?: 'square' | 'rounded' | 'pill';
@@ -529,7 +544,7 @@ export interface ProfileData {
     buttonColor?: string;
     buttonTextColor?: string;
   };
-  
+
   // Identity
   name: string;
   firstName?: string;
@@ -610,7 +625,7 @@ export interface ProfileData {
   testScores?: TestScoreItem[];
   organizations?: OrganizationItem[];
   interests?: InterestItem[];
-  
+
   // Dynamic Custom Fields (Unlimited & Flexible)
   customFields?: CustomFieldItem[];
 
@@ -637,8 +652,9 @@ export interface ProfileData {
   // Introduction Media
   introductionMedia?: ProfileIntroductionMedia | null;
 
-  // Sharing Configuration & Layout Order / Visibility
+  // Sharing Configuration, Field Privacy & Layout Order / Visibility
   sharingSettings?: SharingSettings;
+  fieldPrivacy?: Record<string, PrivacyTier>;
   sectionOrder?: string[];
   sectionVisibility?: Record<string, boolean>;
 }

@@ -36,6 +36,9 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   const companiesCol = db.collection(COLLECTIONS.COMPANIES);
   const membersCol = db.collection(COLLECTIONS.COMPANY_MEMBERS);
   const connectionsCol = db.collection(COLLECTIONS.CONNECTIONS);
+  const shareLinksCol = db.collection(COLLECTIONS.SHARE_LINKS);
+  const shareTemplatesCol = db.collection(COLLECTIONS.SHARE_TEMPLATES);
+  const shareEventsCol = db.collection(COLLECTIONS.SHARE_EVENTS);
 
   // If old unique index on userId was created, drop it so users can own both individual and company profiles
   try {
@@ -155,6 +158,69 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     { expiresAt: 1 },
     'idx_sessions_expires_at',
     false
+  );
+
+  // 7. Share Links
+  await safeCreateIndex(
+    shareLinksCol,
+    COLLECTIONS.SHARE_LINKS,
+    { tokenHash: 1 },
+    'idx_share_links_token_hash_unique',
+    true
+  );
+  await safeCreateIndex(
+    shareLinksCol,
+    COLLECTIONS.SHARE_LINKS,
+    { ownerUserId: 1, createdAt: -1 },
+    'idx_share_links_owner_created',
+    false
+  );
+  await safeCreateIndex(
+    shareLinksCol,
+    COLLECTIONS.SHARE_LINKS,
+    { profileId: 1 },
+    'idx_share_links_profile_id',
+    false
+  );
+  await safeCreateIndex(
+    shareLinksCol,
+    COLLECTIONS.SHARE_LINKS,
+    { expiresAt: 1 },
+    'idx_share_links_expires_at',
+    false
+  );
+
+  // 8. Share Templates
+  await safeCreateIndex(
+    shareTemplatesCol,
+    COLLECTIONS.SHARE_TEMPLATES,
+    { ownerUserId: 1, updatedAt: -1 },
+    'idx_share_templates_owner_updated',
+    false
+  );
+
+  // 9. Share Events
+  await safeCreateIndex(
+    shareEventsCol,
+    COLLECTIONS.SHARE_EVENTS,
+    { shareLinkId: 1, timestamp: -1 },
+    'idx_share_events_link_time',
+    false
+  );
+  await safeCreateIndex(
+    shareEventsCol,
+    COLLECTIONS.SHARE_EVENTS,
+    { ownerUserId: 1, timestamp: -1 },
+    'idx_share_events_owner_time',
+    false
+  );
+  await safeCreateIndex(
+    shareEventsCol,
+    COLLECTIONS.SHARE_EVENTS,
+    { dedupKey: 1 },
+    'idx_share_events_dedup_key',
+    false,
+    true
   );
 
   indexesEnsured = true;

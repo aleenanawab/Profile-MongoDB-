@@ -75,3 +75,32 @@ export {
   checkIsConnected,
   getUserConnections
 } from './connections';
+
+export {
+  createShareLink,
+  listShareLinksForOwner,
+  getShareLinkDetailsForOwner,
+  updateShareLinkForOwner,
+  revokeShareLinkForOwner,
+  consumeAndResolveShareLink,
+  computeShareLinkStatus,
+  toShareLinkClientView
+} from './shareLinks';
+
+export {
+  listShareTemplatesForOwner,
+  createShareTemplateForOwner,
+  updateShareTemplateForOwner,
+  duplicateShareTemplateForOwner,
+  deleteShareTemplateForOwner
+} from './shareTemplates';
+
+export {
+  recordShareEvent,
+  listEventsForShareLink
+} from './shareEvents';
+
+export {
+  getShareRecipientsForUser,
+  DEFAULT_EVENT_LABELS
+} from './shareRecipients';

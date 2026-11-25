@@ -270,3 +270,89 @@ export function isEmailServiceConfigured(): boolean {
   return hasSmtp || hasResend;
 }
 
+export interface SendShareLinkEmailParams {
+  to: string;
+  recipientName?: string;
+  senderName: string;
+  shareUrl: string;
+  shareTitle?: string;
+  eventLabel?: string;
+}
+
+export async function sendShareLinkEmail(params: SendShareLinkEmailParams): Promise<EmailSendResult> {
+  if (!isEmailServiceConfigured()) {
+    return {
+      success: false,
+      error: 'Email delivery service is not configured.'
+    };
+  }
+
+  const normalizedEmail = params.to.trim().toLowerCase();
+  const safeSender = params.senderName.replace(/[<>]/g, '');
+  const safeGreeting = params.recipientName ? `Hello ${params.recipientName.replace(/[<>]/g, '')},` : 'Hello,';
+  const subject = `${safeSender} shared an Avtive Digital Profile with you`;
+  const contextLine = params.eventLabel
+    ? `<p style="font-size:13px;color:#475569;margin:0 0 16px;">Event / Context: <strong>${params.eventLabel.replace(/[<>]/g, '')}</strong></p>`
+    : '';
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;padding:32px 16px;color:#0f172a;">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:28px;">
+    <h2 style="margin:0 0 12px;font-size:18px;">${safeSender} shared their profile</h2>
+    <p style="font-size:14px;line-height:1.6;color:#475569;margin:0 0 14px;">${safeGreeting}<br>${safeSender} has shared a customized digital profile pass with you${params.shareTitle ? ` (${params.shareTitle.replace(/[<>]/g, '')})` : ''}.</p>
+    ${contextLine}
+    <a href="${params.shareUrl}" style="display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 24px;border-radius:10px;margin:8px 0 18px;">View Shared Profile</a>
+    <p style="font-size:12px;color:#64748b;word-break:break-all;border-top:1px solid #f1f5f9;padding-top:14px;">Direct link: <a href="${params.shareUrl}" style="color:#0284c7;">${params.shareUrl}</a></p>
+  </div>
+</body>
+</html>`;
+
+  const transporter = getSmtpTransporter();
+  if (transporter) {
+    try {
+      const user = process.env.SMTP_USER || '';
+      const rawFrom = process.env.SMTP_FROM || user || 'no-reply@avtive.app';
+      let fromAddress = rawFrom.trim();
+      if (!fromAddress.includes('@')) fromAddress = `"Avtive" <${user}>`;
+      else if (!fromAddress.includes('<')) fromAddress = `"Avtive" <${fromAddress}>`;
+
+      const info = await transporter.sendMail({
+        from: fromAddress,
+        to: normalizedEmail,
+        subject,
+        text: `${safeGreeting}\n\n${safeSender} shared their Avtive profile with you:\n${params.shareUrl}`,
+        html
+      });
+      return { success: true, messageId: info.messageId, provider: 'smtp' };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('Share email SMTP error:', msg);
+    }
+  }
+
+  const resendApiKey = (process.env.RESEND_API_KEY || '').trim();
+  if (resendApiKey && !resendApiKey.includes('your_resend')) {
+    try {
+      const rawFrom = (process.env.RESEND_FROM || '').trim().replace(/^["']|["']$/g, '');
+      const fromAddress = rawFrom.includes('@') ? rawFrom : 'Avtive <onboarding@resend.dev>';
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ from: fromAddress, to: [normalizedEmail], subject, html })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.id) {
+        return { success: true, messageId: data.id, provider: 'resend' };
+      }
+      return { success: false, error: data?.message || 'Resend delivery failed.' };
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  }
+
+  return { success: false, error: 'Email delivery failed.' };
+}
+

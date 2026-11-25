@@ -36,8 +36,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Allow public authentication endpoints
+  // 2. Allow public authentication and shared visitor endpoints
   if (PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'))) {
+    return NextResponse.next();
+  }
+
+  // 2b. Allow public permission-scoped shared profile links (/s/[token])
+  if (pathname === '/s' || pathname.startsWith('/s/')) {
     return NextResponse.next();
   }
 

@@ -75,9 +75,9 @@ export function RecipientPickerModal({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col">
       {/* Sub-header */}
-      <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200 dark:border-white/10 flex items-center gap-3 shrink-0">
+      <div className="px-4 sm:px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3 shrink-0">
         <button
           type="button"
           onClick={onBack}
@@ -130,8 +130,8 @@ export function RecipientPickerModal({
         </div>
       </div>
 
-      {/* Scrollable Contact List & Event Label Picker */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3 space-y-4">
+      {/* Contact List & Event Label Picker */}
+      <div className="px-4 sm:px-5 py-4 space-y-4">
         {isLoading ? (
           <div className="py-10 flex flex-col items-center justify-center text-slate-400 gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />

@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Share2, 
-  Sun, 
-  Moon, 
-  Smartphone, 
-  Tv, 
-  Edit3, 
-  CreditCard, 
-  Building2, 
-  Users, 
+import {
+  Share2,
+  Sun,
+  Moon,
+  Smartphone,
+  Tv,
+  Edit3,
+  CreditCard,
+  Building2,
+  Users,
   ChevronDown,
-  LogIn, 
+  LogIn,
   LogOut,
   Save,
   Check,
@@ -31,6 +31,8 @@ interface HeaderNavProps {
   onOpenShare?: () => void;
   canEdit?: boolean;
   isEditing?: boolean;
+  isSharing?: boolean;
+  showEditActionsInHeader?: boolean;
   onCancelEdit?: () => void;
   onSaveEdits?: () => void;
   isSaving?: boolean;
@@ -57,6 +59,8 @@ export function HeaderNav({
   onOpenShare,
   canEdit = false,
   isEditing = false,
+  isSharing = false,
+  showEditActionsInHeader = false,
   onCancelEdit,
   onSaveEdits,
   isSaving = false,
@@ -71,9 +75,9 @@ export function HeaderNav({
   onSectionsMouseLeave
 }: HeaderNavProps) {
   const hasTeamOrCompany = Boolean(
-    currentProfile.companyId || 
-    currentProfile.companyInfo || 
-    (currentProfile.teamMembers && currentProfile.teamMembers.length > 0) || 
+    currentProfile.companyId ||
+    currentProfile.companyInfo ||
+    (currentProfile.teamMembers && currentProfile.teamMembers.length > 0) ||
     profileType === 'team'
   );
 
@@ -83,15 +87,15 @@ export function HeaderNav({
         {/* Left: Avtive Brand */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
-          <Link 
+          <Link
             href="/"
             className="flex items-center gap-2 group cursor-pointer shrink-0 min-h-[44px]"
             title="Avtive Digital Identity"
           >
             <div className="h-8 flex items-center">
-              <img 
-                src="/images/avtive-symbol.png" 
-                alt="Avtive Logo" 
+              <img
+                src="/images/avtive-symbol.png"
+                alt="Avtive Logo"
                 className="h-7 w-auto object-contain"
               />
             </div>
@@ -111,32 +115,30 @@ export function HeaderNav({
           </Link>
         </div>
 
-        {/* Center: Navigation Options (Only shown when not editing and profile has both Individual and Team profiles) */}
-        {hasTeamOrCompany && onSelectProfileType && !isEditing && (
+        {/* Center: Navigation Options (Only shown in Preview mode when profile has both Individual and Team profiles) */}
+        {hasTeamOrCompany && onSelectProfileType && !isEditing && !isSharing && (
           <div className={`hidden sm:flex items-center p-0.5 sm:p-1 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-xs shrink-0`}>
             {/* 1. Individual */}
             <button
               type="button"
               onClick={onOpenMyCard}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${
-                profileType === 'individual'
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${profileType === 'individual'
                   ? `${theme.btnPrimary} shadow-xs`
                   : `${theme.textMuted} hover:${theme.textPrimary}`
-              }`}
+                }`}
             >
               <CreditCard className="w-3.5 h-3.5 shrink-0" />
               <span>Individual</span>
             </button>
-            
+
             {/* 2. Team */}
             <button
               type="button"
               onClick={() => onSelectProfileType('team', 'team')}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${
-                profileType === 'team'
+              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${profileType === 'team'
                   ? `${theme.btnPrimary} shadow-xs`
                   : `${theme.textMuted} hover:${theme.textPrimary}`
-              }`}
+                }`}
             >
               <Users className="w-3.5 h-3.5 shrink-0" />
               <span>Team</span>
@@ -144,10 +146,10 @@ export function HeaderNav({
           </div>
         )}
 
-        {/* Right Controls: Edit/Save/Cancel, Theme Toggle, Share, and Logout */}
+        {/* Right Controls: Edit/Share (Preview), Theme Toggle, and Logout */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
-          {/* Edit Profile Button (Visible only to authenticated profile owner when not editing) */}
-          {canEdit && !isEditing && onOpenEdit && (
+          {/* Edit Profile Button (Visible only to authenticated profile owner in Preview mode) */}
+          {canEdit && !isEditing && !isSharing && onOpenEdit && (
             <button
               type="button"
               onClick={onOpenEdit}
@@ -160,8 +162,8 @@ export function HeaderNav({
             </button>
           )}
 
-          {/* Edit Mode Actions: Cancel and Save (Visible when isEditing) */}
-          {isEditing && (
+          {/* Optional Edit Mode Header Actions (omitted when in-page editor owns sticky P3 header) */}
+          {isEditing && showEditActionsInHeader && (
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {onCancelEdit && (
                 <button
@@ -212,8 +214,8 @@ export function HeaderNav({
             </button>
           )}
 
-          {/* Share Button (When not editing) */}
-          {onOpenShare && !isEditing && (
+          {/* Share Button (When in Preview mode) */}
+          {onOpenShare && !isEditing && !isSharing && (
             <button
               type="button"
               onClick={onOpenShare}

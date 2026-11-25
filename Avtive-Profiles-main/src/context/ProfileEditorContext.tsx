@@ -504,9 +504,9 @@ const DEFAULT_PROFILE_EDITOR_CONTEXT: ProfileEditorContextValue = {
   handleToggleSectionVisibility: () => { },
   handleInstantToggleSection: () => { },
   toggleVisibilityField: () => { },
+  discardUnsavedChanges: () => { },
   handleCopyLink: async () => { },
   handleSaveChanges: async () => { },
-  discardUnsavedChanges: () => { },
   handleProfileSectionLiveUpdate: () => { },
   handleProfileSectionSaveSuccess: () => { },
 };
@@ -583,6 +583,7 @@ export function ProfileEditorProvider({
   // ── Core profile baseline ─────────────────────────────────────────────────
   const [profile, setProfile] = useState<ProfileData>(initialProfile);
   const [savedBaseline, setSavedBaseline] = useState<ProfileData>(initialProfile);
+  const [dirtyBaseline, setDirtyBaseline] = useState<ProfileData>(initialProfile);
 
   // ── Autosave & Request Sequence State ─────────────────────────────────────
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -591,7 +592,8 @@ export function ProfileEditorProvider({
   const requestCounterRef = React.useRef<number>(0);
   const latestDispatchedRef = React.useRef<number>(0);
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const statusResetTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const statusResetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isUnmountedRef = React.useRef<boolean>(false);
   const isMountedRef = React.useRef<boolean>(false);
   const lastSavedSnapshotRef = React.useRef<string>('');
   const lastSavedProfileRef = React.useRef<ProfileData>(initialProfile);
@@ -695,13 +697,13 @@ export function ProfileEditorProvider({
   );
   const [backgroundType, setBackgroundType] = useState<'default' | 'image' | 'video' | 'occasion'>(
     initialProfile.backgroundType ||
-      (initialProfile.customBackgroundVideo
-        ? 'video'
-        : initialProfile.customBackgroundImage
+    (initialProfile.customBackgroundVideo
+      ? 'video'
+      : initialProfile.customBackgroundImage
         ? 'image'
         : initialProfile.activeBackgroundThemeId
-        ? 'occasion'
-        : 'default')
+          ? 'occasion'
+          : 'default')
   );
   const [customBackgroundImage, setCustomBackgroundImage] = useState<string>(
     initialProfile.customBackgroundImage || ''
@@ -1262,6 +1264,7 @@ export function ProfileEditorProvider({
     (savedProfile: ProfileData, isNew?: boolean) => {
       setProfile(savedProfile);
       setSavedBaseline(savedProfile);
+      setDirtyBaseline(savedProfile);
       if (savedProfile.theme) setActiveTheme(savedProfile.theme);
       if (savedProfile.firstName) setFirstName(savedProfile.firstName);
       if (savedProfile.secondName || savedProfile.lastName)
@@ -1347,13 +1350,13 @@ export function ProfileEditorProvider({
     setProfileVisibility(newProf.profileVisibility === 'private' ? 'private' : 'public');
     setBackgroundType(
       newProf.backgroundType ||
-        (newProf.customBackgroundVideo
-          ? 'video'
-          : newProf.customBackgroundImage
+      (newProf.customBackgroundVideo
+        ? 'video'
+        : newProf.customBackgroundImage
           ? 'image'
           : newProf.activeBackgroundThemeId
-          ? 'occasion'
-          : 'default')
+            ? 'occasion'
+            : 'default')
     );
     setCustomBackgroundImage(newProf.customBackgroundImage || '');
     setCustomBackgroundVideo(newProf.customBackgroundVideo || '');
@@ -1383,6 +1386,7 @@ export function ProfileEditorProvider({
     lastSavedProfileRef.current = newProf;
     setProfile(newProf);
     setSavedBaseline(newProf);
+    setDirtyBaseline(newProf);
     applyProfileAtoms(newProf);
 
     setStatusMessage({
@@ -1553,6 +1557,7 @@ export function ProfileEditorProvider({
       lastSavedProfileRef.current = finalProfile;
       lastSavedSnapshotRef.current = getProfileSnapshot(finalProfile);
       setSavedBaseline(finalProfile);
+      setDirtyBaseline(finalProfile);
 
       // Merge server values only into fields the user has not edited while request was in-flight
       setProfile((currentDraft) => {
@@ -1597,16 +1602,18 @@ export function ProfileEditorProvider({
 
       onSaveSuccess?.(finalProfile);
 
-      if (statusResetTimerRef.current) {
-        clearTimeout(statusResetTimerRef.current);
+      if (!isUnmountedRef.current) {
+        if (statusResetTimerRef.current) {
+          clearTimeout(statusResetTimerRef.current);
+        }
+        statusResetTimerRef.current = setTimeout(() => {
+          statusResetTimerRef.current = null;
+          if (isUnmountedRef.current || typeof window === 'undefined') return;
+          setAutosaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
+          setAutosaveStatusText((prev) => (prev === 'Saved' ? '' : prev));
+          setStatusMessage((prev) => (prev?.type === 'success' ? null : prev));
+        }, 3500);
       }
-      statusResetTimerRef.current = setTimeout(() => {
-        statusResetTimerRef.current = null;
-        if (typeof window === 'undefined') return;
-        setAutosaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
-        setAutosaveStatusText((prev) => (prev === 'Saved' ? '' : prev));
-        setStatusMessage((prev) => (prev?.type === 'success' ? null : prev));
-      }, 3500);
 
       executionResult = { ok: true, profile: finalProfile };
       return executionResult;
@@ -1681,6 +1688,7 @@ export function ProfileEditorProvider({
       isMountedRef.current = true;
       lastSavedProfileRef.current = liveProfile;
       lastSavedSnapshotRef.current = getProfileSnapshot(liveProfile);
+      setDirtyBaseline(liveProfile);
       return;
     }
 
@@ -1755,7 +1763,9 @@ export function ProfileEditorProvider({
 
   // Flush on true unmount of provider
   useEffect(() => {
+    isUnmountedRef.current = false;
     return () => {
+      isUnmountedRef.current = true;
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
@@ -1802,7 +1812,7 @@ export function ProfileEditorProvider({
     return profile.slug || profile.id || initialProfile.slug || initialProfile.id || '';
   }, [profile.slug, profile.id, initialProfile.slug, initialProfile.id]);
 
-  const isDirty = useMemo(() => isProfileDirty(liveProfile, savedBaseline), [liveProfile, savedBaseline]);
+  const isDirty = useMemo(() => isProfileDirty(liveProfile, dirtyBaseline), [liveProfile, dirtyBaseline]);
 
   // ── Context value ─────────────────────────────────────────────────────────
   const value = useMemo<ProfileEditorContextValue>(

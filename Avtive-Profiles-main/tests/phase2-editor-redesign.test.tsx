@@ -401,8 +401,8 @@ async function runTests() {
     }
   });
 
-  // ── 5. React 19 + JSDOM P3 Editor Sheet & Private Visitor Card UI ──────
-  await test('P3 ProfileEditorSheet renders bottom-up, Cancel/EDITING/Done, 3 background categories, Visibility, Sections, & Cancel discard', async () => {
+  // ── 5. React 19 + JSDOM P3 In-Page Editor, Share Workspace & PublicProfileClient Modes ──
+  await test('ProfileEditorView renders in-page without dialog/backdrop, supports Background/Identity/Visibility/Sections, Cancel/Done, & PublicProfileClient screen switching', async () => {
     activeUser = OWNER_USER;
     const { JSDOM } = await import('jsdom');
     const dom = new JSDOM('<!doctype html><html><body><div id="p3-root"></div></body></html>', {
@@ -438,6 +438,7 @@ async function runTests() {
       disconnect() {}
     };
     dom.window.HTMLElement.prototype.scrollIntoView = () => {};
+    dom.window.HTMLElement.prototype.scrollTo = () => {};
     g.IS_REACT_ACT_ENVIRONMENT = true;
 
     let lastPutPayload: any = null;
@@ -453,6 +454,30 @@ async function runTests() {
           })
         );
       }
+      if (urlStr.includes('/api/profile/list')) {
+        return new Response(JSON.stringify({ success: true, profiles: [clone(SAMPLE_PROFILE)] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (urlStr.includes('/api/share/recipients')) {
+        return new Response(JSON.stringify({ recipients: [], availableLabels: [], emailConfigured: false }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (urlStr.includes('/api/share/links')) {
+        return new Response(JSON.stringify({ links: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (urlStr.includes('/api/share/templates')) {
+        return new Response(JSON.stringify({ templates: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
       return new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -462,9 +487,12 @@ async function runTests() {
     try {
       const React = await import('react');
       const { createRoot } = await import('react-dom/client');
+      const { ThemeProvider } = await import('../src/context/ThemeContext');
       const { ProfileEditorProvider } = await import('../src/context/ProfileEditorContext');
-      const { ProfileEditorSheet } = await import('../src/components/editor/ProfileEditorSheet');
+      const { ProfileEditorView } = await import('../src/components/editor/ProfileEditorView');
+      const { PublicProfileClient } = await import('../src/app/profile/[identifier]/PublicProfileClient');
       const { AvtiveDigitalCard } = await import('../src/components/card/AvtiveDigitalCard');
+      const { resolveScreenModeFromSearch, buildProfileUrlForMode } = await import('../src/lib/profileScreenMode');
       const { BackgroundRenderer } = await (async () => ({
         BackgroundRenderer: await import('../src/components/editor/BackgroundRenderer'),
       }))();
@@ -482,6 +510,23 @@ async function runTests() {
         'Occasion theme'
       );
 
+      // URL & Screen State helper checks
+      assert.deepStrictEqual(resolveScreenModeFromSearch('?edit=true&share=true', true), {
+        mode: 'edit',
+        needsUrlNormalization: true,
+      });
+      assert.deepStrictEqual(resolveScreenModeFromSearch('?edit=true&share=true', false), {
+        mode: 'share',
+        needsUrlNormalization: true,
+      });
+      assert.deepStrictEqual(resolveScreenModeFromSearch('?edit=true', false), {
+        mode: 'preview',
+        needsUrlNormalization: true,
+      });
+      assert.strictEqual(buildProfileUrlForMode('elena-v', 'edit'), '/profile/elena-v?edit=true');
+      assert.strictEqual(buildProfileUrlForMode('elena-v', 'share'), '/profile/elena-v?share=true');
+      assert.strictEqual(buildProfileUrlForMode('elena-v', 'preview'), '/profile/elena-v');
+
       const container = dom.window.document.getElementById('p3-root')!;
       const root = createRoot(container);
 
@@ -493,7 +538,7 @@ async function runTests() {
           React.createElement(
             ProfileEditorProvider,
             { initialProfile: clone(SAMPLE_PROFILE), userProfiles: [clone(SAMPLE_PROFILE)] },
-            React.createElement(ProfileEditorSheet, {
+            React.createElement(ProfileEditorView, {
               profile: clone(SAMPLE_PROFILE),
               theme: getThemeConfig('editorial'),
               onCancelClose: () => {
@@ -508,9 +553,12 @@ async function runTests() {
         );
       });
 
-      const sheetEl = container.querySelector('[data-testid="profile-editor-sheet"]');
-      assert.ok(sheetEl, 'Bottom-up ProfileEditorSheet container must mount');
-      assert.ok(sheetEl!.className.includes('rounded-t-3xl'), 'Bottom-up sheet must have rounded-t-3xl bottom sheet styling');
+      const editorEl = container.querySelector('[data-testid="profile-editor-view"]');
+      assert.ok(editorEl, 'In-page ProfileEditorView container must mount');
+      assert.strictEqual(container.querySelector('[role="dialog"]'), null, 'In-page editor must NOT be inside a dialog');
+      assert.strictEqual(container.querySelector('[aria-modal="true"]'), null, 'In-page editor must NOT set aria-modal');
+      assert.ok(!editorEl!.className.includes('fixed'), 'In-page editor must NOT use fixed overlay positioning');
+      assert.ok(!editorEl!.className.includes('rounded-t-3xl'), 'In-page editor must NOT use bottom-sheet popup chrome');
 
       const text = container.textContent || '';
       assert.ok(text.includes('Cancel'), 'P3 header must include Cancel');
@@ -660,6 +708,137 @@ async function runTests() {
       assert.ok(visitorText.includes('Private profile'), 'Private visitor view must indicate private state');
       assert.ok(!visitorText.includes('Zero-Color OS'), 'Private visitor view must hide projects');
       assert.ok(!visitorText.includes('elena@avtive.test'), 'Private visitor view must hide email');
+
+      // ── 6. Full PublicProfileClient In-Page Mode Switching (preview | edit | share) & History ─
+      dom.window.localStorage.clear();
+      const { AppRouterContext } = await import(
+        'next/dist/shared/lib/app-router-context.shared-runtime'
+      );
+      const mockAppRouter: any = {
+        back: () => {},
+        forward: () => {},
+        refresh: () => {},
+        push: () => {},
+        replace: () => {},
+        prefetch: () => {},
+      };
+
+      dom.window.history.replaceState(null, '', '/profile/phase2-tester');
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ThemeProvider,
+              null,
+              React.createElement(PublicProfileClient, {
+                initialProfile: clone(SAMPLE_PROFILE),
+                session: OWNER_USER,
+                isOwner: true,
+                initialIsEditing: false,
+                initialIsSharing: false,
+                userProfiles: [clone(SAMPLE_PROFILE)],
+              })
+            )
+          )
+        );
+      });
+
+      // Initially preview mode
+      assert.ok((container.textContent || '').includes('Zero-Color OS'), 'Preview renders profile card');
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0);
+      assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 0);
+
+      // Switch Preview -> Edit
+      const editProfileBtn = container.querySelector('button[aria-label="Edit Profile"]') as HTMLButtonElement | null;
+      assert.ok(editProfileBtn, 'Edit Profile button must exist in preview header');
+      await React.act(async () => {
+        editProfileBtn!.click();
+      });
+      assert.strictEqual(dom.window.location.search, '?edit=true', 'Clicking Edit updates URL query cleanly');
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 1, 'Exactly one in-page editor mounts');
+      assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 0, 'Edit and Share cannot overlap');
+      assert.strictEqual(container.querySelector('[role="dialog"]'), null, 'No popup dialog on Edit');
+      assert.ok(!(container.textContent || '').includes('Zero-Color OS'), 'Preview content must be replaced during in-page Edit');
+
+      // Cancel Edit -> Preview
+      const pageCancelBtn = Array.from(container.querySelectorAll('button')).find(
+        (b) => b.textContent?.trim() === 'Cancel'
+      );
+      assert.ok(pageCancelBtn, 'In-page Cancel button must render');
+      await React.act(async () => {
+        pageCancelBtn!.click();
+      });
+      assert.strictEqual(dom.window.location.search, '', 'Cancel returns to clean profile URL');
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0, 'Editor unmounts on return');
+      assert.ok((container.textContent || '').includes('Zero-Color OS'), 'Preview restores on Cancel');
+
+      // Switch Preview -> Share
+      const shareProfileBtn = container.querySelector('button[aria-label="Share Profile"]') as HTMLButtonElement | null;
+      assert.ok(shareProfileBtn, 'Share Profile button must exist in preview header');
+      await React.act(async () => {
+        shareProfileBtn!.click();
+        await new Promise((r) => setTimeout(r, 30));
+      });
+      assert.strictEqual(dom.window.location.search, '?share=true', 'Clicking Share updates URL query cleanly');
+      assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 1, 'Exactly one in-page share workspace mounts');
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0);
+      assert.strictEqual(container.querySelector('[role="dialog"]'), null, 'No popup dialog on Share');
+      assert.ok(!(container.textContent || '').includes('Zero-Color OS'), 'Preview content must be replaced during in-page Share');
+
+      // Close Share -> Preview
+      const backShareBtn = container.querySelector('button[aria-label="Back to Profile"]') as HTMLButtonElement | null;
+      assert.ok(backShareBtn, 'Back button must exist inside in-page share workspace');
+      await React.act(async () => {
+        backShareBtn!.click();
+      });
+      assert.strictEqual(dom.window.location.search, '', 'Closing share returns to clean profile URL');
+      assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 0);
+      assert.ok((container.textContent || '').includes('Zero-Color OS'), 'Preview restores after closing share');
+
+      // Popstate Browser Back / Forward sync check
+      await React.act(async () => {
+        dom.window.history.replaceState(null, '', '/profile/phase2-tester?edit=true');
+        dom.window.dispatchEvent(new dom.window.PopStateEvent('popstate'));
+      });
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 1, 'Popstate opens in-page edit mode');
+      await React.act(async () => {
+        dom.window.history.replaceState(null, '', '/profile/phase2-tester');
+        dom.window.dispatchEvent(new dom.window.PopStateEvent('popstate'));
+      });
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0, 'Popstate exits back to preview');
+
+      // Non-owner visitor Share replaces preview in-page cleanly without modal overlay
+      dom.window.history.replaceState(null, '', '/profile/phase2-tester');
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ThemeProvider,
+              null,
+              React.createElement(PublicProfileClient, {
+                initialProfile: clone(SAMPLE_PROFILE),
+                session: null,
+                isOwner: false,
+                initialIsEditing: false,
+                initialIsSharing: false,
+                userProfiles: [],
+              })
+            )
+          )
+        );
+      });
+      const visitorShareBtn = container.querySelector('button[aria-label="Share Profile"]') as HTMLButtonElement | null;
+      assert.ok(visitorShareBtn, 'Visitor Share button renders in preview');
+      await React.act(async () => {
+        visitorShareBtn!.click();
+      });
+      assert.strictEqual(container.querySelectorAll('[data-testid="visitor-share-view"]').length, 1, 'Visitor share view renders in-page');
+      assert.strictEqual(container.querySelector('[role="dialog"]'), null, 'Visitor share must not use popup dialog');
+      assert.ok(!(container.textContent || '').includes('Zero-Color OS'), 'Visitor preview replaced during visitor share');
 
       await React.act(async () => {
         root.unmount();

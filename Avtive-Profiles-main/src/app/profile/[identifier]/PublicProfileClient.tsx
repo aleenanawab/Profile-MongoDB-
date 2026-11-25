@@ -13,7 +13,8 @@ import { HeaderNav } from '@/components/layout/HeaderNav';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
 import { PhonePreview } from '@/components/card/PhonePreview';
 import { getThemeConfig } from '@/components/ui/themeStyles';
-import { ShareModal } from '@/components/share/ShareModal';
+import { UnifiedShareWorkspace } from '@/components/sharing/UnifiedShareWorkspace';
+import { VisitorPublicShareView } from '@/components/sharing/VisitorPublicShareView';
 import { ExchangeContactModal } from '@/components/modals/ExchangeContactModal';
 import { QRFullscreenModal } from '@/components/modals/QRFullscreenModal';
 import { ResumeViewerModal } from '@/components/modals/ResumeViewerModal';
@@ -29,8 +30,13 @@ import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
 import { getBackgroundTheme, BackgroundTheme } from '@/data/backgroundThemes';
-import { ProfileEditorSheet } from '@/components/editor/ProfileEditorSheet';
+import { ProfileEditorView } from '@/components/editor/ProfileEditorView';
 import { ProfileBackgroundLayer, resolveBackgroundMode } from '@/components/editor/BackgroundRenderer';
+import {
+  ProfileScreenMode,
+  resolveScreenModeFromSearch,
+  buildProfileUrlForMode,
+} from '@/lib/profileScreenMode';
 import { SharePresetKey } from '@/types/sharing';
 
 export interface PublicProfileClientProps {
@@ -79,15 +85,25 @@ function PublicProfileClientInner({
     initialProfile.theme && initialProfile.theme !== 'default' ? initialProfile.theme : 'editorial'
   );
   const { isDark, toggleDarkMode } = usePortfolioTheme();
-  const [isEditing, setIsEditing] = useState(Boolean(initialIsEditing && isOwner));
-  // Two independent sliders for Edit Mode Sections Navigation:
+  const [screenMode, setScreenMode] = useState<ProfileScreenMode>(() => {
+    if (initialIsEditing && isOwner) return 'edit';
+    if (initialIsSharing) return 'share';
+    return 'preview';
+  });
+  const screenModeRef = useRef<ProfileScreenMode>(screenMode);
+  useEffect(() => {
+    screenModeRef.current = screenMode;
+  }, [screenMode]);
+
+  const isEditing = screenMode === 'edit' && isOwner;
+  const isSharing = screenMode === 'share';
+  // Two independent sliders for Preview Sections Navigation:
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   const closeTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const isTouchRef = React.useRef(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(Boolean(initialIsSharing && isOwner));
   const [shareTargetProfileId, setShareTargetProfileId] = useState<string>(initialProfile.id);
   const [shareDraftSelections, setShareDraftSelections] = useState<Record<string, string[]>>({});
   const [shareDraftPresets, setShareDraftPresets] = useState<Record<string, SharePresetKey | 'custom'>>({});
@@ -288,7 +304,7 @@ function PublicProfileClientInner({
     return () => {
       cleanups.forEach((fn) => fn());
     };
-  }, []);
+  }, [screenMode]);
 
   const prevWidthRef = useRef<number | null>(null);
 
@@ -448,28 +464,58 @@ function PublicProfileClientInner({
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Synchronize edit mode with browser URL and listen to popstate (back/forward)
+  const navigateScreenMode = useCallback(
+    (nextMode: ProfileScreenMode, slugOverride?: string) => {
+      const safeMode: ProfileScreenMode =
+        nextMode === 'edit' && !isOwner ? 'preview' : nextMode;
+      const slug =
+        slugOverride ||
+        profile.slug ||
+        profile.id ||
+        initialProfile.slug ||
+        initialProfile.id;
+
+      if (slug && typeof window !== 'undefined') {
+        const nextUrl = buildProfileUrlForMode(slug, safeMode);
+        if (window.location.pathname + window.location.search !== nextUrl) {
+          window.history.pushState({ screenMode: safeMode }, '', nextUrl);
+        }
+      }
+
+      if (safeMode !== 'edit') {
+        setPreviewBackgroundTheme(null);
+      }
+      setScreenMode(safeMode);
+    },
+    [isOwner, profile.slug, profile.id, initialProfile.slug, initialProfile.id]
+  );
+
+  // Synchronize mutually exclusive screen mode with browser URL & history (Back / Forward)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    const slug = profile.slug || profile.id || initialProfile.slug || initialProfile.id;
+
     const syncFromUrl = () => {
-      const params = new URLSearchParams(window.location.search);
-      const isEditParam = params.get('edit') === 'true' || params.get('edit') === '1';
-      const isShareParam = params.get('share') === 'true' || params.get('share') === '1';
-      if (isEditParam && isOwner) {
-        setIsEditing(true);
-      } else if (!isEditParam) {
-        setIsEditing(false);
+      const resolved = resolveScreenModeFromSearch(window.location.search, isOwner);
+      if (resolved.needsUrlNormalization && slug) {
+        window.history.replaceState(
+          null,
+          '',
+          buildProfileUrlForMode(slug, resolved.mode)
+        );
       }
-      if (isShareParam && isOwner && !isEditParam) {
-        setIsShareModalOpen(true);
+      if (screenModeRef.current === 'edit' && resolved.mode !== 'edit') {
+        discardUnsavedChanges();
+        setPreviewBackgroundTheme(null);
       }
+      setScreenMode(resolved.mode);
     };
 
     syncFromUrl();
     window.addEventListener('popstate', syncFromUrl);
     return () => window.removeEventListener('popstate', syncFromUrl);
-  }, [isOwner]);
+  }, [isOwner, profile.slug, profile.id, initialProfile.slug, initialProfile.id, discardUnsavedChanges]);
 
   // Hydrate updated profile from localStorage ONLY for owner when cache is strictly newer than server
   useEffect(() => {
@@ -620,11 +666,7 @@ function PublicProfileClientInner({
 
       // If no dirty changes exist compared to baseline profile, no-op without sending request
       if (!isProfileDirty(payload, profile)) {
-        setIsEditing(false);
-        const targetSlug = profile.slug || profile.id;
-        if (targetSlug && typeof window !== 'undefined') {
-          window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
-        }
+        navigateScreenMode('preview', profile.slug || profile.id);
         return;
       }
 
@@ -636,16 +678,12 @@ function PublicProfileClientInner({
       const savedProfile = result.profile || payload;
       setProfile(savedProfile);
       setCurrentDraft(savedProfile);
-      setIsEditing(false);
+      navigateScreenMode('preview', savedProfile.slug || savedProfile.id || profile.slug || profile.id);
       try {
         localStorage.setItem(`avtive_profile_${savedProfile.slug || savedProfile.id}`, JSON.stringify(savedProfile));
         localStorage.setItem(`avtive_profile_${savedProfile.id}`, JSON.stringify(savedProfile));
         localStorage.setItem('avtive_last_saved_profile', JSON.stringify(savedProfile));
         window.dispatchEvent(new CustomEvent('avtive_profile_updated', { detail: savedProfile }));
-        const targetSlug = savedProfile.slug || savedProfile.id || profile.slug || profile.id;
-        if (targetSlug && typeof window !== 'undefined') {
-          window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
-        }
       } catch { }
       showToast('Profile saved successfully!');
     } catch (err: any) {
@@ -767,11 +805,10 @@ function PublicProfileClientInner({
 
   const handleOpenEditMode = () => {
     if (!isOwner) return;
-    setIsEditing(true);
-    const slug = profile.slug || profile.id || initialProfile.slug || initialProfile.id;
-    if (slug && typeof window !== 'undefined') {
-      window.history.pushState(null, '', `/profile/${encodeURIComponent(slug)}?edit=true`);
-    }
+    setDesktopOpen(false);
+    setMobileOpen(false);
+    handleCloseSidebar();
+    navigateScreenMode('edit');
   };
 
   const handleCancelEdit = () => {
@@ -780,11 +817,19 @@ function PublicProfileClientInner({
     const baseline = savedBaseline || profile;
     setProfile(baseline);
     setCurrentDraft(baseline);
-    setIsEditing(false);
-    const slug = baseline.slug || baseline.id || initialProfile.slug || initialProfile.id;
-    if (slug && typeof window !== 'undefined') {
-      window.history.pushState(null, '', `/profile/${encodeURIComponent(slug)}`);
-    }
+    navigateScreenMode('preview', baseline.slug || baseline.id || initialProfile.slug || initialProfile.id);
+  };
+
+  const handleOpenShareMode = () => {
+    setDesktopOpen(false);
+    setMobileOpen(false);
+    handleCloseSidebar();
+    setShareTargetProfileId(profile.id);
+    navigateScreenMode('share');
+  };
+
+  const handleCloseShareMode = () => {
+    navigateScreenMode('preview');
   };
 
   useEffect(() => {
@@ -830,11 +875,7 @@ function PublicProfileClientInner({
       const freshProfile = result.profile || liveProfile;
       setProfile(freshProfile);
       setCurrentDraft(freshProfile);
-      setIsEditing(false);
-      const targetSlug = freshProfile.slug || freshProfile.id || initialProfile.slug || initialProfile.id;
-      if (targetSlug && typeof window !== 'undefined') {
-        window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
-      }
+      navigateScreenMode('preview', freshProfile.slug || freshProfile.id || initialProfile.slug || initialProfile.id);
       showToast('Profile saved successfully!');
     } catch (err: any) {
       console.error('Update profile error:', err);
@@ -846,11 +887,7 @@ function PublicProfileClientInner({
     const fresh = updatedProfile || profile;
     setProfile(fresh);
     if (fresh.theme) setActiveTheme(fresh.theme);
-    setIsEditing(false);
-    const slug = fresh.slug || fresh.id || profile.slug || profile.id;
-    if (slug && typeof window !== 'undefined') {
-      window.history.pushState(null, '', `/profile/${encodeURIComponent(slug)}`);
-    }
+    navigateScreenMode('preview', fresh.slug || fresh.id || profile.slug || profile.id);
     router.refresh();
   };
 
@@ -870,10 +907,14 @@ function PublicProfileClientInner({
     };
   }, [profile, isEditing, liveProfile, profileType, activeTheme, previewBackgroundTheme]);
 
-  const hasCustomBackground = resolveBackgroundMode({
-    ...cardProfile,
-    ...(previewBackgroundTheme ? { backgroundType: 'occasion', activeBackgroundThemeId: previewBackgroundTheme.id } : {}),
-  }) !== 'default';
+  const hasCustomBackground =
+    screenMode === 'preview' &&
+    resolveBackgroundMode({
+      ...cardProfile,
+      ...(previewBackgroundTheme
+        ? { backgroundType: 'occasion', activeBackgroundThemeId: previewBackgroundTheme.id }
+        : {}),
+    }) !== 'default';
 
   const desktopView = (
     <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 overflow-hidden relative">
@@ -885,11 +926,13 @@ function PublicProfileClientInner({
           onSelectProfileType={(type) => setProfileType(type)}
           canEdit={isOwner}
           isEditing={isEditing}
+          isSharing={isSharing}
+          showEditActionsInHeader={false}
           onCancelEdit={handleCancelEdit}
           onSaveEdits={handleSaveAndExit}
           isSaving={isSaving}
           onOpenEdit={handleOpenEditMode}
-          onOpenShare={() => setIsShareModalOpen(true)}
+          onOpenShare={handleOpenShareMode}
           isDark={isDark}
           onToggleTheme={handleToggleTheme}
           session={currentUser}
@@ -901,143 +944,206 @@ function PublicProfileClientInner({
         />
       </div>
 
-      {/* Pinned Visible Section Navigation Tab Bar (Stitch Design) */}
-      <div className="shrink-0 z-30 w-full">
-        <ProfileSectionTabBar
-          profile={{ ...profile, type: profileType, theme: activeTheme }}
-          activeSection={activeTabSection}
-          onSelectSection={(sec) => handleSectionSelect(sec, false)}
+      {/* Central In-Page Mode Area: Edit | Share | Preview */}
+      {screenMode === 'edit' && isOwner && (
+        <ProfileEditorView
+          profile={cardProfile}
           theme={activeThemeConfig}
-          isEditing={isEditing}
-          canEdit={isOwner}
-        />
-      </div>
-
-      {/* Slide-In Section Drawer on Desktop (>= lg) */}
-      <AnimatePresence>
-        {desktopOpen && (
-          <div className="hidden lg:block">
-            <motion.div
-              key="desktop-sidebar-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={handleCloseDesktop}
-              className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
-            />
-            <motion.div
-              key="desktop-sidebar-drawer"
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              onMouseEnter={handlePanelMouseEnter}
-              onMouseLeave={handlePanelMouseLeave}
-              className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
-            >
-              <DesktopProfileSidebar
-                onClose={handleCloseDesktop}
-                onSelectSection={handleDesktopSectionSelect}
-                isPublicView={!isEditing}
-              />
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Bottom-Up Section Drawer on Mobile (< lg) */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <div className="lg:hidden">
-            <motion.div
-              key="mobile-viewport-sidebar-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              onClick={handleCloseMobile}
-              className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
-            />
-            <motion.div
-              key="mobile-viewport-sidebar-drawer"
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-              className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
-            >
-              <DesktopProfileSidebar
-                onClose={handleCloseMobile}
-                onSelectSection={handleMobileSectionSelect}
-                isPublicView={!isEditing}
-              />
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Responsive Profile Container + Mobile 80/20 Docked Panel */}
-      <div className="flex-1 min-h-0 w-full flex flex-row overflow-hidden relative">
-        <div
-          id="profile-scroll-panel"
-          onClick={() => {
-            if (desktopOpen) handleCloseDesktop();
-            if (mobileOpen) handleCloseMobile();
-            if (isSidebarOpen) handleCloseSidebar();
+          isUploadingAvatar={isUploadingAvatar}
+          isUploadingCover={isUploadingCover}
+          onCancelClose={handleCancelEdit}
+          onDoneClose={(savedProfile) => {
+            setProfile(savedProfile);
+            setCurrentDraft(savedProfile);
+            navigateScreenMode(
+              'preview',
+              savedProfile.slug || savedProfile.id || initialProfile.slug || initialProfile.id
+            );
+            showToast('Profile saved successfully!');
           }}
-          className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
-        >
-          <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${hasCustomBackground
-            ? 'backdrop-blur-md shadow-2xl'
-            : 'shadow-none sm:shadow-xl'
-            } overflow-hidden relative`}>
-            {isOwner && cardProfile.profileVisibility === 'private' && (
-              <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
-                Private profile — Visitors see your name only
+          onSavePartial={handleSavePartial}
+          onPreviewBackgroundTheme={setPreviewBackgroundTheme}
+          onShowToast={showToast}
+        />
+      )}
+
+      {screenMode === 'share' && (
+        isOwner ? (
+          <UnifiedShareWorkspace
+            isOpen={true}
+            onClose={handleCloseShareMode}
+            profile={profile}
+            userProfiles={userProfiles}
+            selectedProfileId={shareTargetProfileId}
+            onSelectProfileId={setShareTargetProfileId}
+            draftSelectionsByProfile={shareDraftSelections}
+            onUpdateDraftSelection={(pid, fields) =>
+              setShareDraftSelections((prev) => ({ ...prev, [pid]: fields }))
+            }
+            draftPresetByProfile={shareDraftPresets}
+            onUpdateDraftPreset={(pid, preset) =>
+              setShareDraftPresets((prev) => ({ ...prev, [pid]: preset }))
+            }
+            isDark={isDark}
+            onCopySuccess={() => showToast('Secure link copied!')}
+            onUpdateProfile={(updated) => {
+              if (updated.id === profile.id) {
+                setProfile(updated);
+                setCurrentDraft(updated);
+                updateProfilePartial(updated);
+              }
+            }}
+          />
+        ) : (
+          <VisitorPublicShareView
+            profile={profile}
+            onClose={handleCloseShareMode}
+            onCopySuccess={() => showToast('Public profile link copied!')}
+          />
+        )
+      )}
+
+      {screenMode === 'preview' && (
+        <>
+          {/* Pinned Visible Section Navigation Tab Bar */}
+          <div className="shrink-0 z-30 w-full">
+            <ProfileSectionTabBar
+              profile={{ ...profile, type: profileType, theme: activeTheme }}
+              activeSection={activeTabSection}
+              onSelectSection={(sec) => handleSectionSelect(sec, false)}
+              theme={activeThemeConfig}
+              isEditing={false}
+              canEdit={isOwner}
+            />
+          </div>
+
+          {/* Section Navigation Drawer on Desktop (>= lg) */}
+          <AnimatePresence>
+            {desktopOpen && (
+              <div className="hidden lg:block">
+                <motion.div
+                  key="desktop-sidebar-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={handleCloseDesktop}
+                  className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
+                />
+                <motion.div
+                  key="desktop-sidebar-drawer"
+                  initial={{ y: '100%', opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: '100%', opacity: 0 }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+                  onMouseEnter={handlePanelMouseEnter}
+                  onMouseLeave={handlePanelMouseLeave}
+                  className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
+                >
+                  <DesktopProfileSidebar
+                    onClose={handleCloseDesktop}
+                    onSelectSection={handleDesktopSectionSelect}
+                    isPublicView={true}
+                  />
+                </motion.div>
               </div>
             )}
-            <AvtiveDigitalCard
-              profile={cardProfile}
-              canEdit={isOwner}
-              isEditing={false}
-              onPreviewBackgroundTheme={setPreviewBackgroundTheme}
-              isConnected={false}
-              onDraftChange={handleDraftChange}
-              onOpenEdit={handleOpenEditMode}
-              onCancelEdit={handleCancelEdit}
-              onSaveEdits={handleSaveEdits}
-              onSavePartial={handleSavePartial}
-              onSaveContact={handleSaveContact}
-              onOpenShare={() => setIsShareModalOpen(true)}
-              onOpenConnect={() => setIsConnectModalOpen(true)}
-              onOpenQRModal={() => setIsQRModalOpen(true)}
-              onOpenResumeModal={() => setIsResumeModalOpen(true)}
-              onSelectProject={(project) => setSelectedProject(project)}
-              onSelectTeamMember={(member) => {
-                const slug = member.profileId === 'individual' ? 'syedmesumraza' : member.profileId === 'team-member' ? 'hamza-malik' : member.id;
-                router.push(`/profile/${slug}`);
+          </AnimatePresence>
+
+          {/* Section Navigation Drawer on Mobile (< lg) */}
+          <AnimatePresence>
+            {mobileOpen && (
+              <div className="lg:hidden">
+                <motion.div
+                  key="mobile-viewport-sidebar-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={handleCloseMobile}
+                  className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
+                />
+                <motion.div
+                  key="mobile-viewport-sidebar-drawer"
+                  initial={{ y: '100%', opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: '100%', opacity: 0 }}
+                  transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+                  className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
+                >
+                  <DesktopProfileSidebar
+                    onClose={handleCloseMobile}
+                    onSelectSection={handleMobileSectionSelect}
+                    isPublicView={true}
+                  />
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* Main Responsive Profile Preview Container */}
+          <div className="flex-1 min-h-0 w-full flex flex-row overflow-hidden relative">
+            <div
+              id="profile-scroll-panel"
+              onClick={() => {
+                if (desktopOpen) handleCloseDesktop();
+                if (mobileOpen) handleCloseMobile();
+                if (isSidebarOpen) handleCloseSidebar();
               }}
-              onViewCompany={() => {
-                if (profile.companyId) {
-                  router.push(`/profile/${profile.companyId}`);
-                }
-              }}
-              isDark={isDark}
-              viewMode="standard"
-              onSelectSection={(sec) => handleSectionSelect(sec, false)}
-              onToggleSections={handleTriggerClick}
-              onSectionsMouseEnter={handleTriggerMouseEnter}
-              onSectionsMouseLeave={handleTriggerMouseLeave}
-              isSidebarOpen={isSidebarOpen}
-              onToggleMobileSections={handleToggleMobile}
-              isMobileSectionsOpen={mobileOpen}
-              onToggleDesktopSections={handleToggleDesktop}
-              isDesktopSectionsOpen={desktopOpen}
-            />
+              className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
+            >
+              <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${hasCustomBackground
+                ? 'backdrop-blur-md shadow-2xl'
+                : 'shadow-none sm:shadow-xl'
+                } overflow-hidden relative`}>
+                {isOwner && cardProfile.profileVisibility === 'private' && (
+                  <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                    Private profile — Visitors see your name only
+                  </div>
+                )}
+                <AvtiveDigitalCard
+                  profile={cardProfile}
+                  canEdit={isOwner}
+                  isEditing={false}
+                  onPreviewBackgroundTheme={setPreviewBackgroundTheme}
+                  isConnected={false}
+                  onDraftChange={handleDraftChange}
+                  onOpenEdit={handleOpenEditMode}
+                  onCancelEdit={handleCancelEdit}
+                  onSaveEdits={handleSaveEdits}
+                  onSavePartial={handleSavePartial}
+                  onSaveContact={handleSaveContact}
+                  onOpenShare={handleOpenShareMode}
+                  onOpenConnect={() => setIsConnectModalOpen(true)}
+                  onOpenQRModal={() => setIsQRModalOpen(true)}
+                  onOpenResumeModal={() => setIsResumeModalOpen(true)}
+                  onSelectProject={(project) => setSelectedProject(project)}
+                  onSelectTeamMember={(member) => {
+                    const slug = member.profileId === 'individual' ? 'syedmesumraza' : member.profileId === 'team-member' ? 'hamza-malik' : member.id;
+                    router.push(`/profile/${slug}`);
+                  }}
+                  onViewCompany={() => {
+                    if (profile.companyId) {
+                      router.push(`/profile/${profile.companyId}`);
+                    }
+                  }}
+                  isDark={isDark}
+                  viewMode="standard"
+                  onSelectSection={(sec) => handleSectionSelect(sec, false)}
+                  onToggleSections={handleTriggerClick}
+                  onSectionsMouseEnter={handleTriggerMouseEnter}
+                  onSectionsMouseLeave={handleTriggerMouseLeave}
+                  isSidebarOpen={isSidebarOpen}
+                  onToggleMobileSections={handleToggleMobile}
+                  isMobileSectionsOpen={mobileOpen}
+                  onToggleDesktopSections={handleToggleDesktop}
+                  isDesktopSectionsOpen={desktopOpen}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 
@@ -1050,12 +1156,12 @@ function PublicProfileClientInner({
           profileType={profileType}
           onSelectProfileType={(type) => setProfileType(type)}
           canEdit={isOwner}
-          isEditing={isEditing}
+          isEditing={false}
           onCancelEdit={handleCancelEdit}
           onSaveEdits={handleSaveAndExit}
           isSaving={isSaving}
           onOpenEdit={handleOpenEditMode}
-          onOpenShare={() => setIsShareModalOpen(true)}
+          onOpenShare={handleOpenShareMode}
           isDark={isDark}
           onToggleTheme={handleToggleTheme}
           session={currentUser}
@@ -1105,7 +1211,7 @@ function PublicProfileClientInner({
             onSaveEdits={handleSaveEdits}
             onSavePartial={handleSavePartial}
             onSaveContact={handleSaveContact}
-            onOpenShare={() => setIsShareModalOpen(true)}
+            onOpenShare={handleOpenShareMode}
             onOpenConnect={() => setIsConnectModalOpen(true)}
             onOpenQRModal={() => setIsQRModalOpen(true)}
             onOpenResumeModal={() => setIsResumeModalOpen(true)}
@@ -1224,11 +1330,13 @@ function PublicProfileClientInner({
       className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${hasCustomBackground ? 'bg-transparent' : activeThemeConfig.pageBg
         } ${activeThemeConfig.textPrimary} transition-all duration-300 font-sans relative`}
     >
-      {/* Visual Background Layer (Image / Animated Video / Occasion Theme) */}
-      <ProfileBackgroundLayer
-        profile={cardProfile}
-        overrideOccasionThemeId={previewBackgroundTheme?.id}
-      />
+      {/* Visual Background Layer (Preview mode only) */}
+      {screenMode === 'preview' && (
+        <ProfileBackgroundLayer
+          profile={cardProfile}
+          overrideOccasionThemeId={previewBackgroundTheme?.id}
+        />
+      )}
 
       {/* Toast Notification Banner */}
       {toastMessage && (
@@ -1240,37 +1348,12 @@ function PublicProfileClientInner({
       <DualScreenWorkspace
         workflowTitle="Digital Pass Identity"
         workflowSubtitle="Verified Public Profile"
-        currentUrlPath={`/profile/${profile.slug || profile.id}`}
+        currentUrlPath={buildProfileUrlForMode(profile.slug || profile.id, screenMode)}
         showWindowHeader={false}
+        hideMobilePreview={screenMode !== 'preview'}
         desktopContent={desktopView}
         mobileContent={mobileView}
       />
-
-      {/* P3 Same-Page Bottom-Up Profile Editor Sheet */}
-      <AnimatePresence>
-        {isEditing && isOwner && (
-          <ProfileEditorSheet
-            profile={cardProfile}
-            theme={activeThemeConfig}
-            isUploadingAvatar={isUploadingAvatar}
-            isUploadingCover={isUploadingCover}
-            onCancelClose={handleCancelEdit}
-            onDoneClose={(savedProfile) => {
-              setProfile(savedProfile);
-              setCurrentDraft(savedProfile);
-              setIsEditing(false);
-              const targetSlug = savedProfile.slug || savedProfile.id || initialProfile.slug || initialProfile.id;
-              if (targetSlug && typeof window !== 'undefined') {
-                window.history.pushState(null, '', `/profile/${encodeURIComponent(targetSlug)}`);
-              }
-              showToast('Profile saved successfully!');
-            }}
-            onSavePartial={handleSavePartial}
-            onPreviewBackgroundTheme={setPreviewBackgroundTheme}
-            onShowToast={showToast}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Connect / Exchange Contact Modal */}
       {isConnectModalOpen && (
@@ -1280,43 +1363,6 @@ function PublicProfileClientInner({
           profile={profile}
           session={currentUser}
           onSuccess={() => showToast('Connected successfully!')}
-        />
-      )}
-
-      {/* Unified Share Sheet */}
-      {isShareModalOpen && (
-        <ShareModal
-          isOpen={isShareModalOpen}
-          onClose={() => {
-            setIsShareModalOpen(false);
-            if (typeof window !== 'undefined' && window.location.search.includes('share=')) {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('share');
-              window.history.replaceState(null, '', url.pathname + url.search);
-            }
-          }}
-          profile={profile}
-          userProfiles={userProfiles}
-          selectedProfileId={shareTargetProfileId}
-          onSelectProfileId={setShareTargetProfileId}
-          draftSelectionsByProfile={shareDraftSelections}
-          onUpdateDraftSelection={(pid, fields) =>
-            setShareDraftSelections((prev) => ({ ...prev, [pid]: fields }))
-          }
-          draftPresetByProfile={shareDraftPresets}
-          onUpdateDraftPreset={(pid, preset) =>
-            setShareDraftPresets((prev) => ({ ...prev, [pid]: preset }))
-          }
-          isOwner={isOwner}
-          isDark={isDark}
-          onCopySuccess={() => showToast('Secure link copied!')}
-          onUpdateProfile={(updated) => {
-            if (updated.id === profile.id) {
-              setProfile(updated);
-              setCurrentDraft(updated);
-              updateProfilePartial(updated);
-            }
-          }}
         />
       )}
 

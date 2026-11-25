@@ -62,9 +62,9 @@ export function InPersonShareView({
 
   const resolvedUrl = currentLink
     ? currentLink.shareUrl ||
-      (typeof window !== 'undefined'
-        ? `${window.location.origin}${currentLink.sharePath}`
-        : currentLink.sharePath)
+    (typeof window !== 'undefined'
+      ? `${window.location.origin}${currentLink.sharePath}`
+      : currentLink.sharePath)
     : '';
 
   // Generate QR automatically when switching to QR tab
@@ -104,10 +104,10 @@ export function InPersonShareView({
     const NDEFReaderCtor =
       typeof window !== 'undefined'
         ? (window as unknown as {
-            NDEFReader?: new () => {
-              write: (msg: { records: Array<{ recordType: string; data: string }> }) => Promise<void>;
-            };
-          }).NDEFReader
+          NDEFReader?: new () => {
+            write: (msg: { records: Array<{ recordType: string; data: string }> }) => Promise<void>;
+          };
+        }).NDEFReader
         : undefined;
 
     if (!NDEFReaderCtor) {
@@ -175,9 +175,9 @@ export function InPersonShareView({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col">
       {/* Header */}
-      <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200 dark:border-white/10 flex items-center gap-3 shrink-0">
+      <div className="px-4 sm:px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3 shrink-0">
         <button
           type="button"
           onClick={onBack}
@@ -211,11 +211,10 @@ export function InPersonShareView({
                 key={tab.id}
                 type="button"
                 onClick={() => setSubTab(tab.id)}
-                className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  active
-                    ? 'bg-white dark:bg-[#182032] text-slate-900 dark:text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${active
+                  ? 'bg-white dark:bg-[#182032] text-slate-900 dark:text-white shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
               >
                 <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span className="truncate">{tab.label}</span>
@@ -226,7 +225,7 @@ export function InPersonShareView({
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
+      <div className="px-4 sm:px-5 py-4 space-y-4">
         {/* Tap Phones (Real Web NFC) */}
         {subTab === 'nfc' && (
           <div className="p-5 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-center space-y-4 shadow-2xs">
@@ -263,8 +262,8 @@ export function InPersonShareView({
                 {nfcState === 'unsupported'
                   ? 'Web NFC Unavailable on This Browser'
                   : nfcState === 'completed'
-                  ? 'Share Link Written via NFC'
-                  : 'Write Secure Share Link via NFC'}
+                    ? 'Share Link Written via NFC'
+                    : 'Write Secure Share Link via NFC'}
               </h4>
               <p className="text-xs text-slate-600 dark:text-slate-300 max-w-xs mx-auto leading-relaxed">
                 {nfcState === 'unsupported'
@@ -298,8 +297,8 @@ export function InPersonShareView({
                   {nfcState === 'connecting' || nfcState === 'transferring'
                     ? 'Waiting for NFC tap...'
                     : nfcState === 'failed' || nfcState === 'completed'
-                    ? 'Start NFC Share Again'
-                    : 'Start NFC Share'}
+                      ? 'Start NFC Share Again'
+                      : 'Start NFC Share'}
                 </button>
               ) : (
                 <div className="grid grid-cols-2 gap-2">

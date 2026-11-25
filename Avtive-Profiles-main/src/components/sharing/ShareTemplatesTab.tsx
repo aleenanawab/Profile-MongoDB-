@@ -182,7 +182,7 @@ export function ShareTemplatesTab({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
+    <div className="px-4 sm:px-5 py-4 space-y-4">
       <div className="space-y-1">
         <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
           A template saves a preset group of profile details. Selecting a template updates your share selection while still enforcing Never Share &amp; profile visibility rules.

@@ -238,9 +238,9 @@ export function SharedLinksTab({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col">
       {/* Search & Filters Header */}
-      <div className="px-4 sm:px-5 pt-3.5 pb-3 border-b border-slate-200 dark:border-white/10 space-y-3 shrink-0">
+      <div className="px-4 sm:px-5 pt-3.5 pb-3 border-b border-zinc-200 dark:border-zinc-800 space-y-3 shrink-0">
         <div className="relative">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -261,11 +261,10 @@ export function SharedLinksTab({
                   key={st}
                   type="button"
                   onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-semibold capitalize border transition-all cursor-pointer shrink-0 ${
-                    active
+                  className={`px-3 py-1 rounded-full text-[11px] font-semibold capitalize border transition-all cursor-pointer shrink-0 ${active
                       ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
                       : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   {st}
                 </button>
@@ -280,9 +279,8 @@ export function SharedLinksTab({
           >
             <span>Show link titles</span>
             <span
-              className={`w-8 h-4.5 rounded-full p-0.5 transition-colors inline-flex items-center ${
-                showTitles ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'
-              }`}
+              className={`w-8 h-4.5 rounded-full p-0.5 transition-colors inline-flex items-center ${showTitles ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'
+                }`}
             >
               <span className="w-3.5 h-3.5 rounded-full bg-white shadow-xs" />
             </span>
@@ -290,8 +288,8 @@ export function SharedLinksTab({
         </div>
       </div>
 
-      {/* Scrollable Link Records */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3.5 space-y-3">
+      {/* Link Records */}
+      <div className="px-4 sm:px-5 py-3.5 space-y-3">
         {errorMsg && (
           <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -382,8 +380,8 @@ export function SharedLinksTab({
                       {link.expiryOption === '1_view'
                         ? 'After 1 view'
                         : link.expiresAt
-                        ? formatDate(link.expiresAt)
-                        : 'Never'}
+                          ? formatDate(link.expiresAt)
+                          : 'Never'}
                     </span>
                   </div>
                   <div>
@@ -438,11 +436,10 @@ export function SharedLinksTab({
                             key={opt}
                             type="button"
                             onClick={() => setEditExpiryDraft(opt)}
-                            className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold border cursor-pointer ${
-                              editExpiryDraft === opt
+                            className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold border cursor-pointer ${editExpiryDraft === opt
                                 ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
                                 : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
-                            }`}
+                              }`}
                           >
                             {opt === 'never' ? 'Never' : opt === '7d' ? '7 days' : '1 view'}
                           </button>
@@ -471,11 +468,10 @@ export function SharedLinksTab({
                                   prev.includes(f.key) ? prev.filter((k) => k !== f.key) : [...prev, f.key]
                                 )
                               }
-                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition-colors cursor-pointer disabled:opacity-40 ${
-                                included
+                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition-colors cursor-pointer disabled:opacity-40 ${included
                                   ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300'
                                   : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500'
-                              }`}
+                                }`}
                             >
                               {isPriv && <Lock className="w-2.5 h-2.5 inline mr-1" />}
                               {f.label}

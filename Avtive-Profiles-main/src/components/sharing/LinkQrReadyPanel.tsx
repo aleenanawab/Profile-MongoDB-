@@ -203,9 +203,9 @@ export function LinkQrReadyPanel({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col">
       {/* Header */}
-      <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between gap-3 shrink-0">
+      <div className="px-4 sm:px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
@@ -236,8 +236,8 @@ export function LinkQrReadyPanel({
         </a>
       </div>
 
-      {/* Scrollable Body */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
+      {/* Body */}
+      <div className="px-4 sm:px-5 py-4 space-y-4">
         {actionStatus && (
           <div
             className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold border ${

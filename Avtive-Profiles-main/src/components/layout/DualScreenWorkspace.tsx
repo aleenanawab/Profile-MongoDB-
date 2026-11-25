@@ -30,6 +30,7 @@ export interface DualScreenWorkspaceProps {
   isSaving?: boolean;
   showWindowHeader?: boolean;
   stageBackgroundStyle?: React.CSSProperties;
+  hideMobilePreview?: boolean;
 }
 
 export function DualScreenWorkspace({
@@ -39,7 +40,8 @@ export function DualScreenWorkspace({
   desktopToolbarRight,
   className = '',
   showWindowHeader = true,
-  stageBackgroundStyle
+  stageBackgroundStyle,
+  hideMobilePreview = false
 }: DualScreenWorkspaceProps) {
   const { isDark, toggleDarkMode } = usePortfolioTheme();
   const [mobileActiveView, setMobileActiveView] = useState<'editor' | 'preview'>('editor');
@@ -69,12 +71,12 @@ export function DualScreenWorkspace({
       <div className="flex-1 h-full min-h-0 w-full p-0 sm:p-3.5 lg:p-4 2xl:p-6 flex flex-col xl:flex-row items-center xl:items-start justify-center gap-0 sm:gap-4 lg:gap-5 2xl:gap-6 max-w-[1920px] mx-auto box-border min-w-0 overflow-y-auto overflow-x-hidden">
 
         {/* ======================================================================= */}
-        {/* SCREEN 1: DESKTOP WORKING SCREEN (Clean Minimalist Window)              */}
+        {/* SCREEN 1: PRIMARY RESPONSIVE WORKING SCREEN (Desktop & Mobile Full Page) */}
         {/* ======================================================================= */}
         <section
           aria-label="Desktop Working Screen"
-          className={`${mobileActiveView === 'preview' ? 'hidden xl:flex' : 'flex'
-            } flex-1 h-full min-h-0 w-full min-w-0 max-w-[1240px] flex-col rounded-none sm:rounded-2xl lg:rounded-3xl border-0 sm:border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0A0A0A] shadow-none sm:shadow-xl shadow-black/5 dark:shadow-2xl dark:shadow-black/60 overflow-hidden transition-colors box-border relative`}
+          className={`${!hideMobilePreview && mobileActiveView === 'preview' ? 'hidden xl:flex' : 'flex'
+            } flex-1 h-full min-h-0 w-full min-w-0 ${hideMobilePreview ? 'max-w-[1100px]' : 'max-w-[1240px]'} flex-col rounded-none sm:rounded-2xl lg:rounded-3xl border-0 sm:border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0A0A0A] shadow-none sm:shadow-xl shadow-black/5 dark:shadow-2xl dark:shadow-black/60 overflow-hidden transition-colors box-border relative`}
         >
           {/* Desktop Browser Window Header Frame */}
           {showWindowHeader && (
@@ -150,8 +152,9 @@ export function DualScreenWorkspace({
 
         {/* ======================================================================= */}
         {/* SCREEN 2: MOBILE WORKING SCREEN (Exact 375×667 Smartphone Chassis)      */}
-        {/* Shown alongside working screen on desktop (>= xl); toggled on mobile    */}
+        {/* Shown alongside working screen on desktop (>= xl) in preview mode       */}
         {/* ======================================================================= */}
+        {!hideMobilePreview && (
         <aside
           aria-label="Mobile Working Screen"
           className={`${mobileActiveView === 'preview' ? 'flex' : 'hidden xl:flex'
@@ -205,6 +208,7 @@ export function DualScreenWorkspace({
 
           </div>
         </aside>
+        )}
 
       </div>
 

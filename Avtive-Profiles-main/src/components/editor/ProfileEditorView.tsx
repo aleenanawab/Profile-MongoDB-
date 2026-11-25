@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { motion, Reorder } from 'framer-motion';
+import { Reorder } from 'framer-motion';
 import { Loader2, Check, Plus, Layers, RotateCcw } from 'lucide-react';
 import { ProfileData, DynamicSection } from '@/types/profile';
 import { BackgroundTheme } from '@/data/backgroundThemes';
@@ -13,7 +13,7 @@ import { IdentityEditorCard } from '@/components/editor/IdentityEditorCard';
 import { ProfileVisibilityCard } from '@/components/editor/ProfileVisibilityCard';
 import { EditableSectionCard, SECTION_CONFIG } from '@/components/editor/EditableSectionCard';
 
-export interface ProfileEditorSheetProps {
+export interface ProfileEditorViewProps {
   profile: ProfileData;
   theme: ThemeConfig;
   isUploadingAvatar?: boolean;
@@ -25,8 +25,7 @@ export interface ProfileEditorSheetProps {
   onShowToast?: (msg: string) => void;
 }
 
-export function ProfileEditorSheet({
-  profile,
+export function ProfileEditorView({
   theme,
   isUploadingAvatar,
   isUploadingCover,
@@ -35,7 +34,7 @@ export function ProfileEditorSheet({
   onSavePartial,
   onPreviewBackgroundTheme,
   onShowToast,
-}: ProfileEditorSheetProps) {
+}: ProfileEditorViewProps) {
   const {
     liveProfile,
     activeTheme,
@@ -111,7 +110,7 @@ export function ProfileEditorSheet({
     const saved = res.profile || liveProfile;
     setTimeout(() => {
       onDoneClose(saved);
-    }, 180);
+    }, 150);
   };
 
   const handleAddDynamicSection = () => {
@@ -162,30 +161,14 @@ export function ProfileEditorSheet({
   const hiddenCount = orderedSectionKeys.filter((k) => !isSectionVisible(k)).length;
 
   return (
-    <motion.div
-      key="profile-editor-backdrop"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] flex items-end justify-center"
-      data-testid="profile-editor-sheet-overlay"
+    <div
+      data-testid="profile-editor-view"
+      aria-label="Edit Profile"
+      className="w-full flex-1 min-h-0 overflow-y-auto overscroll-contain bg-zinc-50 dark:bg-black text-zinc-950 dark:text-white animate-in fade-in duration-150"
     >
-      <motion.div
-        key="profile-editor-sheet"
-        initial={{ y: '100%', opacity: 0.9 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: '100%', opacity: 0.9 }}
-        transition={{ type: 'spring', damping: 30, stiffness: 280 }}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Edit Profile"
-        data-testid="profile-editor-sheet"
-        className="w-full max-w-2xl h-[94dvh] sm:h-[90dvh] rounded-t-3xl bg-zinc-50 dark:bg-black border-t border-x border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden"
-      >
-        {/* P3 Sticky Top Editing Header: Cancel | EDITING | Done */}
-        <header className="sticky top-0 z-30 shrink-0 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 pt-3 pb-3">
-          <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 mx-auto mb-2.5" />
+      {/* P3 Sticky Top Editing Header inside page flow: Cancel | EDITING | Done */}
+      <header className="sticky top-0 z-20 w-full bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 py-3">
+        <div className="max-w-3xl mx-auto">
           <div className="grid grid-cols-3 items-center gap-2">
             {/* Left: Cancel */}
             <div className="flex justify-start">
@@ -233,9 +216,9 @@ export function ProfileEditorSheet({
             </div>
           </div>
 
-          {/* Unsaved Changes Confirmation Bar */}
+          {/* Inline Unsaved Changes Confirmation Bar */}
           {confirmDiscard && (
-            <div className="mt-2.5 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-between gap-2 text-xs">
+            <div className="mt-2.5 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 flex flex-wrap items-center justify-between gap-2 text-xs">
               <span className="font-medium text-zinc-800 dark:text-zinc-200">
                 Discard unsaved changes? Previously saved changes stay intact.
               </span>
@@ -257,99 +240,101 @@ export function ProfileEditorSheet({
               </div>
             </div>
           )}
-        </header>
+        </div>
+      </header>
 
-        {/* Scrollable P3 Editor Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-5 py-4 space-y-4">
-          {/* B. Background Selection Card */}
-          <BackgroundSelectorCard
-            profile={liveProfile}
-            theme={theme}
-            onUpdateFields={updateProfilePartial}
-            onPreviewOccasionTheme={onPreviewBackgroundTheme}
-            onShowToast={onShowToast}
-          />
+      {/* Main In-Page Editor Content */}
+      <div className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4">
+        {/* 1. Background Selection Card */}
+        <BackgroundSelectorCard
+          profile={liveProfile}
+          theme={theme}
+          onUpdateFields={updateProfilePartial}
+          onPreviewOccasionTheme={onPreviewBackgroundTheme}
+          onShowToast={onShowToast}
+        />
 
-          {/* C. Profile Identity Card */}
-          <IdentityEditorCard
-            profile={liveProfile}
-            theme={theme}
-            activeTheme={activeTheme}
-            onUpdateField={updateField}
-            onShowToast={onShowToast}
-          />
+        {/* 2. Profile Identity Card */}
+        <IdentityEditorCard
+          profile={liveProfile}
+          theme={theme}
+          activeTheme={activeTheme}
+          onUpdateField={updateField}
+          onShowToast={onShowToast}
+        />
 
-          {/* D. Profile Visibility Control */}
-          <ProfileVisibilityCard
-            value={liveProfile.profileVisibility === 'private' ? 'private' : 'public'}
-            onChange={(val) => updateField('profileVisibility', val)}
-          />
+        {/* 3. Public / Private Visibility Control */}
+        <ProfileVisibilityCard
+          value={liveProfile.profileVisibility === 'private' ? 'private' : 'public'}
+          onChange={(val) => updateField('profileVisibility', val)}
+        />
 
-          {/* E. All Profile Sections */}
-          <div className="space-y-2.5 pt-1">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Sections
-              </span>
-              {hiddenCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleRestoreAllHidden}
-                  className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white inline-flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  Show {hiddenCount} hidden
-                </button>
-              )}
-            </div>
-
-            <Reorder.Group
-              axis="y"
-              values={orderedSectionKeys}
-              onReorder={(newOrder) => {
-                setSectionOrder(newOrder);
-                updateField('sectionOrder', newOrder);
-              }}
-              className="space-y-2.5"
-            >
-              {orderedSectionKeys.map((secKey, idx) => (
-                <EditableSectionCard
-                  key={secKey}
-                  sectionKey={secKey}
-                  profile={liveProfile}
-                  theme={theme}
-                  index={idx}
-                  total={orderedSectionKeys.length}
-                  isVisible={isSectionVisible(secKey)}
-                  onMoveUp={() => handleMoveSection(idx, 'up')}
-                  onMoveDown={() => handleMoveSection(idx, 'down')}
-                  onToggleVisibility={() => handleToggleSectionVisibility(secKey)}
-                  onUpdateField={updateField}
-                  onSavePartial={onSavePartial}
-                  onDeleteDynamicSection={handleDeleteDynamicSection}
-                  onToggleContactFieldVisibility={(field) => toggleVisibilityField(field)}
-                  onShowToast={onShowToast}
-                />
-              ))}
-            </Reorder.Group>
+        {/* 4. Profile Sections */}
+        <div className="space-y-2.5 pt-1">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Sections
+            </span>
+            {hiddenCount > 0 && (
+              <button
+                type="button"
+                onClick={handleRestoreAllHidden}
+                className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 hover:text-black dark:hover:text-white inline-flex items-center gap-1 cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Show {hiddenCount} hidden
+              </button>
+            )}
           </div>
 
-          {/* Add Custom Section */}
-          <div className="pt-1 pb-6">
-            {isAddingCustomSection ? (
-              <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 space-y-2.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
-                  <Layers className="w-4 h-4" />
-                  <span>New Custom Section</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={newSectionTitle}
-                    onChange={(e) => setNewSectionTitle(e.target.value)}
-                    placeholder="e.g., Speaking Engagements, Open Source..."
-                    className="flex-1 px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-white outline-none focus:border-black dark:focus:border-white"
-                  />
+          <Reorder.Group
+            axis="y"
+            values={orderedSectionKeys}
+            onReorder={(newOrder) => {
+              setSectionOrder(newOrder);
+              updateField('sectionOrder', newOrder);
+            }}
+            className="space-y-2.5"
+          >
+            {orderedSectionKeys.map((secKey, idx) => (
+              <EditableSectionCard
+                key={secKey}
+                sectionKey={secKey}
+                profile={liveProfile}
+                theme={theme}
+                index={idx}
+                total={orderedSectionKeys.length}
+                isVisible={isSectionVisible(secKey)}
+                onMoveUp={() => handleMoveSection(idx, 'up')}
+                onMoveDown={() => handleMoveSection(idx, 'down')}
+                onToggleVisibility={() => handleToggleSectionVisibility(secKey)}
+                onUpdateField={updateField}
+                onSavePartial={onSavePartial}
+                onDeleteDynamicSection={handleDeleteDynamicSection}
+                onToggleContactFieldVisibility={(field) => toggleVisibilityField(field)}
+                onShowToast={onShowToast}
+              />
+            ))}
+          </Reorder.Group>
+        </div>
+
+        {/* 5. Add Custom Section */}
+        <div className="pt-1 pb-8">
+          {isAddingCustomSection ? (
+            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
+                <Layers className="w-4 h-4" />
+                <span>New Custom Section</span>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  type="text"
+                  value={newSectionTitle}
+                  onChange={(e) => setNewSectionTitle(e.target.value)}
+                  placeholder="e.g., Speaking Engagements, Open Source..."
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-950 dark:text-white outline-none focus:border-black dark:focus:border-white"
+                />
+                <div className="flex items-center gap-2 justify-end">
                   <button
                     type="button"
                     onClick={() => setIsAddingCustomSection(false)}
@@ -367,19 +352,19 @@ export function ProfileEditorSheet({
                   </button>
                 </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsAddingCustomSection(true)}
-                className="w-full py-3 px-4 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white bg-white dark:bg-zinc-950 text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Custom Section</span>
-              </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsAddingCustomSection(true)}
+              className="w-full py-3 px-4 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-black dark:hover:border-white bg-white dark:bg-zinc-950 text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Custom Section</span>
+            </button>
+          )}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

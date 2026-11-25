@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { 
-  User, 
-  FileText, 
-  Code, 
-  FolderGit2, 
-  GraduationCap, 
-  Phone, 
-  Link2, 
-  Briefcase, 
-  Sparkles, 
-  Award, 
-  Globe, 
-  MessageSquare, 
-  Tag, 
-  Building2, 
+import {
+  User,
+  FileText,
+  Code,
+  FolderGit2,
+  GraduationCap,
+  Phone,
+  Link2,
+  Briefcase,
+  Sparkles,
+  Award,
+  Globe,
+  MessageSquare,
+  Tag,
+  Building2,
   Users,
   ChevronLeft,
   ChevronRight,
@@ -173,10 +173,12 @@ export function ProfileSectionTabBar({
       const tabWidth = tab.offsetWidth;
       const containerWidth = container.offsetWidth;
       const targetScroll = tabLeft - (containerWidth / 2) + (tabWidth / 2);
-      container.scrollTo({
-        left: Math.max(0, targetScroll),
-        behavior: 'smooth'
-      });
+      if (typeof container.scrollTo === 'function') {
+        container.scrollTo({
+          left: Math.max(0, targetScroll),
+          behavior: 'smooth'
+        });
+      }
     }
   }, [activeSection]);
 
@@ -208,8 +210,8 @@ export function ProfileSectionTabBar({
   };
 
   return (
-    <nav 
-      aria-label="Profile Section Navigation" 
+    <nav
+      aria-label="Profile Section Navigation"
       className={`relative w-full max-w-full overflow-hidden box-border ${theme.headerBg} border-b ${theme.divider} transition-colors select-none ${className}`}
     >
       <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 relative flex items-center min-w-0 box-border">
@@ -242,11 +244,10 @@ export function ProfileSectionTabBar({
                 type="button"
                 onClick={() => onSelectSection(item.key)}
                 aria-current={active ? 'page' : undefined}
-                className={`shrink-0 h-11 min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${
-                  active
-                    ? `${theme.btnPrimary} shadow-xs font-bold scale-[1.02]`
-                    : `${theme.textSecondary} hover:${theme.textPrimary} hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent`
-                }`}
+                className={`shrink-0 h-11 min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${active
+                  ? `${theme.btnPrimary} shadow-xs font-bold scale-[1.02]`
+                  : `${theme.textSecondary} hover:${theme.textPrimary} hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent`
+                  }`}
               >
                 <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${active ? 'opacity-100' : 'opacity-70'}`} />
                 <span className="whitespace-nowrap">{item.label}</span>

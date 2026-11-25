@@ -746,9 +746,9 @@ async function runSuite() {
   });
 
   // ── GROUP 5: UI Component Integration (JSDOM + React 19) ──────────────────
-  console.log('--- Group 5: UI Components (UnifiedShareDrawer & SharedProfileClient) ---');
+  console.log('--- Group 5: UI Components (UnifiedShareWorkspace & SharedProfileClient) ---');
 
-  await test('UnifiedShareDrawer renders 3 tabs, switches profiles, enforces Safety Check, and toggles Live Preview', async () => {
+  await test('UnifiedShareWorkspace renders inline 3 tabs, switches profiles, renders Safety Check inline without modal/drawer overlays, and toggles Live Preview', async () => {
     activeCookieUser = USER_A;
     resetRateLimitsForTests();
 
@@ -817,7 +817,7 @@ async function runSuite() {
     try {
       const React = await import('react');
       const { createRoot } = await import('react-dom/client');
-      const { UnifiedShareDrawer } = await import('../src/components/sharing/UnifiedShareDrawer');
+      const { UnifiedShareWorkspace } = await import('../src/components/sharing/UnifiedShareWorkspace');
       const { SharedProfileClient } = await import('../src/app/s/[token]/SharedProfileClient');
 
       const uiProfile: ProfileData = {
@@ -845,7 +845,7 @@ async function runSuite() {
       const root = createRoot(container);
 
       const renderDrawer = (isOpen: boolean) =>
-        React.createElement(UnifiedShareDrawer, {
+        React.createElement(UnifiedShareWorkspace, {
           isOpen,
           onClose: () => {},
           profile: uiProfile,
@@ -867,12 +867,17 @@ async function runSuite() {
         await new Promise((r) => setTimeout(r, 30));
       });
 
-      const bodyText = container.textContent || '';
-      assert.ok(bodyText.includes('Share Profile'), 'Drawer renders Share Profile header');
-      assert.ok(bodyText.includes('Everything') && bodyText.includes('Embedded Jobs'), 'Drawer renders all presets');
-      assert.ok(bodyText.includes('Shared Links') && bodyText.includes('Templates'), 'Drawer renders 3 unified tabs');
+      const workspaceEl = container.querySelector('[data-testid="unified-share-workspace"]');
+      assert.ok(workspaceEl, 'UnifiedShareWorkspace renders in-page container');
+      assert.strictEqual(container.querySelector('[role="dialog"]'), null, 'Sharing workspace must not render a modal dialog');
+      assert.ok(!workspaceEl!.className.includes('fixed inset-0'), 'Sharing workspace must not use fixed inset-0 overlay');
 
-      // 1. Trigger Safety Check on a Private field
+      const bodyText = container.textContent || '';
+      assert.ok(bodyText.includes('Share Profile'), 'Workspace renders Share Profile header');
+      assert.ok(bodyText.includes('Everything') && bodyText.includes('Embedded Jobs'), 'Workspace renders all presets');
+      assert.ok(bodyText.includes('Shared Links') && bodyText.includes('Templates'), 'Workspace renders 3 unified tabs');
+
+      // 1. Trigger Safety Check on a Private field (must render inline without role="dialog")
       const privateToggle = container.querySelector('button[aria-label="Toggle Private Residence"]') as HTMLButtonElement | null;
       assert.ok(privateToggle, 'Private custom field switch exists');
       await React.act(async () => {
@@ -880,8 +885,9 @@ async function runSuite() {
       });
       assert.ok(
         (container.textContent || '').includes('Private Residence is marked Private'),
-        'Clicking private field opens SH3 Safety Check warning dialog'
+        'Clicking private field renders Safety Check warning inline'
       );
+      assert.strictEqual(container.querySelector('[role="dialog"]'), null, 'Safety check renders inline without a dialog popup');
 
       const confirmPrivateBtn = Array.from(container.querySelectorAll('button')).find((b) =>
         (b.textContent || '').includes('Include in this share link')

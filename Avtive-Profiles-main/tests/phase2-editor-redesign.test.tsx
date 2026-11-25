@@ -160,6 +160,8 @@ import { diffProfile, isProfileDirty } from '../src/lib/profileDiff';
 import { sanitizeProfileForPublic, mapDocToProfileData, getProfileByIdOrSlug } from '../src/lib/db/profiles';
 import { PUT as updateProfilePUT } from '../src/app/api/profile/update/route';
 import { POST as uploadPOST } from '../src/app/api/upload/route';
+import { normalizeMimeType, uploadToCloudinary } from '../src/lib/storage/cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import { getThemeConfig } from '../src/components/ui/themeStyles';
 
 const SAMPLE_PROFILE: ProfileData = {
@@ -328,6 +330,75 @@ async function runTests() {
     });
     const res = await uploadPOST(req);
     assert.strictEqual(res.status, 400, 'Spoofed non-%PDF bytes must be rejected');
+  });
+
+  // ── 4b. Parameterized WebM Audio (audio/webm;codecs=opus) Voice Intro Upload ─
+  await test('POST /api/upload & uploadToCloudinary support audio/webm;codecs=opus via binary stream', async () => {
+    activeUser = OWNER_USER;
+    assert.strictEqual(normalizeMimeType('audio/webm;codecs=opus'), 'audio/webm');
+    assert.strictEqual(normalizeMimeType('video/webm;codecs=vp8,opus'), 'video/webm');
+
+    const prevCloud = process.env.CLOUDINARY_CLOUD_NAME;
+    const prevKey = process.env.CLOUDINARY_API_KEY;
+    const prevSecret = process.env.CLOUDINARY_API_SECRET;
+    process.env.CLOUDINARY_CLOUD_NAME = 'demo-cloud';
+    process.env.CLOUDINARY_API_KEY = '123456';
+    process.env.CLOUDINARY_API_SECRET = 'secret-key';
+
+    let capturedOptions: any = null;
+    let streamedBytes: Buffer[] = [];
+    const origUploadStream = cloudinary.uploader.upload_stream;
+
+    (cloudinary.uploader as any).upload_stream = (opts: any, cb: any) => {
+      capturedOptions = opts;
+      streamedBytes = [];
+      return {
+        end: (buf: Buffer) => {
+          streamedBytes.push(Buffer.from(buf));
+          cb(null, {
+            secure_url: 'https://res.cloudinary.com/demo-cloud/video/upload/v1/voice_intro.webm',
+            public_id: `${opts.folder}/${opts.public_id}`,
+            bytes: buf.length,
+            format: 'webm',
+          });
+        },
+      };
+    };
+
+    try {
+      const webmHeader = Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x86, 0x81, 0x01]);
+      const directRes = await uploadToCloudinary(webmHeader, 'voice_test.webm', 'audio/webm;codecs=opus', 'media');
+      assert.strictEqual(directRes.success, true);
+      assert.strictEqual(directRes.mimeType, 'audio/webm');
+      assert.strictEqual(capturedOptions?.resource_type, 'video');
+      assert.strictEqual(Buffer.concat(streamedBytes).equals(webmHeader), true);
+
+      const formData = new FormData();
+      const voiceFile = new File([webmHeader], 'voice_intro.webm', {
+        type: 'audio/webm;codecs=opus',
+      });
+      formData.append('file', voiceFile);
+      formData.append('field', 'introductionMedia');
+
+      const req = new NextRequest('http://localhost:3000/api/upload', {
+        method: 'POST',
+        body: formData as any,
+      });
+      const res = await uploadPOST(req);
+      assert.strictEqual(res.status, 200);
+      const body = await res.json();
+      assert.strictEqual(body.success, true);
+      assert.strictEqual(body.mimeType, 'audio/webm');
+      assert.ok(body.url.startsWith('https://'));
+    } finally {
+      (cloudinary.uploader as any).upload_stream = origUploadStream;
+      if (prevCloud === undefined) delete process.env.CLOUDINARY_CLOUD_NAME;
+      else process.env.CLOUDINARY_CLOUD_NAME = prevCloud;
+      if (prevKey === undefined) delete process.env.CLOUDINARY_API_KEY;
+      else process.env.CLOUDINARY_API_KEY = prevKey;
+      if (prevSecret === undefined) delete process.env.CLOUDINARY_API_SECRET;
+      else process.env.CLOUDINARY_API_SECRET = prevSecret;
+    }
   });
 
   // ── 5. React 19 + JSDOM P3 Editor Sheet & Private Visitor Card UI ──────

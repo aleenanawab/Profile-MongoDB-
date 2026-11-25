@@ -68,6 +68,10 @@ function hasValidMediaSignature(buffer: Buffer, mimeType: string): boolean {
     if (buffer.length >= 2 && buffer[0] === 0xff && (buffer[1] & 0xe0) === 0xe0) return true;
     return true;
   }
+  if (mimeType === 'audio/aac') {
+    if (buffer.length >= 2 && buffer[0] === 0xff && (buffer[1] & 0xf0) === 0xf0) return true;
+    return true;
+  }
   if (mimeType.includes('wav')) {
     return buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WAVE';
   }
@@ -156,6 +160,10 @@ export async function POST(request: NextRequest) {
         requestedBucket = 'avatars';
       } else if (jBucket === 'media' || jBucket === 'video' || jBucket === 'audio' || jBucket === 'intro') {
         requestedBucket = 'media';
+      } else if (jBucket === 'backgrounds' || jBucket === 'background') {
+        requestedBucket = 'backgrounds';
+      } else if (jBucket === 'documents' || jBucket === 'document' || jBucket === 'resume' || jBucket === 'cv') {
+        requestedBucket = 'documents';
       }
 
       profileId = jsonBody.profileId;
@@ -175,9 +183,9 @@ export async function POST(request: NextRequest) {
       }
 
       if (rawData.startsWith('data:')) {
-        const matches = rawData.match(/^data:([a-zA-Z0-9/+.-]+);base64,(.+)$/);
+        const matches = rawData.match(/^data:([^;,]+)(?:;[^,]*)?;base64,(.+)$/);
         if (matches && matches[2]) {
-          mimeType = matches[1] || 'image/jpeg';
+          mimeType = (matches[1] || 'image/jpeg').split(';')[0].trim().toLowerCase() || 'image/jpeg';
           buffer = Buffer.from(matches[2], 'base64');
         } else {
           return NextResponse.json(
@@ -244,10 +252,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      mimeType = file.type || 'image/jpeg';
+      mimeType = (file.type || 'image/jpeg').split(';')[0].trim().toLowerCase() || 'image/jpeg';
       originalName = file.name;
 
-      const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
+      const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.startsWith(prefix));
       const isVideo = ALLOWED_VIDEO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
       const isDoc = ALLOWED_DOCUMENT_MIMES.some(prefix => mimeType.toLowerCase() === prefix);
       const maxAllowedSize = isVideo ? MAX_VIDEO_SIZE : isDoc ? MAX_DOCUMENT_SIZE : isAudio ? MAX_AUDIO_SIZE : MAX_IMAGE_SIZE;
@@ -271,7 +279,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    mimeType = mimeType.toLowerCase() === 'image/jpg' ? 'image/jpeg' : mimeType.toLowerCase();
+    const normalizedMime = mimeType.split(';')[0].trim().toLowerCase();
+    mimeType = normalizedMime === 'image/jpg' ? 'image/jpeg' : normalizedMime;
 
     const isImage = ALLOWED_IMAGE_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));
     const isAudio = ALLOWED_AUDIO_MIMES.some(prefix => mimeType.toLowerCase().startsWith(prefix));

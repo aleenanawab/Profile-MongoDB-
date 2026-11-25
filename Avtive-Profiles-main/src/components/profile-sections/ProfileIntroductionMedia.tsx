@@ -181,14 +181,22 @@ export function ProfileIntroductionMediaSection({
       audioChunksRef.current = [];
 
       // Determine supported audio MIME
-      let mimeType = 'audio/webm';
-      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-        mimeType = 'audio/ogg';
-      }
+      const preferredMimes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+        'audio/mp4'
+      ];
+      const supportedMime =
+        typeof MediaRecorder.isTypeSupported === 'function'
+          ? preferredMimes.find((m) => MediaRecorder.isTypeSupported(m))
+          : undefined;
 
-      const recorder = new MediaRecorder(stream, { mimeType });
+      const recorder = supportedMime
+        ? new MediaRecorder(stream, { mimeType: supportedMime })
+        : new MediaRecorder(stream);
+      const effectiveMime = recorder.mimeType || supportedMime || 'audio/webm';
       recorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) {
           audioChunksRef.current.push(e.data);
@@ -196,7 +204,8 @@ export function ProfileIntroductionMediaSection({
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        const cleanType = effectiveMime.split(';')[0].trim() || 'audio/webm';
+        const blob = new Blob(audioChunksRef.current, { type: cleanType });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
@@ -267,13 +276,20 @@ export function ProfileIntroductionMediaSection({
     setErrorMessage(null);
 
     try {
-      // 1. Upload audio blob to Cloudinary via /api/upload
-      const audioFile = new File([audioBlob], `voice_intro_${Date.now()}.webm`, {
-        type: audioBlob.type || 'audio/webm'
+      // 1. Upload audio blob to Cloudinary via /api/upload (strip codec parameters like ;codecs=opus)
+      const baseAudioMime = (audioBlob.type || 'audio/webm').split(';')[0].trim().toLowerCase() || 'audio/webm';
+      const audioExt = baseAudioMime.includes('ogg')
+        ? 'ogg'
+        : baseAudioMime.includes('mp4') || baseAudioMime.includes('m4a')
+        ? 'm4a'
+        : 'webm';
+      const audioFile = new File([audioBlob], `voice_intro_${Date.now()}.${audioExt}`, {
+        type: baseAudioMime
       });
 
       const formData = new FormData();
       formData.append('file', audioFile);
+      formData.append('bucket', 'media');
       formData.append('target', 'profiles');
       formData.append('field', 'introductionMedia');
 
@@ -469,10 +485,10 @@ export function ProfileIntroductionMediaSection({
       {/* ─────────────────────────────────────────────────────────────────────── */}
       {media && (
         <div className={`relative rounded-2xl border transition-all overflow-hidden ${!isVisible
-            ? 'border-dashed border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
-            : theme
-              ? `${theme.subCardBg} ${theme.subCardBorder}`
-              : 'border-slate-200/90 dark:border-white/10 bg-slate-50/90 dark:bg-white/[0.04]'
+          ? 'border-dashed border-amber-300 dark:border-amber-700/60 bg-amber-50/50 dark:bg-amber-950/20'
+          : theme
+            ? `${theme.subCardBg} ${theme.subCardBorder}`
+            : 'border-slate-200/90 dark:border-white/10 bg-slate-50/90 dark:bg-white/[0.04]'
           }`}>
           {/* Header Strip with Type Indicator & Edit Controls */}
           <div className={`px-3.5 py-2 flex items-center justify-between border-b ${theme?.divider || 'border-slate-200/60 dark:border-white/5'} text-xs`}>
@@ -553,8 +569,8 @@ export function ProfileIntroductionMediaSection({
                     <span
                       key={idx}
                       className={`flex-1 rounded-full transition-all duration-200 ${isPlayingAudio
-                          ? 'bg-zinc-900 dark:bg-white animate-pulse'
-                          : 'bg-zinc-300 dark:bg-zinc-700'
+                        ? 'bg-zinc-900 dark:bg-white animate-pulse'
+                        : 'bg-zinc-300 dark:bg-zinc-700'
                         }`}
                       style={{
                         height: isPlayingAudio ? `${Math.max(15, (h * (idx % 2 === 0 ? 1 : 0.7)))}%` : `${h * 0.4}%`,
@@ -700,8 +716,8 @@ export function ProfileIntroductionMediaSection({
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'voice'
-                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                     }`}
                 >
                   <Mic className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
@@ -715,8 +731,8 @@ export function ProfileIntroductionMediaSection({
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'video'
-                      ? 'bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950'
                     }`}
                 >
                   <Video className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
@@ -730,8 +746,8 @@ export function ProfileIntroductionMediaSection({
                     setErrorMessage(null);
                   }}
                   className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${activeTab === 'external'
-                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
                     }`}
                 >
                   <Link2 className="w-3.5 h-3.5 text-rose-500" />

@@ -97,6 +97,7 @@ function PublicProfileClientInner({
 
   const isEditing = screenMode === 'edit' && effectiveIsOwner;
   const isSharing = screenMode === 'share';
+  const [previewViewMode, setPreviewViewMode] = useState<'desktop' | 'mobile'>('desktop');
   // Two independent sliders for Preview Sections Navigation:
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(false);
@@ -957,9 +958,8 @@ function PublicProfileClientInner({
       data-theme={activeTheme}
       className={
         isPreviewMode
-          ? `min-h-[100dvh] w-full flex flex-col relative overflow-x-clip ${
-              hasCustomBackground ? 'bg-transparent' : activeThemeConfig.pageBg
-            } ${activeThemeConfig.textPrimary} transition-colors duration-300 font-sans`
+          ? `min-h-[100dvh] w-full flex flex-col relative overflow-x-clip ${hasCustomBackground ? 'bg-transparent' : activeThemeConfig.pageBg
+          } ${activeThemeConfig.textPrimary} transition-colors duration-300 font-sans`
           : `h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${activeThemeConfig.pageBg} ${activeThemeConfig.textPrimary} transition-colors duration-300 font-sans relative`
       }
     >
@@ -1004,6 +1004,8 @@ function PublicProfileClientInner({
             onOpenShare={handleOpenShareMode}
             isDark={isDark}
             onToggleTheme={handleToggleTheme}
+            viewMode={previewViewMode}
+            onToggleViewMode={effectiveIsOwner ? setPreviewViewMode : undefined}
             session={currentUser}
             onLogout={handleLogout}
             theme={activeThemeConfig}
@@ -1151,16 +1153,25 @@ function PublicProfileClientInner({
                 if (mobileOpen) handleCloseMobile();
                 if (isSidebarOpen) handleCloseSidebar();
               }}
-              className={`w-full flex-1 transition-all duration-300 ${
-                hasCustomBackground ? 'px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6' : 'px-0 sm:px-6 lg:px-8 py-0 sm:py-6'
+              className={`w-full flex-1 touch-pan-y transition-all duration-300 ${
+                previewViewMode === 'mobile'
+                  ? 'px-3 sm:px-6 py-4 sm:py-8'
+                  : hasCustomBackground
+                    ? 'px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6'
+                    : 'px-0 sm:px-6 lg:px-8 py-0 sm:py-6'
               }`}
             >
               <div
                 data-testid="profile-card-shell"
-                className={`w-full max-w-3xl mx-auto ${
-                  hasCustomBackground
-                    ? 'rounded-2xl sm:rounded-3xl border shadow-xl'
-                    : 'rounded-none sm:rounded-3xl border-0 sm:border shadow-none sm:shadow-xl'
+                data-view-mode={previewViewMode}
+                className={`@container w-full mx-auto transition-all duration-300 ${
+                  previewViewMode === 'mobile'
+                    ? 'max-w-[390px] rounded-2xl border shadow-xl'
+                    : `max-w-3xl ${
+                        hasCustomBackground
+                          ? 'rounded-2xl sm:rounded-3xl border shadow-xl'
+                          : 'rounded-none sm:rounded-3xl border-0 sm:border shadow-none sm:shadow-xl'
+                      }`
                 } ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} overflow-hidden relative`}
               >
                 {effectiveIsOwner && cardProfile.profileVisibility === 'private' && (
@@ -1196,7 +1207,7 @@ function PublicProfileClientInner({
                     }
                   }}
                   isDark={isDark}
-                  viewMode="standard"
+                  viewMode={previewViewMode === 'mobile' ? 'mobile' : 'standard'}
                   activeSection={activeTabSection}
                   onSelectSection={(sec) => handleSectionSelect(sec, false)}
                   onToggleSections={handleTriggerClick}

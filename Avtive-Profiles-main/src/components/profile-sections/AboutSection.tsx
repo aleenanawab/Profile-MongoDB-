@@ -18,10 +18,10 @@ interface AboutSectionProps {
   theme?: ThemeConfig;
 }
 
-export function AboutSection({ 
-  profile, 
-  canEdit = false, 
-  isEditing = false, 
+export function AboutSection({
+  profile,
+  canEdit = false,
+  isEditing = false,
   onUpdateField,
   onSavePartial,
   onSelectSection,
@@ -98,9 +98,9 @@ export function AboutSection({
   };
 
   return (
-    <section 
+    <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('about', 'about')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
         canEdit && !isEditing ? 'cursor-pointer group/about hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
       }`}
       title={canEdit && !isEditing ? 'Click to edit Story & Bio' : undefined}

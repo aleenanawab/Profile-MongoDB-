@@ -868,6 +868,41 @@ async function runTests() {
         'Dark executive profile card preserves its original dark appearance'
       );
 
+      // Owner Header Desktop / Mobile View Switcher constrains card to ~390px over wallpaper without adding a phone chassis
+      const desktopToggle = container.querySelector('[data-testid="desktop-view-toggle"]') as HTMLButtonElement | null;
+      const mobileToggle = container.querySelector('[data-testid="mobile-view-toggle"]') as HTMLButtonElement | null;
+      assert.ok(desktopToggle && mobileToggle, 'Owner preview renders Desktop and Mobile view toggles in header');
+      assert.strictEqual(desktopToggle?.getAttribute('aria-pressed'), 'true', 'Desktop view active initially');
+      assert.strictEqual(mobileToggle?.getAttribute('aria-pressed'), 'false');
+      assert.strictEqual(
+        container.querySelector('[data-testid="profile-card-shell"]')?.getAttribute('data-view-mode'),
+        'desktop'
+      );
+
+      await React.act(async () => {
+        mobileToggle!.click();
+      });
+      const mobileCardShell = container.querySelector('[data-testid="profile-card-shell"]') as HTMLElement | null;
+      assert.strictEqual(mobileToggle?.getAttribute('aria-pressed'), 'true', 'Mobile view toggle becomes active');
+      assert.strictEqual(desktopToggle?.getAttribute('aria-pressed'), 'false');
+      assert.strictEqual(mobileCardShell?.getAttribute('data-view-mode'), 'mobile');
+      assert.ok(mobileCardShell?.className.includes('max-w-[390px]'), 'Mobile preview constrains card to ~390px centered layout');
+      assert.ok(container.querySelector('[data-background-mode="image"]'), 'Wallpaper stays visible around mobile preview');
+      assert.strictEqual(
+        mobileCardShell?.querySelector('[data-view-mode="mobile"]')?.getAttribute('data-view-mode'),
+        'mobile',
+        'Single AvtiveDigitalCard adapts directly to mobile preview dimensions'
+      );
+
+      await React.act(async () => {
+        desktopToggle!.click();
+      });
+      assert.strictEqual(
+        container.querySelector('[data-testid="profile-card-shell"]')?.getAttribute('data-view-mode'),
+        'desktop',
+        'Switching back restores Desktop View immediately'
+      );
+
       // Company profile layout follows the same Hero -> Actions -> Section Nav -> Sections hierarchy
       await React.act(async () => {
         root.render(
@@ -1032,6 +1067,11 @@ async function runTests() {
           )
         );
       });
+      assert.strictEqual(
+        container.querySelectorAll('[data-testid="mobile-view-toggle"]').length,
+        0,
+        'Non-owner visitors do not see the owner Desktop/Mobile switcher'
+      );
       const visitorShareBtn = container.querySelector('button[aria-label="Share Profile"]') as HTMLButtonElement | null;
       assert.ok(visitorShareBtn, 'Visitor Share button renders in preview');
       await React.act(async () => {

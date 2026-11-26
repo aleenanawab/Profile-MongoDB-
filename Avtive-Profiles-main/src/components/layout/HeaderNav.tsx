@@ -66,6 +66,8 @@ export function HeaderNav({
   isSaving = false,
   isDark = false,
   onToggleTheme,
+  viewMode = 'desktop',
+  onToggleViewMode,
   onOpenMyCard,
   session,
   onLogout,
@@ -82,7 +84,7 @@ export function HeaderNav({
   );
 
   return (
-    <header className={`sticky top-0 z-40 w-full pt-[max(0rem,env(safe-area-inset-top))] backdrop-blur-md ${theme.headerBg} border-b ${theme.divider} transition-colors shadow-2xs`}>
+    <header className={`sticky top-0 z-40 w-full overflow-x-clip pt-[max(0rem,env(safe-area-inset-top))] backdrop-blur-md ${theme.headerBg} border-b ${theme.divider} transition-colors shadow-2xs`}>
       <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-2 flex items-center justify-between gap-1.5 sm:gap-2.5 min-w-0">
         {/* Left: Avtive Brand */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -123,8 +125,8 @@ export function HeaderNav({
               type="button"
               onClick={onOpenMyCard}
               className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${profileType === 'individual'
-                  ? `${theme.btnPrimary} shadow-xs`
-                  : `${theme.textMuted} hover:${theme.textPrimary}`
+                ? `${theme.btnPrimary} shadow-xs`
+                : `${theme.textMuted} hover:${theme.textPrimary}`
                 }`}
             >
               <CreditCard className="w-3.5 h-3.5 shrink-0" />
@@ -136,8 +138,8 @@ export function HeaderNav({
               type="button"
               onClick={() => onSelectProfileType('team', 'team')}
               className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[36px] rounded-xl font-bold transition-all cursor-pointer ${profileType === 'team'
-                  ? `${theme.btnPrimary} shadow-xs`
-                  : `${theme.textMuted} hover:${theme.textPrimary}`
+                ? `${theme.btnPrimary} shadow-xs`
+                : `${theme.textMuted} hover:${theme.textPrimary}`
                 }`}
             >
               <Users className="w-3.5 h-3.5 shrink-0" />
@@ -146,8 +148,48 @@ export function HeaderNav({
           </div>
         )}
 
-        {/* Right Controls: Edit/Share (Preview), Theme Toggle, and Logout */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
+        {/* Right Controls: Viewport Switcher, Edit/Share (Preview), Theme Toggle, and Logout */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0 min-w-0">
+          {/* Desktop / Mobile View Switcher (Available in Desktop Header for Owner Preview) */}
+          {canEdit && !isEditing && !isSharing && onToggleViewMode && (
+            <div
+              role="group"
+              aria-label="Profile preview viewport"
+              className={`hidden md:inline-flex items-center p-0.5 rounded-xl border ${theme.cardBorder} ${theme.cardBg} shadow-2xs shrink-0`}
+            >
+              <button
+                type="button"
+                onClick={() => onToggleViewMode('desktop')}
+                aria-label="Desktop View"
+                aria-pressed={viewMode === 'desktop'}
+                title="Desktop View"
+                data-testid="desktop-view-toggle"
+                className={`h-9 min-h-[36px] px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${viewMode === 'desktop'
+                    ? `${theme.btnPrimary} shadow-xs`
+                    : `${theme.textSecondary} hover:opacity-90`
+                  }`}
+              >
+                <Tv className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden lg:inline">Desktop</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleViewMode('mobile')}
+                aria-label="Mobile View"
+                aria-pressed={viewMode === 'mobile'}
+                title="Mobile View"
+                data-testid="mobile-view-toggle"
+                className={`h-9 min-h-[36px] px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${viewMode === 'mobile'
+                    ? `${theme.btnPrimary} shadow-xs`
+                    : `${theme.textSecondary} hover:opacity-90`
+                  }`}
+              >
+                <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden lg:inline">Mobile</span>
+              </button>
+            </div>
+          )}
+
           {/* Edit Profile Button (Visible only to authenticated profile owner in Preview mode) */}
           {canEdit && !isEditing && !isSharing && onOpenEdit && (
             <button
@@ -242,5 +284,7 @@ export function HeaderNav({
         </div>
       </div>
     </header>
+  );
+}
   );
 }

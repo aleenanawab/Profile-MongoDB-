@@ -124,7 +124,7 @@ export function ExperienceSection({
   return (
     <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('experience')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
         }`}
     >
       <div className="flex items-center justify-between">

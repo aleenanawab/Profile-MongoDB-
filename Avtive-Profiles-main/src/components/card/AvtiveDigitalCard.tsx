@@ -85,7 +85,7 @@ interface AvtiveDigitalCardProps {
   onSendMessage?: (data: { name: string; email: string; message: string }) => void;
   onOpenMyCard?: () => void;
   isDark: boolean;
-  viewMode?: 'standard' | 'web';
+  viewMode?: 'standard' | 'web' | 'mobile';
   activeSection?: string;
   onSelectSection?: (sectionKey: string, fieldKey?: string) => void;
   onDraftChange?: (draft: ProfileData) => void;
@@ -149,6 +149,7 @@ export function AvtiveDigitalCard({
   const activeProfile = profile;
   const activeThemeKey = activeProfile.theme || 'editorial';
   const theme = getThemeConfig(activeThemeKey);
+  const isMobilePreview = viewMode === 'mobile';
 
   const isCompany = normalizeProfileType(activeProfile.type) === 'team';
   const companyName = activeProfile.company || activeProfile.companyInfo?.name || 'Avtive';
@@ -241,7 +242,7 @@ export function AvtiveDigitalCard({
   }
 
   return (
-    <div className="relative w-full text-left">
+    <div className="relative w-full text-left @container" data-view-mode={isMobilePreview ? 'mobile' : 'desktop'}>
       {/* Main Profile Container Card with dynamic theme styling */}
       <div
         data-theme={activeThemeKey}
@@ -250,7 +251,7 @@ export function AvtiveDigitalCard({
 
         {/* Error banner if save fails */}
         {isEditing && errorMessage && (
-          <div className="px-4 sm:px-6 pt-3 pb-1">
+          <div className="px-4 @md:px-6 pt-3 pb-1">
             <div className="p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
@@ -270,6 +271,7 @@ export function AvtiveDigitalCard({
               canEdit={canEdit}
               isEditing={isEditing}
               isConnected={isConnected}
+              isMobilePreview={isMobilePreview}
               onUpdateField={handleFieldUpdate}
               onSavePartial={handleSavePartial}
               onOpenEdit={onOpenEdit}
@@ -706,7 +708,7 @@ export function AvtiveDigitalCard({
               case 'virtual-card':
                 if (!isSectionVisible('virtualCard') && !isSectionVisible('virtual-card')) return null;
                 return (
-                  <div key="virtual-card" id="virtual-card-section" className={`px-4 sm:px-6 md:px-8 py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
+                  <div key="virtual-card" id="virtual-card-section" className={`${isMobilePreview ? 'px-4' : 'px-4 @md:px-6 @2xl:px-8'} py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
                         Virtual Card Preview
@@ -730,7 +732,7 @@ export function AvtiveDigitalCard({
               case 'cv':
                 if (!activeProfile.resumeUrl || !isSectionVisible('resume')) return null;
                 return (
-                  <div key="resume" id="section-resume" className={`px-4 sm:px-6 md:px-8 py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
+                  <div key="resume" id="section-resume" className={`${isMobilePreview ? 'px-4' : 'px-4 @md:px-6 @2xl:px-8'} py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className={`w-10 h-10 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} flex items-center justify-center shrink-0`}>
@@ -790,7 +792,7 @@ export function AvtiveDigitalCard({
                       <div
                         key={sectionKey}
                         onClick={() => canEdit && onSelectSection?.('customFields', customField.id)}
-                        className={`relative group/cf px-4 sm:px-6 md:px-8 py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors space-y-2.5 ${canEdit && onSelectSection ? 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60' : ''
+                        className={`relative group/cf ${isMobilePreview ? 'px-4' : 'px-4 @md:px-6 @2xl:px-8'} py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors space-y-2.5 ${canEdit && onSelectSection ? 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60' : ''
                           }`}
                       >
                         {canEdit && onSelectSection && (
@@ -865,21 +867,21 @@ export function AvtiveDigitalCard({
                 if (dynamicSection) {
                   if (!isSectionVisible(sectionKey) || dynamicSection.visible === false) return null;
                   return (
-                    <div key={dynamicSection.id || dynamicSection.key} className={`px-4 sm:px-6 md:px-8 py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
+                    <div key={dynamicSection.id || dynamicSection.key} className={`${isMobilePreview ? 'px-4' : 'px-4 @md:px-6 @2xl:px-8'} py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
                       <div className="flex items-center justify-between mb-4">
                         <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
                           {dynamicSection.title}
                         </h2>
                       </div>
                       {dynamicSection.data && (
-                        <p className={`text-sm ${theme.textSecondary} mb-3`}>{dynamicSection.data}</p>
+                        <p className={`text-sm ${theme.textSecondary} mb-3 break-words`}>{dynamicSection.data}</p>
                       )}
                       {dynamicSection.customFields && dynamicSection.customFields.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className={`grid grid-cols-1 ${isMobilePreview ? '' : '@md:grid-cols-2'} gap-3`}>
                           {dynamicSection.customFields.map((field) => (
-                            <div key={field.id} className={`p-3 rounded-lg border ${theme.divider} ${theme.subCardBg}`}>
+                            <div key={field.id} className={`p-3 rounded-lg border min-w-0 ${theme.divider} ${theme.subCardBg}`}>
                               <div className={`text-xs font-medium ${theme.textSecondary}`}>{field.label}</div>
-                              <div className={`text-sm font-semibold ${theme.textPrimary}`}>{field.value}</div>
+                              <div className={`text-sm font-semibold break-words ${theme.textPrimary}`}>{field.value}</div>
                             </div>
                           ))}
                         </div>

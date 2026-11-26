@@ -102,7 +102,7 @@ export function CompanyCard({
     return (
       <section 
         onClick={() => canEdit && onSelectSection?.('company')}
-        className={`px-4 sm:px-6 md:px-8 py-3.5 ${theme.cardBg} border-b ${theme.divider} transition-colors ${
+        className={`px-4 @md:px-6 @2xl:px-8 py-3.5 ${theme.cardBg} border-b ${theme.divider} transition-colors ${
           canEdit && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
         }`}
       >
@@ -128,7 +128,7 @@ export function CompanyCard({
   return (
     <section 
       onClick={() => canEdit && !isEditing && onSelectSection?.('company')}
-      className={`px-4 sm:px-6 md:px-8 py-3.5 ${theme.cardBg} border-b ${theme.divider} transition-colors ${
+      className={`px-4 @md:px-6 @2xl:px-8 py-3.5 ${theme.cardBg} border-b ${theme.divider} transition-colors ${
         canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
       }`}
     >
@@ -240,7 +240,7 @@ export function CompanyCard({
           </div>
 
           <div className={`flex items-center gap-1 text-xs font-bold ${theme.textPrimary} shrink-0 ml-3`}>
-            <span className="hidden sm:inline">View Company Profile</span>
+            <span className="hidden @md:inline">View Company Profile</span>
             <ArrowRight className={`w-3.5 h-3.5 group-hover:translate-x-1 transition-transform ${theme.accentText}`} />
           </div>
         </div>

@@ -120,7 +120,7 @@ export function LanguagesSection({
   return (
     <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('languages')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
         }`}
     >
       <div className="flex items-center justify-between">
@@ -146,7 +146,7 @@ export function LanguagesSection({
       </div>
 
       {hasLanguages ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
           {languagesDraft.map((lang, idx) => {
             const otherSelected = new Set(
               languagesDraft

@@ -115,7 +115,7 @@ export function PortfolioSection({
   };
 
   return (
-    <section className={`relative group/port px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
+    <section className={`relative group/port px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
       canEdit && !isEditing && onSelectSection ? 'hover:bg-accent/5 transition-all' : ''
     }`}>
       <div className="flex items-center justify-between">
@@ -269,7 +269,7 @@ export function PortfolioSection({
                 /* View Project Item */
                 <>
                   {(project.image || project.coverImage) && (
-                    <div className={`relative h-52 sm:h-60 w-full overflow-hidden ${theme.coverFallback}`}>
+                    <div className={`relative h-44 @md:h-52 @lg:h-60 w-full overflow-hidden ${theme.coverFallback}`}>
                       <img
                         src={project.image || project.coverImage}
                         alt={project.title}

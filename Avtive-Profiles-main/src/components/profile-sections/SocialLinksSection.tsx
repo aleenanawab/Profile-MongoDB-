@@ -32,8 +32,8 @@ const getInitialSocials = (profile: ProfileData): SocialLink[] => {
   const raw = (Array.isArray(profile.socials) && profile.socials.length > 0)
     ? profile.socials
     : (Array.isArray(profile.socialLinks) && profile.socialLinks.length > 0
-    ? (profile.socialLinks as unknown as SocialLink[])
-    : []);
+      ? (profile.socialLinks as unknown as SocialLink[])
+      : []);
   return raw.map((s: any) => ({
     platform: s.platform || 'website',
     url: s.url || '',
@@ -42,13 +42,13 @@ const getInitialSocials = (profile: ProfileData): SocialLink[] => {
   }));
 };
 
-export function SocialLinksSection({ 
-  profile, 
-  canEdit = false, 
+export function SocialLinksSection({
+  profile,
+  canEdit = false,
   isEditing = false,
   onUpdateField,
   onSavePartial,
-  onSelectSection 
+  onSelectSection
 }: SocialLinksSectionProps) {
   const theme = getThemeConfig(profile.theme || 'editorial');
 
@@ -150,19 +150,19 @@ export function SocialLinksSection({
   const renderedLinks = isEditing
     ? socialsDraft
     : socialsDraft.filter((item) => {
-        if (item.visible === false) return false;
-        const u = (item.url || '').trim();
-        return u !== '' && u !== 'https://' && u !== 'http://';
-      });
+      if (item.visible === false) return false;
+      const u = (item.url || '').trim();
+      return u !== '' && u !== 'https://' && u !== 'http://';
+    });
 
   if (renderedLinks.length === 0 && !canEdit && !isEditing) {
     return null;
   }
 
   return (
-    <section 
+    <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('socialLinks')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
         canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
       }`}
     >
@@ -189,7 +189,7 @@ export function SocialLinksSection({
       </div>
 
       {renderedLinks.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
           {renderedLinks.map((item, idx) => {
             if (isEditing) {
               return (
@@ -259,7 +259,7 @@ export function SocialLinksSection({
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center justify-between p-3.5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} transition-colors group shadow-2xs`}
+                className={`min-w-0 overflow-hidden flex items-center justify-between p-3.5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} transition-colors group shadow-2xs`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`w-8 h-8 rounded-xl ${theme.badgeBg} flex items-center justify-center shrink-0 border ${theme.cardBorder} shadow-2xs`}>

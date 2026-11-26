@@ -95,7 +95,7 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
       id={sectionKey ? `section-${sectionKey}` : undefined}
       data-section={sectionKey}
       onClick={() => canEdit && !isEditing && sectionKey && onSelectSection?.(sectionKey)}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
         canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
       }`}
     >
@@ -111,7 +111,7 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
             </span>
           )}
           {hasItems && (
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-neutral-200/60 dark:bg-neutral-800/60 ${theme.textSecondary}`}>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${theme.badgeBg} ${theme.badgeText}`}>
               {items.length}
             </span>
           )}
@@ -130,7 +130,7 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
             </button>
           ) : (
             canEdit && (
-              <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 opacity-80 hover:opacity-100">
+              <span className={`text-[10px] font-mono ${theme.textMuted} opacity-80 hover:opacity-100`}>
                 Click to edit ↗
               </span>
             )
@@ -181,11 +181,10 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
                         type="button"
                         onClick={() => handleToggleVisible(index)}
                         title={item.visible === false ? 'Hidden from public (click to show)' : 'Visible to public (click to hide)'}
-                        className={`p-1 rounded-lg transition-colors cursor-pointer ${
-                          item.visible === false
-                            ? 'text-amber-500 bg-amber-500/10'
-                            : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                        }`}
+                        className={`p-1 rounded-lg transition-colors cursor-pointer ${item.visible === false
+                          ? 'text-amber-500 bg-amber-500/10'
+                          : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                          }`}
                       >
                         {item.visible === false ? (
                           <EyeOff className="w-3.5 h-3.5" />

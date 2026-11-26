@@ -180,7 +180,7 @@ export function SkillsSection({
       id="section-skills"
       data-section="skills"
       onClick={() => canEdit && !isEditing && onSelectSection?.('skills', 'skills')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
         canEdit && !isEditing ? 'cursor-pointer group/skills hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
       }`}
       title={canEdit && !isEditing ? 'Click to edit Skills in Studio' : undefined}
@@ -228,9 +228,8 @@ export function SkillsSection({
           {skillsDraft.map((skill, idx) => (
             <div
               key={skill.id || `skill-${idx}`}
-              className={`p-3 rounded-xl border ${
-                skill.pinned ? 'border-primary/40 bg-primary/5' : 'border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/40'
-              } flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs`}
+              className={`p-3 rounded-xl border ${skill.pinned ? 'border-primary/40 bg-primary/5' : 'border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/40'
+                } flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs`}
             >
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="font-mono text-[10px] text-neutral-400 font-semibold w-4 shrink-0">
@@ -274,11 +273,10 @@ export function SkillsSection({
                   type="button"
                   onClick={() => handleTogglePinSkill(idx)}
                   title={skill.pinned ? 'Unpin from top 3' : 'Pin to top 3'}
-                  className={`w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer ${
-                    skill.pinned
-                      ? 'text-amber-500 bg-amber-500/10'
-                      : 'text-neutral-400 hover:text-amber-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                  }`}
+                  className={`w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors cursor-pointer ${skill.pinned
+                    ? 'text-amber-500 bg-amber-500/10'
+                    : 'text-neutral-400 hover:text-amber-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                    }`}
                 >
                   <Pin className="w-3.5 h-3.5" />
                 </button>
@@ -319,16 +317,15 @@ export function SkillsSection({
           {sortedSkillsForView.map((skill, idx) => (
             <span
               key={skill.id || `view-skill-${idx}`}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold shadow-xs transition-all ${
-                skill.pinned
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200 ring-1 ring-amber-500/20'
-                  : 'bg-slate-100 dark:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80 text-slate-800 dark:text-zinc-200'
-              }`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold shadow-xs transition-all ${skill.pinned
+                ? 'bg-amber-500/15 border-amber-500/35 text-amber-500 dark:text-amber-300 ring-1 ring-amber-500/20'
+                : `${theme.badgeBg} ${theme.badgeText}`
+                }`}
             >
               {skill.pinned && <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />}
               <span>{skill.name}</span>
               {skill.level && (
-                <span className="text-[10px] font-mono text-neutral-400 font-normal">
+                <span className={`text-[10px] font-mono ${theme.textMuted} font-normal`}>
                   • {skill.level}
                 </span>
               )}
@@ -456,7 +453,7 @@ export function ServicesSection({
       id="section-services"
       data-section="services"
       onClick={() => canEdit && !isEditing && onSelectSection?.('services', 'services')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
         canEdit && !isEditing ? 'cursor-pointer group/services hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
       }`}
       title={canEdit && !isEditing ? 'Click to edit Services in Studio' : undefined}
@@ -491,7 +488,7 @@ export function ServicesSection({
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" onClick={(e) => isEditing && e.stopPropagation()}>
+      <div className="grid grid-cols-1 @md:grid-cols-2 gap-3" onClick={(e) => isEditing && e.stopPropagation()}>
         {servicesDraft.map((service) => (
           <div
             key={service.id}

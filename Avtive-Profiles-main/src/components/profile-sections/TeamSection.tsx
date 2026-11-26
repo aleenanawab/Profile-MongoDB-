@@ -114,7 +114,7 @@ export function TeamSection({
     <section 
       id="team"
       onClick={() => canEdit && !isEditing && onSelectSection?.('teamMembers')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-4 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-4 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
         canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
       }`}
     >
@@ -155,7 +155,7 @@ export function TeamSection({
       {hasMembers ? (
         <>
           {!isEditing && (
-            <div className="mb-2 -mx-2 sm:-mx-4">
+            <div className="mb-2 -mx-2 @md:-mx-4">
               <TeamLanyardRail
                 members={teamDraft}
                 theme={theme}
@@ -165,7 +165,7 @@ export function TeamSection({
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-3">
           {teamDraft.map((member) => {
             const isLinked = Boolean(member.profileId);
             const isPending = member.status === 'PENDING';
@@ -173,7 +173,7 @@ export function TeamSection({
             return (
               <div
                 key={member.id}
-                className={`p-3.5 sm:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} shadow-2xs`}
+                className={`min-w-0 p-3.5 @md:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} shadow-2xs`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {isEditing ? (
@@ -280,7 +280,7 @@ export function TeamSection({
 
                     {isLinked && (
                       <div className={`text-xs font-bold ${theme.textPrimary} shrink-0 ml-2 group-hover:translate-x-1 transition-transform flex items-center gap-0.5`}>
-                        <span className="hidden sm:inline text-[11px]">View Profile</span>
+                        <span className="hidden @md:inline text-[11px]">View Profile</span>
                         <ArrowRight className={`w-3.5 h-3.5 ${theme.accentText}`} />
                       </div>
                     )}

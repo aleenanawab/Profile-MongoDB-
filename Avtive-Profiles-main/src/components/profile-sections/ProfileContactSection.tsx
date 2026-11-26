@@ -181,7 +181,7 @@ export function ProfileContactSection({
   }
 
   return (
-    <section className={`relative group/contact px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-colors ${
+    <section className={`relative group/contact px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-colors ${
       canEdit && !isEditing && onSelectSection ? 'hover:bg-accent/5' : ''
     }`}>
       {/* Interactive edit badge */}
@@ -200,7 +200,7 @@ export function ProfileContactSection({
         </button>
       )}
 
-      <div 
+      <div
         className={`flex items-center justify-between ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer' : ''}`}
         onClick={() => canEdit && !isEditing && onSelectSection?.('contact', 'email')}
       >
@@ -387,11 +387,11 @@ export function ProfileContactSection({
           />
         </div>
       ) : hasContactInfo ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+        <div className="grid grid-cols-1 @md:grid-cols-2 gap-2 pt-1">
           {profile.email && (canEdit || isFieldShared(profile, 'email', canEdit)) && (
             <a
               href={`mailto:${profile.email}`}
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
+              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
             >
               <div className="w-7 h-7 rounded-lg bg-slate-500/10 flex items-center justify-center shrink-0">
                 <Mail className={`w-3.5 h-3.5 ${theme.accentText}`} />
@@ -410,7 +410,7 @@ export function ProfileContactSection({
           {profile.phone && (canEdit || isFieldShared(profile, 'phone', canEdit)) && (
             <a
               href={`tel:${profile.phone.replace(/[^0-9+]/g, '')}`}
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
+              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
             >
               <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
                 <Phone className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
@@ -431,7 +431,7 @@ export function ProfileContactSection({
               href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(profile.name)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
+              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
             >
               <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
@@ -448,7 +448,7 @@ export function ProfileContactSection({
           )}
 
           {(profile.location || profile.country) && (
-            <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
               <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
                 <MapPin className="w-3.5 h-3.5 text-amber-500" />
               </div>
@@ -475,7 +475,7 @@ export function ProfileContactSection({
           )}
 
           {profile.officeAddress && (
-            <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
               <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
                 <Building2 className="w-3.5 h-3.5 text-orange-500" />
               </div>
@@ -498,7 +498,7 @@ export function ProfileContactSection({
                 href={ws.url.startsWith('http') ? ws.url : `https://${ws.url}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
+                className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
               >
                 <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
                   <Globe className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
@@ -518,7 +518,7 @@ export function ProfileContactSection({
               href={profile.website}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
+              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
             >
               <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
                 <Globe className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
@@ -535,7 +535,7 @@ export function ProfileContactSection({
           ) : null}
 
           {profile.birthday && (canEdit || profile.sharingSettings?.birthday === true) && (
-            <div className={`flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
               <div className="w-7 h-7 rounded-lg bg-pink-500/10 flex items-center justify-center shrink-0">
                 <Calendar className="w-3.5 h-3.5 text-pink-500" />
               </div>

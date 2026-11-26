@@ -25,6 +25,7 @@ interface HeroSectionProps {
   navigationOrigin?: any;
   isEditing?: boolean;
   isConnected?: boolean;
+  isMobilePreview?: boolean;
   onUpdateField?: (field: keyof ProfileData, value: any) => void;
   onSavePartial?: (partialData: Partial<ProfileData>, clearFields?: string[]) => Promise<ProfileData>;
   onOpenEdit?: () => void;
@@ -51,6 +52,7 @@ export function HeroSection({
   userProfiles,
   canEdit = false,
   isEditing = false,
+  isMobilePreview = false,
   theme = getThemeConfig(profile.theme || 'editorial'),
   onUpdateField,
   onSavePartial,
@@ -446,7 +448,7 @@ export function HeroSection({
             onOpenEdit?.();
           }
         }}
-        className={`relative ${(sharing as any).coverImage === false && !isEditing && !canEdit ? `h-20 sm:h-24 ${theme.coverFallback}` : 'h-36 sm:h-48 md:h-60 lg:h-72 bg-slate-900'} w-full overflow-hidden ${canEdit || isEditing ? 'cursor-pointer group/cover hover:brightness-105 transition-all' : ''
+        className={`relative ${(sharing as any).coverImage === false && !isEditing && !canEdit ? `${isMobilePreview ? 'h-20' : 'h-20 @md:h-24'} ${theme.coverFallback}` : `${isMobilePreview ? 'h-36' : 'h-36 @md:h-48 @lg:h-60 @2xl:h-72'} bg-slate-900`} w-full overflow-hidden ${canEdit || isEditing ? 'cursor-pointer group/cover hover:brightness-105 transition-all' : ''
           }`}
         title={isEditing ? 'Click to change cover image' : canEdit ? 'Click to edit profile' : undefined}
       >
@@ -603,7 +605,7 @@ export function HeroSection({
 
         {/* Cover Header Controls: Multi-Role Persona Switcher & Edit Icon (Owner Only in Public/Preview View) */}
         {canEdit && !isEditing && (
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-5 flex items-center gap-2 z-20">
+          <div className={`absolute ${isMobilePreview ? 'top-3 right-3' : 'top-3 right-3 @md:top-4 @md:right-5'} flex items-center gap-2 z-20`}>
             <ProfileSwitcher
               currentProfileIdOrSlug={profile.slug || profile.id}
               initialProfiles={userProfiles}
@@ -625,7 +627,7 @@ export function HeroSection({
       </div>
 
       {/* 2. Identity Header */}
-      <div className={`px-4 sm:px-6 md:px-8 pb-6 ${allowPhotoDisplay ? '-mt-10 sm:-mt-14 md:-mt-18' : 'pt-5 sm:pt-6'} relative z-10 space-y-4`}>
+      <div className={`${isMobilePreview ? 'px-4' : 'px-4 @md:px-6 @2xl:px-8'} pb-6 ${allowPhotoDisplay ? (isMobilePreview ? '-mt-10' : '-mt-10 @md:-mt-14 @2xl:-mt-18') : (isMobilePreview ? 'pt-5' : 'pt-5 @md:pt-6')} relative z-10 space-y-4`}>
           {/* Profile Photo / Company Logo */}
           {allowPhotoDisplay && avatarUrl && (
             isCompany ? (
@@ -638,7 +640,7 @@ export function HeroSection({
                     onOpenEdit?.();
                   }
                 }}
-                className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
+                className={`relative ${isMobilePreview ? 'w-20 h-20 rounded-2xl p-1.5' : 'w-20 h-20 @md:w-28 @md:h-28 @2xl:w-36 @2xl:h-36 rounded-2xl @md:rounded-3xl p-1.5 @md:p-2.5'} overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
                   }`}
                 title={isEditing ? 'Click to change logo' : canEdit ? 'Click to edit profile' : undefined}
               >
@@ -680,7 +682,7 @@ export function HeroSection({
                     onOpenEdit?.();
                   }
                 }}
-                className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white dark:border-[#18181B] shadow-md bg-zinc-100 dark:bg-zinc-800 shrink-0 ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
+                className={`relative ${isMobilePreview ? 'w-20 h-20' : 'w-20 h-20 @md:w-28 @md:h-28 @2xl:w-36 @2xl:h-36'} rounded-full overflow-hidden border-4 border-white dark:border-[#18181B] shadow-md bg-zinc-100 dark:bg-zinc-800 shrink-0 ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
                   }`}
                 title={isEditing ? 'Click to change photo' : canEdit ? 'Click to edit profile' : undefined}
               >
@@ -986,8 +988,8 @@ export function HeroSection({
                     className={`space-y-0.5 ${canEdit ? 'cursor-pointer group/name hover:opacity-85 transition-opacity' : ''}`}
                     title={canEdit ? 'Click to edit name' : undefined}
                   >
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words`}>
+                    <div className="flex items-center gap-2 flex-wrap min-w-0">
+                      <h1 className={`${isMobilePreview ? 'text-2xl' : 'text-2xl @md:text-3xl @2xl:text-4xl'} font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words min-w-0 max-w-full`}>
                         <span>{profile.name}</span>
                       </h1>
                       {profile.pronouns && (canEdit || profile.sharingSettings?.pronouns === true) && (
@@ -1002,7 +1004,7 @@ export function HeroSection({
                       )}
                     </div>
                     {(profile.username || profile.slug) && (
-                      <p className={`text-xs font-mono ${theme.textMuted} font-medium`}>
+                      <p className={`text-xs font-mono ${theme.textMuted} font-medium break-all`}>
                         @{profile.username || profile.slug}
                       </p>
                     )}
@@ -1027,7 +1029,7 @@ export function HeroSection({
                   {profile.headline && (
                     <p
                       onClick={() => canEdit && onOpenEdit?.()}
-                      className={`text-sm sm:text-base font-semibold ${theme.textPrimary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      className={`${isMobilePreview ? 'text-sm' : 'text-sm @md:text-base'} font-semibold ${theme.textPrimary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                       title={canEdit ? 'Click to edit headline' : undefined}
                     >
                       {profile.headline}
@@ -1037,7 +1039,7 @@ export function HeroSection({
                   {(sharing as any).title !== false && (
                     <p
                       onClick={() => canEdit && onOpenEdit?.()}
-                      className={`text-sm sm:text-base font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      className={`${isMobilePreview ? 'text-sm' : 'text-sm @md:text-base'} font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                       title={canEdit ? 'Click to edit title' : undefined}
                     >
                       {[
@@ -1224,7 +1226,7 @@ export function HeroSection({
           )}
 
           {/* Action Buttons Below Avatar */}
-          <div className="flex items-center gap-2 pt-2 max-w-md w-full min-w-0 flex-wrap sm:flex-nowrap">
+          <div className={`flex items-center gap-2 pt-2 max-w-md w-full min-w-0 flex-wrap ${isMobilePreview ? '' : '@md:flex-nowrap'}`}>
             {canEdit ? (
               isEditing ? null : isCompany ? (
                 /* Company Owner / Editor Actions */

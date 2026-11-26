@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { 
-  Wifi, 
-  RotateCw, 
-  Download, 
-  Zap, 
+import {
+  Wifi,
+  RotateCw,
+  Download,
+  Zap,
   ExternalLink,
   QrCode,
   Share2,
@@ -27,15 +27,15 @@ interface NFCCardPreviewProps {
   theme?: ThemeConfig;
 }
 
-export function NFCCardPreview({ 
-  profile, 
-  onSimulateNFCTap, 
-  onOpenQRModal, 
-  onViewCompany, 
+export function NFCCardPreview({
+  profile,
+  onSimulateNFCTap,
+  onOpenQRModal,
+  onViewCompany,
   onDownloadCard,
   onOpenShare,
   isDark,
-  theme = getThemeConfig(profile.theme || 'elegant')
+  theme = getThemeConfig(profile.theme || 'editorial')
 }: NFCCardPreviewProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -83,9 +83,8 @@ export function NFCCardPreview({
         title="Click to flip card"
       >
         <div
-          className={`relative w-full h-full duration-700 transform-style-3d transition-transform ${
-            isFlipped ? 'rotate-y-180' : ''
-          }`}
+          className={`relative w-full h-full duration-700 transform-style-3d transition-transform ${isFlipped ? 'rotate-y-180' : ''
+            }`}
         >
           {/* ========================================================================= */}
           {/* FRONT: Avtive Logo + Founder PFP + Identity + Company Name (No Chip)       */}
@@ -96,7 +95,7 @@ export function NFCCardPreview({
 
             {/* Top Bar: Actual Avtive Logo + Contactless Wave */}
             <div className="flex items-center justify-between z-10">
-              <div 
+              <div
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onViewCompany) onViewCompany(companyId);
@@ -104,9 +103,9 @@ export function NFCCardPreview({
                 className="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:opacity-85 transition-opacity"
                 title={`Go to ${companyName} Profile`}
               >
-                <img 
-                  src="/images/avtive-symbol.png" 
-                  alt="Avtive Logo" 
+                <img
+                  src="/images/avtive-symbol.png"
+                  alt="Avtive Logo"
                   className="h-5 sm:h-6 w-auto object-contain"
                 />
                 <span className={`text-[11px] sm:text-xs font-bold tracking-wider uppercase ${theme.accentText} font-mono`}>
@@ -145,7 +144,7 @@ export function NFCCardPreview({
                   {profile.name}
                 </p>
                 <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5">
-                  <span 
+                  <span
                     onClick={(e) => {
                       e.stopPropagation();
                       if (onViewCompany) onViewCompany(companyId);

@@ -29,7 +29,7 @@ export function ExchangeContactModal({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const theme = getThemeConfig(profile.theme || 'elegant');
+  const theme = getThemeConfig(profile.theme || 'editorial');
 
   if (!isOpen) return null;
 

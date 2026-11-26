@@ -19,6 +19,7 @@ import { ProfileIntroductionMediaSection } from '@/components/profile-sections/P
 
 interface HeroSectionProps {
   profile: ProfileData;
+  userProfiles?: ProfileData[];
   canEdit?: boolean;
   theme?: ThemeConfig;
   navigationOrigin?: any;
@@ -47,6 +48,7 @@ interface HeroSectionProps {
 
 export function HeroSection({
   profile,
+  userProfiles,
   canEdit = false,
   isEditing = false,
   theme = getThemeConfig(profile.theme || 'editorial'),
@@ -548,20 +550,15 @@ export function HeroSection({
           </div>
         )}
 
-        {/* Cover Edit Overlay Badge */}
-        {(isEditing || canEdit) && (
-          <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 transition-opacity ${isEditing ? 'opacity-95 hover:opacity-100' : 'opacity-0 group-hover/cover:opacity-100'
-            }`}>
+        {/* Cover Edit Overlay Badge (rendered inside edit mode so it never collides with cover header controls) */}
+        {isEditing && (
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 transition-opacity opacity-95 hover:opacity-100">
             <button
               type="button"
               disabled={isUploadingCover}
               onClick={(e) => {
                 e.stopPropagation();
-                if (isEditing) {
-                  coverInputRef.current?.click();
-                } else {
-                  onOpenEdit?.();
-                }
+                coverInputRef.current?.click();
               }}
               className="min-h-[44px] px-3.5 py-2 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xl border border-white/20 transition-transform hover:scale-105 cursor-pointer disabled:opacity-75 disabled:pointer-events-none select-none"
             >
@@ -573,11 +570,11 @@ export function HeroSection({
               ) : (
                 <>
                   <Camera className="w-4 h-4 text-white" />
-                  <span>{isEditing ? 'Change Cover' : 'Edit Cover'}</span>
+                  <span>Change Cover</span>
                 </>
               )}
             </button>
-            {isEditing && (heroDraft.coverImage || profile.coverImage) && (
+            {(heroDraft.coverImage || profile.coverImage) && (
               <button
                 type="button"
                 onClick={handleRemoveCover}
@@ -596,7 +593,10 @@ export function HeroSection({
         {/* Cover Header Controls: Multi-Role Persona Switcher & Edit Icon (Owner Only in Public/Preview View) */}
         {canEdit && !isEditing && (
           <div className="absolute top-3 right-3 sm:top-4 sm:right-5 flex items-center gap-2 z-20">
-            <ProfileSwitcher currentProfileIdOrSlug={profile.slug || profile.id} />
+            <ProfileSwitcher
+              currentProfileIdOrSlug={profile.slug || profile.id}
+              initialProfiles={userProfiles}
+            />
             <button
               type="button"
               onClick={(e) => {
@@ -627,7 +627,7 @@ export function HeroSection({
                   onOpenEdit?.();
                 }
               }}
-              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-blue-500/50 transition-all' : ''
+              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
                 }`}
               title={isEditing ? 'Click to change logo' : canEdit ? 'Click to edit profile' : undefined}
             >
@@ -979,13 +979,13 @@ export function HeroSection({
                       </span>
                     )}
                     {profile.statusBadge && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/40">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${theme.badgeBg} ${theme.badgeText}`}>
                         {profile.statusBadge}
                       </span>
                     )}
                   </div>
                   {(profile.username || profile.slug) && (
-                    <p className="text-xs font-mono text-zinc-600 dark:text-zinc-400 font-semibold">
+                    <p className={`text-xs font-mono ${theme.textMuted} font-medium`}>
                       @{profile.username || profile.slug}
                     </p>
                   )}
@@ -994,11 +994,11 @@ export function HeroSection({
                 {/* Open to Work Badge */}
                 {profile.openToWork?.enabled && (
                   <div className="pt-1">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} text-xs font-medium`}>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       <span>Open to work</span>
                       {Array.isArray(profile.openToWork.roles) && profile.openToWork.roles.length > 0 && (
-                        <span className="text-[11px] font-normal text-emerald-600/80 dark:text-emerald-400/80">
+                        <span className={`text-[11px] font-normal ${theme.textSecondary}`}>
                           • {profile.openToWork.roles.join(', ')}
                         </span>
                       )}
@@ -1032,13 +1032,13 @@ export function HeroSection({
                 )}
 
                 {/* Custom CTA Button */}
-                {profile.customCta?.url && profile.customCta?.label && (
+                {profile.customCta?.active !== false && profile.customCta?.url && profile.customCta?.label && (
                   <div className="pt-1">
                     <a
                       href={profile.customCta.url.startsWith('http') ? profile.customCta.url : `https://${profile.customCta.url}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-primary text-primary-foreground shadow-xs hover:opacity-90 transition-all"
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-90 transition-all ${theme.btnPrimary}`}
                     >
                       <span>{profile.customCta.label}</span>
                     </a>
@@ -1126,6 +1126,81 @@ export function HeroSection({
                   onSavePartial={onSavePartial}
                   onOpenEdit={onOpenEdit}
                 />
+
+                {/* Direct Social Icon Bar above primary actions so Section Nav sits directly under Action Buttons */}
+                {!isEditing && sharing.socialLinks !== false && (
+                  <div
+                    onClick={(e) => {
+                      if (canEdit && onSelectSection && (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('edit-socials-trigger'))) {
+                        onSelectSection('socials');
+                      }
+                    }}
+                    className={`flex items-center gap-2 pt-1.5 text-zinc-700 dark:text-zinc-300 flex-wrap relative ${canEdit ? 'group/socials rounded-xl py-1 transition-all' : ''}`}
+                    title={canEdit ? 'Click to edit Socials & Links' : undefined}
+                  >
+                    {profile.whatsapp && sharing.phone !== false && !socials.some((s) => s.platform === 'whatsapp') && (
+                      <a
+                        href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
+                        title="WhatsApp"
+                        aria-label="WhatsApp"
+                      >
+                        <WhatsAppIcon className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                      </a>
+                    )}
+
+                    {profile.email && sharing.email !== false && !socials.some((s) => s.platform === 'email') && (
+                      <a
+                        href={`mailto:${profile.email}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
+                        title="Email"
+                        aria-label="Email"
+                      >
+                        <Mail className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                      </a>
+                    )}
+
+                    {socials.map((s, idx) => {
+                      const url = s.url?.trim() || '';
+                      if (!url) return null;
+                      const formattedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tel:')
+                        ? url
+                        : `https://${url}`;
+
+                      return (
+                        <a
+                          key={`${s.platform}-${idx}-${url}`}
+                          href={formattedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
+                          title={s.label || s.platform}
+                          aria-label={s.label || s.platform}
+                        >
+                          {renderSocialIcon(s.platform)}
+                        </a>
+                      );
+                    })}
+
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectSection?.('socials');
+                        }}
+                        className="edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Pencil className="w-2.5 h-2.5" />
+                        <span>Edit Links</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -1226,12 +1301,12 @@ export function HeroSection({
                 </button>
               </>
             ) : (
-              /* Individual Public Visitor Actions (Unchanged) */
+              /* Individual Public Visitor Actions */
               <>
                 <button
                   type="button"
                   onClick={onOpenConnect}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                 >
                   <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Connect</span>
@@ -1240,7 +1315,7 @@ export function HeroSection({
                 <button
                   type="button"
                   onClick={onOpenShare}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
                 >
                   <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                   <span className="truncate">Share</span>
@@ -1249,99 +1324,6 @@ export function HeroSection({
             )
           )}
         </div>
-
-        {/* Custom CTA Button if active and configured */}
-        {profile.customCta?.active && profile.customCta.label && profile.customCta.url && (
-          <div className="pt-2 max-w-md w-full min-w-0">
-            <a
-              href={profile.customCta.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`w-full py-2.5 px-4 rounded-xl font-bold text-center text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all ${theme.btnPrimary} flex items-center justify-center gap-2 select-none`}
-            >
-              <span>{profile.customCta.label}</span>
-            </a>
-          </div>
-        )}
-
-        {/* Direct Social Icon Bar: Respects exact drag-and-drop order from socials (hidden in Edit Mode) */}
-        {!isEditing && sharing.socialLinks !== false && (
-          <div
-            onClick={(e) => {
-              if (canEdit && onSelectSection && (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('edit-socials-trigger'))) {
-                onSelectSection('socials');
-              }
-            }}
-            className={`flex items-center gap-2.5 pt-2 text-zinc-600 dark:text-zinc-300 flex-wrap relative ${canEdit ? 'group/socials rounded-xl p-1.5 -ml-1.5 hover:bg-zinc-100/80 dark:hover:bg-white/[0.04] hover:ring-1 hover:ring-zinc-300 dark:hover:ring-zinc-700 transition-all' : ''
-              }`}
-            title={canEdit ? 'Click to edit Socials & Links in Studio' : undefined}
-          >
-            {/* Direct WhatsApp (if sharing enabled and not duplicate) */}
-            {profile.whatsapp && sharing.phone !== false && !socials.some((s) => s.platform === 'whatsapp') && (
-              <a
-                href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
-                title="WhatsApp"
-                aria-label="WhatsApp"
-              >
-                <WhatsAppIcon className="w-4 h-4 text-emerald-500" />
-              </a>
-            )}
-
-            {/* Direct Email (if sharing enabled and not duplicate) */}
-            {profile.email && sharing.email !== false && !socials.some((s) => s.platform === 'email') && (
-              <a
-                href={`mailto:${profile.email}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
-                title="Email"
-                aria-label="Email"
-              >
-                <Mail className="w-4 h-4 text-rose-500" />
-              </a>
-            )}
-
-            {/* Dynamic Social Links In Dragged Order */}
-            {socials.map((s, idx) => {
-              const url = s.url?.trim() || '';
-              if (!url) return null;
-              const formattedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tel:')
-                ? url
-                : `https://${url}`;
-
-              return (
-                <a
-                  key={`${s.platform}-${idx}-${url}`}
-                  href={formattedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 flex items-center justify-center transition-all hover:scale-105"
-                  title={s.label || s.platform}
-                  aria-label={s.label || s.platform}
-                >
-                  {renderSocialIcon(s.platform)}
-                </a>
-              );
-            })}
-
-            {canEdit && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectSection?.('socials');
-                }}
-                className="edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity ml-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1 cursor-pointer"
-              >
-                <Pencil className="w-2.5 h-2.5" />
-                <span>Edit Links</span>
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

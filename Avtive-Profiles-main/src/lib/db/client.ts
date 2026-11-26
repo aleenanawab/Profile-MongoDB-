@@ -13,7 +13,9 @@ export const COLLECTIONS = {
   SESSIONS: 'sessions',
   SHARE_LINKS: 'share_links',
   SHARE_TEMPLATES: 'share_templates',
-  SHARE_EVENTS: 'share_events'
+  SHARE_EVENTS: 'share_events',
+  CONTACT_TAGS: 'contact_tags',
+  CONTACT_TAG_LINKS: 'contact_tag_links'
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

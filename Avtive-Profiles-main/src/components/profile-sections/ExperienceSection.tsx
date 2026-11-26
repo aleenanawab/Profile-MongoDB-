@@ -22,9 +22,9 @@ const getInitialExperiences = (profile: ProfileData): ExperienceItem[] => {
   return [];
 };
 
-export function ExperienceSection({ 
-  profile, 
-  theme = getThemeConfig(profile.theme || 'elegant'),
+export function ExperienceSection({
+  profile,
+  theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit = false,
   isEditing = false,
   onUpdateField,
@@ -122,11 +122,10 @@ export function ExperienceSection({
   };
 
   return (
-    <section 
+    <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('experience')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-        canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
-      }`}
+      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
+        }`}
     >
       <div className="flex items-center justify-between">
         <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>

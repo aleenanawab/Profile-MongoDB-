@@ -11,7 +11,6 @@ import {
 } from '@/types/profile';
 import { HeaderNav } from '@/components/layout/HeaderNav';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
-import { PhonePreview } from '@/components/card/PhonePreview';
 import { getThemeConfig } from '@/components/ui/themeStyles';
 import { UnifiedShareWorkspace } from '@/components/sharing/UnifiedShareWorkspace';
 import { VisitorPublicShareView } from '@/components/sharing/VisitorPublicShareView';
@@ -23,8 +22,6 @@ import { ProfileEditorProvider, useProfileEditor } from '@/context/ProfileEditor
 import { downloadVCard } from '@/lib/vcard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DesktopProfileSidebar, DESKTOP_SIDEBAR_SECTIONS } from '@/components/profiles/DesktopProfileSidebar';
-import { ProfileSectionTabBar } from '@/components/profiles/ProfileSectionTabBar';
-import { Edit3, Save, X, Loader2, LayoutGrid, Sun, Moon, LogOut } from 'lucide-react';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
 import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
@@ -95,7 +92,11 @@ function PublicProfileClientInner({
     screenModeRef.current = screenMode;
   }, [screenMode]);
 
-  const isEditing = screenMode === 'edit' && isOwner;
+  const currentOwnerKey = isOwner ? `${session?.id || ''}:${initialProfile.id}` : null;
+  const [invalidatedOwnerKey, setInvalidatedOwnerKey] = useState<string | null>(null);
+  const effectiveIsOwner = Boolean(isOwner && invalidatedOwnerKey !== currentOwnerKey);
+
+  const isEditing = screenMode === 'edit' && effectiveIsOwner;
   const isSharing = screenMode === 'share';
   // Two independent sliders for Preview Sections Navigation:
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -272,7 +273,6 @@ function PublicProfileClientInner({
             const rawKey = id.replace('section-', '');
             if (rawKey === 'hero') currentSection = 'profile';
             else if (rawKey === 'about') currentSection = 'personalDetails';
-            else if (rawKey === 'services') currentSection = 'skills';
             else if (rawKey === 'contact') currentSection = 'contactInfo';
             else if (rawKey === 'socials') currentSection = 'socialLinks';
             else if (rawKey === 'custom-fields') currentSection = 'customFields';
@@ -374,8 +374,8 @@ function PublicProfileClientInner({
       hero: ['section-hero', 'section-profile'],
       about: ['section-about', 'section-personalDetails'],
       personalDetails: ['section-about', 'section-personalDetails'],
-      skills: ['section-skills', 'section-services'],
-      services: ['section-skills', 'section-services'],
+      skills: ['section-skills'],
+      services: ['section-services'],
       projects: ['section-projects', 'section-portfolio'],
       portfolio: ['section-projects', 'section-portfolio'],
       experience: ['section-experience'],
@@ -467,7 +467,7 @@ function PublicProfileClientInner({
   const navigateScreenMode = useCallback(
     (nextMode: ProfileScreenMode, slugOverride?: string) => {
       const safeMode: ProfileScreenMode =
-        nextMode === 'edit' && !isOwner ? 'preview' : nextMode;
+        nextMode === 'edit' && !effectiveIsOwner ? 'preview' : nextMode;
       const slug =
         slugOverride ||
         profile.slug ||
@@ -487,7 +487,7 @@ function PublicProfileClientInner({
       }
       setScreenMode(safeMode);
     },
-    [isOwner, profile.slug, profile.id, initialProfile.slug, initialProfile.id]
+    [effectiveIsOwner, profile.slug, profile.id, initialProfile.slug, initialProfile.id]
   );
 
   // Synchronize mutually exclusive screen mode with browser URL & history (Back / Forward)
@@ -497,7 +497,7 @@ function PublicProfileClientInner({
     const slug = profile.slug || profile.id || initialProfile.slug || initialProfile.id;
 
     const syncFromUrl = () => {
-      const resolved = resolveScreenModeFromSearch(window.location.search, isOwner);
+      const resolved = resolveScreenModeFromSearch(window.location.search, effectiveIsOwner);
       if (resolved.needsUrlNormalization && slug) {
         window.history.replaceState(
           null,
@@ -515,11 +515,11 @@ function PublicProfileClientInner({
     syncFromUrl();
     window.addEventListener('popstate', syncFromUrl);
     return () => window.removeEventListener('popstate', syncFromUrl);
-  }, [isOwner, profile.slug, profile.id, initialProfile.slug, initialProfile.id, discardUnsavedChanges]);
+  }, [effectiveIsOwner, profile.slug, profile.id, initialProfile.slug, initialProfile.id, discardUnsavedChanges]);
 
   // Hydrate updated profile from localStorage ONLY for owner when cache is strictly newer than server
   useEffect(() => {
-    if (isOwner) {
+    if (effectiveIsOwner) {
       try {
         const cached =
           localStorage.getItem(`avtive_profile_${initialProfile.slug}`) ||
@@ -570,21 +570,62 @@ function PublicProfileClientInner({
       window.removeEventListener('avtive_profile_updated', handleProfileUpdate);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [initialProfile.id, initialProfile.slug, initialProfile.updatedAt, isOwner]);
+  }, [initialProfile.id, initialProfile.slug, initialProfile.updatedAt, effectiveIsOwner]);
 
-  // Fetch / verify session dynamically so header auth status is accurate
+  // Verify live session dynamically (catches expired sessions, multi-tab logout, and bfcache restore)
   useEffect(() => {
-    if (!currentUser) {
-      fetch('/api/auth/me')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.user) {
-            setCurrentUser(data.user);
+    let active = true;
+    const checkSession = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!active) return;
+        if (res.status === 401) {
+          if (currentOwnerKey) setInvalidatedOwnerKey(currentOwnerKey);
+          setCurrentUser(null);
+          return;
+        }
+        const data = await res.json().catch(() => null);
+        if (!active || !data) return;
+        if (data.user) {
+          setCurrentUser(data.user);
+          if (isOwner && currentOwnerKey) {
+            const matchesOwner = Boolean(
+              (profile.userId && data.user.id === profile.userId) ||
+              (profile.email &&
+                data.user.email &&
+                profile.email.toLowerCase().trim() === data.user.email.toLowerCase().trim())
+            );
+            if (!matchesOwner) {
+              setInvalidatedOwnerKey(currentOwnerKey);
+            } else {
+              setInvalidatedOwnerKey(null);
+            }
           }
-        })
-        .catch(() => { });
-    }
-  }, [currentUser]);
+        } else if ('user' in data && data.user === null) {
+          setCurrentUser(null);
+          if (currentOwnerKey) setInvalidatedOwnerKey(currentOwnerKey);
+        }
+      } catch { }
+    };
+
+    checkSession();
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) checkSession();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isOwner) {
+        checkSession();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      active = false;
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isOwner, currentOwnerKey, profile.userId, profile.email]);
 
   const handleToggleTheme = () => {
     toggleDarkMode();
@@ -804,7 +845,7 @@ function PublicProfileClientInner({
   };
 
   const handleOpenEditMode = () => {
-    if (!isOwner) return;
+    if (!effectiveIsOwner) return;
     setDesktopOpen(false);
     setMobileOpen(false);
     handleCloseSidebar();
@@ -907,6 +948,11 @@ function PublicProfileClientInner({
     };
   }, [profile, isEditing, liveProfile, profileType, activeTheme, previewBackgroundTheme]);
 
+  const ownerProfiles = React.useMemo(
+    () => (effectiveIsOwner ? (userProfiles && userProfiles.length > 0 ? userProfiles : [profile]) : []),
+    [effectiveIsOwner, userProfiles, profile]
+  );
+
   const hasCustomBackground =
     screenMode === 'preview' &&
     resolveBackgroundMode({
@@ -924,7 +970,7 @@ function PublicProfileClientInner({
           currentProfile={{ ...profile, theme: activeTheme }}
           profileType={profileType}
           onSelectProfileType={(type) => setProfileType(type)}
-          canEdit={isOwner}
+          canEdit={effectiveIsOwner}
           isEditing={isEditing}
           isSharing={isSharing}
           showEditActionsInHeader={false}
@@ -945,7 +991,7 @@ function PublicProfileClientInner({
       </div>
 
       {/* Central In-Page Mode Area: Edit | Share | Preview */}
-      {screenMode === 'edit' && isOwner && (
+      {screenMode === 'edit' && effectiveIsOwner && (
         <ProfileEditorView
           profile={cardProfile}
           theme={activeThemeConfig}
@@ -968,12 +1014,12 @@ function PublicProfileClientInner({
       )}
 
       {screenMode === 'share' && (
-        isOwner ? (
+        effectiveIsOwner ? (
           <UnifiedShareWorkspace
             isOpen={true}
             onClose={handleCloseShareMode}
             profile={profile}
-            userProfiles={userProfiles}
+            userProfiles={ownerProfiles}
             selectedProfileId={shareTargetProfileId}
             onSelectProfileId={setShareTargetProfileId}
             draftSelectionsByProfile={shareDraftSelections}
@@ -985,6 +1031,11 @@ function PublicProfileClientInner({
               setShareDraftPresets((prev) => ({ ...prev, [pid]: preset }))
             }
             isDark={isDark}
+            onAuthRequired={() => setCurrentUser(null)}
+            onSwitchToPublicShare={() => {
+              if (currentOwnerKey) setInvalidatedOwnerKey(currentOwnerKey);
+              setCurrentUser(null);
+            }}
             onCopySuccess={() => showToast('Secure link copied!')}
             onUpdateProfile={(updated) => {
               if (updated.id === profile.id) {
@@ -1005,18 +1056,6 @@ function PublicProfileClientInner({
 
       {screenMode === 'preview' && (
         <>
-          {/* Pinned Visible Section Navigation Tab Bar */}
-          <div className="shrink-0 z-30 w-full">
-            <ProfileSectionTabBar
-              profile={{ ...profile, type: profileType, theme: activeTheme }}
-              activeSection={activeTabSection}
-              onSelectSection={(sec) => handleSectionSelect(sec, false)}
-              theme={activeThemeConfig}
-              isEditing={false}
-              canEdit={isOwner}
-            />
-          </div>
-
           {/* Section Navigation Drawer on Desktop (>= lg) */}
           <AnimatePresence>
             {desktopOpen && (
@@ -1096,14 +1135,15 @@ function PublicProfileClientInner({
                 ? 'backdrop-blur-md shadow-2xl'
                 : 'shadow-none sm:shadow-xl'
                 } overflow-hidden relative`}>
-                {isOwner && cardProfile.profileVisibility === 'private' && (
+                {effectiveIsOwner && cardProfile.profileVisibility === 'private' && (
                   <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                     Private profile — Visitors see your name only
                   </div>
                 )}
                 <AvtiveDigitalCard
                   profile={cardProfile}
-                  canEdit={isOwner}
+                  userProfiles={ownerProfiles}
+                  canEdit={effectiveIsOwner}
                   isEditing={false}
                   onPreviewBackgroundTheme={setPreviewBackgroundTheme}
                   isConnected={false}
@@ -1129,6 +1169,7 @@ function PublicProfileClientInner({
                   }}
                   isDark={isDark}
                   viewMode="standard"
+                  activeSection={activeTabSection}
                   onSelectSection={(sec) => handleSectionSelect(sec, false)}
                   onToggleSections={handleTriggerClick}
                   onSectionsMouseEnter={handleTriggerMouseEnter}
@@ -1155,7 +1196,7 @@ function PublicProfileClientInner({
           currentProfile={{ ...profile, theme: activeTheme }}
           profileType={profileType}
           onSelectProfileType={(type) => setProfileType(type)}
-          canEdit={isOwner}
+          canEdit={effectiveIsOwner}
           isEditing={false}
           onCancelEdit={handleCancelEdit}
           onSaveEdits={handleSaveAndExit}
@@ -1173,18 +1214,6 @@ function PublicProfileClientInner({
         />
       </div>
 
-      {/* Pinned Visible Section Navigation Tab Bar (Row 2 directly below controls) */}
-      <div className="shrink-0 z-30 w-full">
-        <ProfileSectionTabBar
-          profile={{ ...profile, type: profileType, theme: activeTheme }}
-          activeSection={activeTabSection}
-          onSelectSection={(sec) => handleSectionSelect(sec, true)}
-          theme={activeThemeConfig}
-          isEditing={isEditing}
-          canEdit={isOwner}
-        />
-      </div>
-
       <div className="flex-1 w-full min-h-0 flex flex-row overflow-hidden relative">
         <div
           id="mobile-profile-scroll-panel"
@@ -1194,14 +1223,15 @@ function PublicProfileClientInner({
           }}
           className="h-full min-h-0 overflow-y-auto overscroll-contain transition-all duration-300 w-full flex-1 smooth-scroll-container"
         >
-          {isOwner && cardProfile.profileVisibility === 'private' && (
+          {effectiveIsOwner && cardProfile.profileVisibility === 'private' && (
             <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[10px] font-semibold text-zinc-700 dark:text-zinc-300">
               Private profile — Visitors see your name only
             </div>
           )}
           <AvtiveDigitalCard
             profile={cardProfile}
-            canEdit={isOwner}
+            userProfiles={ownerProfiles}
+            canEdit={effectiveIsOwner}
             isEditing={false}
             onPreviewBackgroundTheme={setPreviewBackgroundTheme}
             isConnected={false}
@@ -1227,6 +1257,7 @@ function PublicProfileClientInner({
             }}
             isDark={isDark}
             viewMode="standard"
+            activeSection={activeTabSection}
             onSelectSection={(sec) => handleSectionSelect(sec, true)}
             onToggleSections={handleTriggerClick}
             onSectionsMouseEnter={handleTriggerMouseEnter}

@@ -26,6 +26,7 @@ interface ProfileSwitcherProps {
   currentProfileIdOrSlug?: string;
   initialProfiles?: ProfileData[];
   onSelectProfile?: (profile: ProfileData) => void;
+  onUnauthorized?: () => void;
   className?: string;
 }
 
@@ -40,13 +41,18 @@ export function ProfileSwitcher({
   currentProfileIdOrSlug,
   initialProfiles,
   onSelectProfile,
+  onUnauthorized,
   className = ''
 }: ProfileSwitcherProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [profiles, setProfiles] = useState<ProfileData[]>(initialProfiles || []);
-  const [loading, setLoading] = useState(!initialProfiles);
+  const [loading, setLoading] = useState(initialProfiles === undefined);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const onUnauthorizedRef = useRef(onUnauthorized);
+  useEffect(() => {
+    onUnauthorizedRef.current = onUnauthorized;
+  }, [onUnauthorized]);
 
   // Inline Create Form State (strictly in-component, zero popups)
   const [isCreatingInline, setIsCreatingInline] = useState(false);
@@ -80,17 +86,32 @@ export function ProfileSwitcher({
     } catch {}
   }, [initialProfiles]);
 
-  // Fetch profiles & listen for real-time updates
+  // Fetch profiles ONLY when SSR initialProfiles was not supplied & listen for real-time updates
   useEffect(() => {
-    fetch('/api/profile/list')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
-          setProfiles(data.profiles);
-        }
-      })
-      .catch((err) => console.error('Failed to load profiles for switcher', err))
-      .finally(() => setLoading(false));
+    let active = true;
+    if (initialProfiles === undefined) {
+      fetch('/api/profile/list')
+        .then(async (res) => {
+          if (!active) return;
+          if (res.status === 401) {
+            onUnauthorizedRef.current?.();
+            return;
+          }
+          if (!res.ok) return;
+          const data = await res.json();
+          if (active && data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
+            setProfiles(data.profiles);
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    } else {
+      Promise.resolve().then(() => {
+        if (active) setLoading(false);
+      });
+    }
 
     const handleProfileUpdate = (e: Event) => {
       const customEvent = e as CustomEvent<ProfileData>;
@@ -123,10 +144,11 @@ export function ProfileSwitcher({
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
+      active = false;
       window.removeEventListener('avtive_profile_updated', handleProfileUpdate);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [initialProfiles]);
 
   // Close dropdown on outside click
   useEffect(() => {

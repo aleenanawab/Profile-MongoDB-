@@ -102,5 +102,8 @@ export {
 
 export {
   getShareRecipientsForUser,
+  createContactTagForOwner,
+  deleteContactTagForOwner,
+  updateRecipientTagsForOwner,
   DEFAULT_EVENT_LABELS
 } from './shareRecipients';

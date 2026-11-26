@@ -27,6 +27,8 @@ interface ShareTemplatesTabProps {
   profile: ProfileData;
   activeTemplateId?: string;
   currentSelectedFields: string[];
+  isAuthRequired?: boolean;
+  onAuthRequired?: () => void;
   onApplyTemplate: (template: ShareTemplateRecord) => void;
   onQuickQrAction: () => void;
   onQuickDownloadCardPdf: () => void;
@@ -36,12 +38,18 @@ export function ShareTemplatesTab({
   profile,
   activeTemplateId,
   currentSelectedFields,
+  isAuthRequired = false,
+  onAuthRequired,
   onApplyTemplate,
   onQuickQrAction,
   onQuickDownloadCardPdf
 }: ShareTemplatesTabProps) {
   const [templates, setTemplates] = useState<ShareTemplateRecord[]>(BUILT_IN_TEMPLATES);
   const [isLoading, setIsLoading] = useState(true);
+  const onAuthRequiredRef = React.useRef(onAuthRequired);
+  React.useEffect(() => {
+    onAuthRequiredRef.current = onAuthRequired;
+  }, [onAuthRequired]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [previewingId, setPreviewingId] = useState<string | null>(null);
 
@@ -59,13 +67,34 @@ export function ShareTemplatesTab({
 
   useEffect(() => {
     let cancelled = false;
+    if (isAuthRequired) {
+      Promise.resolve().then(() => {
+        if (cancelled) return;
+        setIsLoading(false);
+        setErrorMsg('Your session has expired. Sign in again to load custom templates.');
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
     Promise.resolve().then(() => {
       if (!cancelled) setIsLoading(true);
     });
     fetch('/api/share/templates')
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
-        if (!cancelled && ok && Array.isArray(data.templates)) {
+      .then((res) =>
+        res
+          .json()
+          .catch(() => ({}))
+          .then((data) => ({ ok: res.ok, status: res.status, data }))
+      )
+      .then(({ ok, status, data }) => {
+        if (cancelled) return;
+        if (status === 401) {
+          onAuthRequiredRef.current?.();
+          setErrorMsg('Your session has expired. Please sign in again to load saved templates.');
+          return;
+        }
+        if (ok && Array.isArray(data.templates)) {
           setTemplates(data.templates);
         }
       })
@@ -78,7 +107,7 @@ export function ShareTemplatesTab({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthRequired]);
 
   const handleCreateCustom = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,7 +129,11 @@ export function ShareTemplatesTab({
           profileId: profile.id
         })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok || !data.template) {
         throw new Error(data.error || 'Failed to save template.');
       }
@@ -121,7 +154,11 @@ export function ShareTemplatesTab({
       const res = await fetch(`/api/share/templates/${encodeURIComponent(templateId)}`, {
         method: 'POST'
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok || !data.template) {
         throw new Error(data.error || 'Failed to duplicate template.');
       }
@@ -152,7 +189,11 @@ export function ShareTemplatesTab({
           profileId: profile.id
         })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok || !data.template) {
         throw new Error(data.error || 'Failed to update template.');
       }
@@ -171,6 +212,11 @@ export function ShareTemplatesTab({
       const res = await fetch(`/api/share/templates/${encodeURIComponent(tplId)}`, {
         method: 'DELETE'
       });
+      if (res.status === 401) {
+        onAuthRequired?.();
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Failed to delete template.');
@@ -183,11 +229,6 @@ export function ShareTemplatesTab({
 
   return (
     <div className="px-4 sm:px-5 py-4 space-y-4">
-      <div className="space-y-1">
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          A template saves a preset group of profile details. Selecting a template updates your share selection while still enforcing Never Share &amp; profile visibility rules.
-        </p>
-      </div>
 
       {errorMsg && (
         <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold">
@@ -213,13 +254,12 @@ export function ShareTemplatesTab({
             return (
               <div
                 key={tpl.id}
-                className={`rounded-2xl border p-4 space-y-3 transition-all ${
-                  isSelected
-                    ? 'border-black dark:border-white bg-zinc-100 dark:bg-zinc-900'
-                    : tpl.isBuiltIn && tpl.presetKey === 'general'
+                className={`rounded-2xl border p-4 space-y-3 transition-all ${isSelected
+                  ? 'border-black dark:border-white bg-zinc-100 dark:bg-zinc-900'
+                  : tpl.isBuiltIn && tpl.presetKey === 'general'
                     ? 'border-zinc-900 dark:border-zinc-700 bg-black text-white dark:bg-zinc-950'
                     : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-white/[0.03]'
-                }`}
+                  }`}
               >
                 {(() => {
                   const isDarkFeatured = !isSelected && tpl.isBuiltIn && tpl.presetKey === 'general';
@@ -228,7 +268,7 @@ export function ShareTemplatesTab({
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            {tpl.isBuiltIn && <Lock className={`w-3.5 h-3.5 ${isDarkFeatured ? 'text-amber-400' : 'text-slate-400'}`} />}
+                            {tpl.isBuiltIn && <Lock className={`w-3.5 h-3.5 ${isDarkFeatured ? 'text-zinc-300' : 'text-zinc-400'}`} />}
                             <h4 className={`text-sm font-bold truncate ${isDarkFeatured ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                               {tpl.name}
                             </h4>
@@ -249,11 +289,10 @@ export function ShareTemplatesTab({
                         {safeForProfile.authorizedFields.slice(0, 5).map((fKey) => (
                           <span
                             key={fKey}
-                            className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${
-                              isDarkFeatured
-                                ? 'bg-white/15 text-white'
-                                : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-white/10'
-                            }`}
+                            className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${isDarkFeatured
+                              ? 'bg-white/15 text-white'
+                              : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-white/10'
+                              }`}
                           >
                             {SHAREABLE_FIELD_MAP[fKey]?.label || fKey}
                           </span>
@@ -311,11 +350,10 @@ export function ShareTemplatesTab({
                                       prev.includes(f.key) ? prev.filter((k) => k !== f.key) : [...prev, f.key]
                                     )
                                   }
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border cursor-pointer ${
-                                    active
-                                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
-                                      : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500'
-                                  }`}
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border cursor-pointer ${active
+                                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
+                                    : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500'
+                                    }`}
                                 >
                                   {f.label}
                                 </button>
@@ -347,11 +385,10 @@ export function ShareTemplatesTab({
                         <button
                           type="button"
                           onClick={() => onApplyTemplate(tpl)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
-                            isDarkFeatured
-                              ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
-                              : 'bg-slate-900 hover:bg-black text-white dark:bg-white dark:hover:bg-slate-200 dark:text-slate-900'
-                          }`}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${isDarkFeatured
+                            ? 'bg-white hover:bg-zinc-200 text-black'
+                            : 'bg-black hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black'
+                            }`}
                         >
                           <Check className="w-3.5 h-3.5" />
                           <span>Use Template</span>
@@ -360,11 +397,10 @@ export function ShareTemplatesTab({
                         <button
                           type="button"
                           onClick={() => setPreviewingId((prev) => (prev === tpl.id ? null : tpl.id))}
-                          className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 cursor-pointer ${
-                            isDarkFeatured
-                              ? 'border-white/25 text-white hover:bg-white/10'
-                              : 'border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10'
-                          }`}
+                          className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 cursor-pointer ${isDarkFeatured
+                            ? 'border-white/25 text-white hover:bg-white/10'
+                            : 'border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10'
+                            }`}
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>Preview</span>
@@ -373,11 +409,10 @@ export function ShareTemplatesTab({
                         <button
                           type="button"
                           onClick={() => handleDuplicate(tpl.id)}
-                          className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 cursor-pointer ${
-                            isDarkFeatured
-                              ? 'border-white/25 text-white hover:bg-white/10'
-                              : 'border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10'
-                          }`}
+                          className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1 cursor-pointer ${isDarkFeatured
+                            ? 'border-white/25 text-white hover:bg-white/10'
+                            : 'border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10'
+                            }`}
                         >
                           <Copy className="w-3.5 h-3.5" />
                           <span>Duplicate</span>

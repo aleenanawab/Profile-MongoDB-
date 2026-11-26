@@ -32,6 +32,7 @@ interface LinkQrReadyPanelProps {
   onBack: () => void;
   onUpdateLink: (updated: ShareLinkClientView) => void;
   onEditRecipients: () => void;
+  onAuthRequired?: () => void;
   isDark?: boolean;
 }
 
@@ -42,6 +43,7 @@ export function LinkQrReadyPanel({
   onBack,
   onUpdateLink,
   onEditRecipients,
+  onAuthRequired,
   isDark = false
 }: LinkQrReadyPanelProps) {
   const [qrStyle, setQrStyle] = useState<'classic' | 'framed'>('classic');
@@ -159,7 +161,11 @@ export function LinkQrReadyPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expiryOption: nextExpiry })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok || !data.link) {
         throw new Error(data.error || 'Failed to update expiry option.');
       }
@@ -187,7 +193,11 @@ export function LinkQrReadyPanel({
           recipients: emailRecipients
         })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok) {
         throw new Error(data.error || 'Failed to send email.');
       }
@@ -240,11 +250,10 @@ export function LinkQrReadyPanel({
       <div className="px-4 sm:px-5 py-4 space-y-4">
         {actionStatus && (
           <div
-            className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold border ${
-              actionStatus.type === 'success'
-                ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-300'
-                : 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300'
-            }`}
+            className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold border ${actionStatus.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-300'
+              : 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300'
+              }`}
           >
             {actionStatus.message}
           </div>
@@ -253,9 +262,8 @@ export function LinkQrReadyPanel({
         {/* QR Code Display Box (SH4) */}
         <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] flex flex-col items-center space-y-3.5 shadow-2xs">
           <div
-            className={`p-3 rounded-2xl bg-white shadow-sm border-2 transition-all ${
-              qrStyle === 'framed' ? 'border-amber-500/70 ring-4 ring-amber-500/10' : 'border-slate-200'
-            }`}
+            className={`p-3 rounded-2xl bg-white shadow-sm border-2 transition-all ${qrStyle === 'framed' ? 'border-black ring-4 ring-zinc-900/10' : 'border-zinc-200'
+              }`}
           >
             {isGeneratingQr || !qrDataUrl ? (
               <div className="w-40 h-40 flex items-center justify-center">
@@ -274,22 +282,20 @@ export function LinkQrReadyPanel({
             <button
               type="button"
               onClick={() => setQrStyle('classic')}
-              className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer ${
-                qrStyle === 'classic'
-                  ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                  : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
-              }`}
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer ${qrStyle === 'classic'
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                }`}
             >
               Classic QR
             </button>
             <button
               type="button"
               onClick={() => setQrStyle('framed')}
-              className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer ${
-                qrStyle === 'framed'
-                  ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                  : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
-              }`}
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold border transition-colors cursor-pointer ${qrStyle === 'framed'
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                : 'bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                }`}
             >
               Accent Frame
             </button>
@@ -366,7 +372,7 @@ export function LinkQrReadyPanel({
                 </span>
               ))}
               {link.eventLabel && (
-                <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-[11px] font-semibold inline-flex items-center gap-1">
+                <span className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px] font-semibold inline-flex items-center gap-1">
                   <Tag className="w-3 h-3" />
                   {link.eventLabel}
                 </span>
@@ -397,11 +403,10 @@ export function LinkQrReadyPanel({
                   type="button"
                   disabled={isUpdatingExpiry}
                   onClick={() => handleExpiryChange(opt.key)}
-                  className={`min-h-[40px] py-2 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer disabled:opacity-60 ${
-                    active
-                      ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-xs'
-                      : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-slate-300'
-                  }`}
+                  className={`min-h-[40px] py-2 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer disabled:opacity-60 ${active
+                    ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-xs'
+                    : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10 hover:border-slate-300'
+                    }`}
                 >
                   {opt.label}
                 </button>

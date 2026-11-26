@@ -241,7 +241,7 @@ export function InPersonShareView({
               <div className="w-16 h-24 rounded-2xl bg-slate-900 dark:bg-white/10 border-2 border-slate-700 dark:border-white/20 flex items-center justify-center text-white font-bold text-base shadow-md">
                 {profile.name.charAt(0).toUpperCase()}
               </div>
-              <div className="w-10 h-10 rounded-full border-2 border-amber-500/60 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <div className="w-10 h-10 rounded-full border-2 border-zinc-400 dark:border-zinc-600 flex items-center justify-center text-zinc-700 dark:text-zinc-200">
                 {nfcState === 'transferring' || nfcState === 'connecting' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : nfcState === 'completed' ? (
@@ -273,7 +273,7 @@ export function InPersonShareView({
             </div>
 
             {eventLabel && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-[11px] font-semibold text-zinc-800 dark:text-zinc-200">
                 <Tag className="w-3 h-3" />
                 <span>Label: {eventLabel}</span>
               </div>

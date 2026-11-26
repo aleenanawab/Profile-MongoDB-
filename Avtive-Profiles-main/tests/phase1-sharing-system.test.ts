@@ -21,7 +21,9 @@ const collections: Record<string, any[]> = {
   sessions: [],
   share_links: [],
   share_templates: [],
-  share_events: []
+  share_events: [],
+  contact_tags: [],
+  contact_tag_links: []
 };
 
 function clone<T>(v: T): T {
@@ -230,7 +232,12 @@ import { GET as shareLinkDetailGET, PATCH as shareLinkDetailPATCH } from '../src
 import { POST as shareLinkRevokePOST } from '../src/app/api/share/links/[id]/revoke/route';
 import { GET as templatesGET, POST as templatesPOST } from '../src/app/api/share/templates/route';
 import { PATCH as templatePATCH, POST as templateDuplicatePOST, DELETE as templateDELETE } from '../src/app/api/share/templates/[id]/route';
-import { GET as recipientsGET } from '../src/app/api/share/recipients/route';
+import {
+  GET as recipientsGET,
+  POST as recipientsPOST,
+  PATCH as recipientsPATCH,
+  DELETE as recipientsDELETE
+} from '../src/app/api/share/recipients/route';
 import { POST as sendEmailPOST } from '../src/app/api/share/send-email/route';
 
 // Seed realistic profile for User A including Normal, Private, Owner-Hidden, and Never Share fields
@@ -715,6 +722,119 @@ async function runSuite() {
     assert.strictEqual(realData.recipients.length, 1);
     assert.strictEqual(realData.recipients[0].name, 'Elena Rostova');
     assert.strictEqual(realData.recipients[0].company, 'Nordic Robotics');
+    assert.deepStrictEqual(
+      realData.activeContactTags,
+      [],
+      'Must not expose unused default labels as active contact filters'
+    );
+    assert.deepStrictEqual(realData.availableLabels, [], 'availableLabels stays empty until real tags are assigned');
+
+    // Share event label on a created share link must stay separate from contact tags
+    assert.ok(
+      !(realData.contactTags || []).some((t: any) => t.name === 'Expo 2027'),
+      'Share event labels from past links must not become contact tags'
+    );
+    assert.ok(
+      (realData.eventLabels || []).includes('Expo 2027'),
+      'Past share event labels appear strictly under eventLabels'
+    );
+
+    // Seed second contact for multi-contact batch tagging test
+    collections.profiles.push({
+      _id: 'prof-client-2',
+      id: 'prof-client-2',
+      userId: 'usr-client-2',
+      name: 'Marcus Lind',
+      email: 'marcus@studio.io',
+      company: 'Nordic Studio',
+      designation: 'Design Lead',
+      type: 'individual'
+    });
+    collections.connections.push({
+      _id: 'conn-2',
+      id: 'conn-2',
+      fromUserId: USER_A.id,
+      toProfileId: 'prof-client-2',
+      toUserId: 'usr-client-2',
+      createdAt: new Date().toISOString()
+    });
+    const elenaBeforeSnapshot = JSON.stringify(collections.profiles.find((p) => p.id === 'prof-recruiter-1'));
+
+    // Create contact tag (unused at creation -> not in activeContactTags yet)
+    const createTagRes = await recipientsPOST(
+      new NextRequest('http://localhost:3000/api/share/recipients', {
+        method: 'POST',
+        body: JSON.stringify({ name: 'Recruiters' })
+      })
+    );
+    assert.strictEqual(createTagRes.status, 201);
+    const createdTagData = await createTagRes.json();
+    assert.ok(createdTagData.contactTags.some((t: any) => t.name === 'Recruiters' && t.count === 0));
+    assert.strictEqual(createdTagData.activeContactTags.includes('Recruiters'), false);
+
+    // Assign tag to multiple contacts at once
+    const batchAssignRes = await recipientsPATCH(
+      new NextRequest('http://localhost:3000/api/share/recipients', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          recipientIds: ['conn-prof-recruiter-1', 'conn-prof-client-2'],
+          addTags: ['Recruiters', 'VIP']
+        })
+      })
+    );
+    assert.strictEqual(batchAssignRes.status, 200);
+    const batchData = await batchAssignRes.json();
+    assert.ok(batchData.activeContactTags.includes('Recruiters') && batchData.activeContactTags.includes('VIP'));
+    const elenaRec = batchData.recipients.find((r: any) => r.id === 'conn-prof-recruiter-1');
+    const marcusRec = batchData.recipients.find((r: any) => r.id === 'conn-prof-client-2');
+    assert.ok(elenaRec?.tags?.includes('Recruiters') && elenaRec?.tags?.includes('VIP'));
+    assert.ok(marcusRec?.tags?.includes('Recruiters') && marcusRec?.tags?.includes('VIP'));
+    assert.strictEqual(
+      JSON.stringify(collections.profiles.find((p) => p.id === 'prof-recruiter-1')),
+      elenaBeforeSnapshot,
+      'Assigning contact tags must never modify another user profile document'
+    );
+
+    // Search by tag returns matching contacts
+    const tagSearchRes = await recipientsGET(new NextRequest('http://localhost:3000/api/share/recipients?q=VIP'));
+    const tagSearchData = await tagSearchRes.json();
+    assert.strictEqual(tagSearchData.recipients.length, 2);
+
+    // Remove tag from a single contact
+    const removeTagRes = await recipientsPATCH(
+      new NextRequest('http://localhost:3000/api/share/recipients', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          recipientIds: ['conn-prof-client-2'],
+          removeTags: ['VIP']
+        })
+      })
+    );
+    const afterRemoveData = await removeTagRes.json();
+    const marcusAfter = afterRemoveData.recipients.find((r: any) => r.id === 'conn-prof-client-2');
+    assert.strictEqual(marcusAfter?.tags?.includes('VIP'), false);
+    assert.strictEqual(marcusAfter?.tags?.includes('Recruiters'), true);
+
+    // Delete custom tag cleans up catalog and assignments
+    const delTagRes = await recipientsDELETE(
+      new NextRequest('http://localhost:3000/api/share/recipients', {
+        method: 'DELETE',
+        body: JSON.stringify({ tagName: 'VIP' })
+      })
+    );
+    const afterDeleteData = await delTagRes.json();
+    assert.strictEqual(afterDeleteData.activeContactTags.includes('VIP'), false);
+    assert.strictEqual(
+      afterDeleteData.recipients.find((r: any) => r.id === 'conn-prof-recruiter-1')?.tags?.includes('VIP'),
+      false
+    );
+
+    // Isolation check: User B must never see User A contact tags
+    activeCookieUser = USER_B;
+    const userBRes = await recipientsGET(new NextRequest('http://localhost:3000/api/share/recipients'));
+    const userBData = await userBRes.json();
+    assert.strictEqual((userBData.contactTags || []).some((t: any) => t.name === 'Recruiters'), false);
+    activeCookieUser = USER_A;
 
     // Honest email check when unconfigured
     const emailRes = await sendEmailPOST(
@@ -780,6 +900,10 @@ async function runSuite() {
     g.IS_REACT_ACT_ENVIRONMENT = true;
     dom.window.HTMLElement.prototype.scrollIntoView = () => {};
 
+    let profileListCalls = 0;
+    let linksCalls = 0;
+    let templatesCalls = 0;
+
     // Route client fetches directly to the real Next.js handlers
     g.fetch = async (input: any, init?: any) => {
       const urlStr = typeof input === 'string' ? input : input?.url || '';
@@ -788,21 +912,27 @@ async function runSuite() {
       const fullUrl = urlStr.startsWith('http') ? urlStr : `http://localhost:3000${urlStr}`;
 
       if (urlStr.includes('/api/profile/list')) {
+        profileListCalls++;
         return new Response(
           JSON.stringify({ success: true, profiles: [PROFILE_A, PROFILE_A_SECOND] }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
       }
       if (urlStr.includes('/api/share/recipients')) {
+        if (method === 'POST') return recipientsPOST(new NextRequest(fullUrl, { method, body: bodyStr }));
+        if (method === 'PATCH') return recipientsPATCH(new NextRequest(fullUrl, { method, body: bodyStr }));
+        if (method === 'DELETE') return recipientsDELETE(new NextRequest(fullUrl, { method, body: bodyStr }));
         return recipientsGET(new NextRequest(fullUrl, { method }));
       }
       if (urlStr.endsWith('/api/share/links') || urlStr.includes('/api/share/links?')) {
+        linksCalls++;
         if (method === 'POST') {
           return shareLinksPOST(new NextRequest(fullUrl, { method, body: bodyStr }));
         }
         return shareLinksGET(new NextRequest(fullUrl, { method }));
       }
       if (urlStr.endsWith('/api/share/templates') || urlStr.includes('/api/share/templates?')) {
+        templatesCalls++;
         if (method === 'POST') {
           return templatesPOST(new NextRequest(fullUrl, { method, body: bodyStr }));
         }
@@ -946,6 +1076,83 @@ async function runSuite() {
         'Unsaved sharing draft remains retained across drawer close/reopen'
       );
 
+      // 3b. Open Contacts picker & verify interactive Contact Tag creation, batch assignment, filtering & event separation
+      const contactsTriggerBtn = container.querySelector('button[aria-label="Select recipients"]') as HTMLButtonElement | null;
+      assert.ok(contactsTriggerBtn, 'Contacts picker button renders');
+      await React.act(async () => {
+        contactsTriggerBtn!.click();
+        await new Promise((r) => setTimeout(r, 30));
+      });
+      const pickerEl = container.querySelector('[data-testid="recipient-picker-panel"]');
+      assert.ok(pickerEl, 'RecipientPickerModal mounts inline');
+      const filterButtonsBefore = Array.from(
+        pickerEl!.querySelectorAll('[role="tablist"] button')
+      ).map((b) => (b.textContent || '').trim());
+      assert.ok(!filterButtonsBefore.some((txt) => txt.includes('Expo 2027')), 'Event label does not leak into contact tag filters');
+      assert.ok(!filterButtonsBefore.some((txt) => txt.includes('Clients')), 'Unused default labels do not appear in filter bar');
+
+      // Select both contacts and create+apply tag 'Founders'
+      const selectElenaBtn = pickerEl!.querySelector('button[aria-label="Select Elena Rostova"]') as HTMLButtonElement | null;
+      const selectMarcusBtn = pickerEl!.querySelector('button[aria-label="Select Marcus Lind"]') as HTMLButtonElement | null;
+      assert.ok(selectElenaBtn && selectMarcusBtn, 'Seeded contacts appear in picker');
+      await React.act(async () => {
+        selectElenaBtn!.click();
+        selectMarcusBtn!.click();
+      });
+
+      const newTagInput = pickerEl!.querySelector('input[aria-label="New contact tag"]') as HTMLInputElement | null;
+      assert.ok(newTagInput, 'Contact tag creation input exists');
+      await React.act(async () => {
+        const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value')?.set;
+        setter?.call(newTagInput, 'Founders');
+        newTagInput!.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      });
+      const addTagBtn = Array.from(pickerEl!.querySelectorAll('button')).find(
+        (b) => (b.textContent || '').trim() === 'Add tag'
+      ) as HTMLButtonElement | undefined;
+      assert.ok(addTagBtn && !addTagBtn.disabled, 'Add tag button enabled');
+      await React.act(async () => {
+        addTagBtn!.click();
+        await new Promise((r) => setTimeout(r, 40));
+      });
+
+      // Confirm Founders now shows as an active filter chip and removes cleanly from Marcus
+      const filterButtonsAfter = Array.from(
+        pickerEl!.querySelectorAll('[role="tablist"] button')
+      ).map((b) => (b.textContent || '').trim());
+      assert.ok(filterButtonsAfter.some((txt) => txt.includes('Founders')), 'Newly assigned tag appears in active filter chips');
+
+      const removeFoundersMarcusBtn = pickerEl!.querySelector(
+        'button[aria-label="Remove tag Founders from Marcus Lind"]'
+      ) as HTMLButtonElement | null;
+      assert.ok(removeFoundersMarcusBtn, 'Per-contact remove tag button renders');
+      await React.act(async () => {
+        removeFoundersMarcusBtn!.click();
+        await new Promise((r) => setTimeout(r, 40));
+      });
+      assert.strictEqual(
+        pickerEl!.querySelector('button[aria-label="Remove tag Founders from Marcus Lind"]'),
+        null,
+        'Removed tag updates immediately in UI'
+      );
+
+      // Separate Share Event Label input and finish selection
+      const evInput = pickerEl!.querySelector('#share-event-label-input') as HTMLInputElement | null;
+      assert.ok(evInput, 'Share Event Label input exists separately');
+      await React.act(async () => {
+        const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value')?.set;
+        setter?.call(evInput, 'Summit Berlin');
+        evInput!.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      });
+      const donePickerBtn = Array.from(pickerEl!.querySelectorAll('button')).find((b) =>
+        (b.textContent || '').startsWith('Done')
+      ) as HTMLButtonElement | undefined;
+      assert.ok(donePickerBtn, 'Done button closes recipient picker');
+      await React.act(async () => {
+        donePickerBtn!.click();
+      });
+      assert.ok((container.textContent || '').includes('Summit Berlin'), 'Share Event Label attaches to composer');
+
       // 4. Switch to Shared Links & Templates tabs inside same drawer
       const linksTabBtn = Array.from(container.querySelectorAll('button')).find((b) =>
         (b.textContent || '').trim() === 'Shared Links'
@@ -974,6 +1181,54 @@ async function runSuite() {
           (container.textContent || '').includes('Embedded Jobs'),
         'Templates tab displays built-in presets and saved custom templates'
       );
+      assert.strictEqual(profileListCalls, 0, 'UnifiedShareWorkspace skips redundant /api/profile/list fetch when userProfiles is provided');
+
+      // 4b. Verify 401 session expiration shows clear banner and halts repeated /api/share/links & /api/share/templates calls
+      activeCookieUser = null;
+      const linksCountBefore401 = linksCalls;
+      const tplCountBefore401 = templatesCalls;
+      const expiredContainer = dom.window.document.createElement('div');
+      dom.window.document.body.appendChild(expiredContainer);
+      const expiredRoot = createRoot(expiredContainer);
+      await React.act(async () => {
+        expiredRoot.render(
+          React.createElement(UnifiedShareWorkspace, {
+            isOpen: true,
+            onClose: () => {},
+            profile: uiProfile,
+            userProfiles: [uiProfile],
+          })
+        );
+      });
+      await React.act(async () => {
+        await new Promise((r) => setTimeout(r, 30));
+      });
+      assert.ok(
+        expiredContainer.querySelector('[data-testid="share-auth-required-banner"]'),
+        'UnifiedShareWorkspace surfaces session-expired alert banner on 401'
+      );
+
+      const linksTabOn401 = Array.from(expiredContainer.querySelectorAll('button')).find((b) =>
+        (b.textContent || '').trim() === 'Shared Links'
+      ) as HTMLButtonElement | undefined;
+      await React.act(async () => {
+        linksTabOn401?.click();
+        await new Promise((r) => setTimeout(r, 20));
+      });
+      const tplTabOn401 = Array.from(expiredContainer.querySelectorAll('button')).find((b) =>
+        (b.textContent || '').trim() === 'Templates'
+      ) as HTMLButtonElement | undefined;
+      await React.act(async () => {
+        tplTabOn401?.click();
+        await new Promise((r) => setTimeout(r, 20));
+      });
+      assert.strictEqual(linksCalls, linksCountBefore401, 'SharedLinksTab does not spam /api/share/links after 401');
+      assert.strictEqual(templatesCalls, tplCountBefore401, 'ShareTemplatesTab does not spam /api/share/templates after 401');
+      await React.act(async () => {
+        expiredRoot.unmount();
+      });
+      expiredContainer.remove();
+      activeCookieUser = USER_A;
 
       // 5. Render SharedProfileClient in valid, revoked, and expired states
       const { AppRouterContext } = await import(

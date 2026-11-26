@@ -14,7 +14,7 @@ interface QRFullscreenModalProps {
 
 export function QRFullscreenModal({ isOpen, onClose, profile }: QRFullscreenModalProps) {
   const [qrUrl, setQrUrl] = useState('');
-  const theme = getThemeConfig(profile.theme || 'elegant');
+  const theme = getThemeConfig(profile.theme || 'editorial');
   const identifier = profile.slug || profile.id;
   const canonicalPublicUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/profile/${identifier}` 

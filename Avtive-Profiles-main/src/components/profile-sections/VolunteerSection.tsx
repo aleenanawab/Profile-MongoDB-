@@ -29,7 +29,7 @@ const getInitialVolunteer = (profile: ProfileData): VolunteerItem[] => {
 
 export function VolunteerSection({
   profile,
-  theme = getThemeConfig(profile.theme || 'elegant'),
+  theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit = false,
   isEditing = false,
   onUpdateField,

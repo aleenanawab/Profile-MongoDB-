@@ -20,7 +20,7 @@ interface PortfolioSectionProps {
 export function PortfolioSection({ 
   profile, 
   onSelectProject, 
-  theme = getThemeConfig(profile.theme || 'elegant'),
+  theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit = false,
   isEditing = false,
   onUpdateField,

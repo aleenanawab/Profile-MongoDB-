@@ -46,9 +46,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Allow public profile viewing (/profile/[slug]) but protect editing/sharing routes
+  // 3. Allow public profile viewing (/profile/[slug]) but protect explicit /edit or /share subroutes
   if (pathname.startsWith('/profile/')) {
-    const isEditOrShare = pathname.includes('/edit') || pathname.includes('/share');
+    const isEditOrShare = /\/(edit|share)\/?$/.test(pathname);
     if (!isEditOrShare) {
       return NextResponse.next();
     }

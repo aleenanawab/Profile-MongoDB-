@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import {
   ArrowLeft,
   X,
-  History,
   Share2,
   Link2,
   Layers,
@@ -22,10 +22,13 @@ import {
   Loader2,
   Clock,
   BookmarkPlus,
-  Contact
+  Contact,
+  AlertCircle
 } from 'lucide-react';
+import { buildProfileUrlForMode } from '@/lib/profileScreenMode';
 import { PrivacyTier, ProfileData } from '@/types/profile';
 import {
+  ContactTagSummary,
   ShareChannel,
   ShareExpiryOption,
   ShareLinkClientView,
@@ -70,6 +73,8 @@ export interface UnifiedShareWorkspaceProps {
   onUpdateDraftPreset?: (profileId: string, preset: SharePresetKey | 'custom') => void;
   onCopySuccess?: () => void;
   onUpdateProfile?: (updatedProfile: ProfileData) => void;
+  onAuthRequired?: () => void;
+  onSwitchToPublicShare?: () => void;
   isDark?: boolean;
 }
 
@@ -89,6 +94,8 @@ export function UnifiedShareWorkspace({
   onUpdateDraftPreset,
   onCopySuccess,
   onUpdateProfile,
+  onAuthRequired,
+  onSwitchToPublicShare,
   isDark = false
 }: UnifiedShareWorkspaceProps) {
   const [roles, setRoles] = useState<ProfileData[]>(
@@ -154,26 +161,34 @@ export function UnifiedShareWorkspace({
   const [quickTplName, setQuickTplName] = useState('');
   const [isSavingQuickTpl, setIsSavingQuickTpl] = useState(false);
 
-  // Recipients fetched from /api/share/recipients
+  // Recipients & Contact Tags fetched from /api/share/recipients
   const [recipientsList, setRecipientsList] = useState<ShareRecipientAssociation[]>([]);
-  const [availableLabels, setAvailableLabels] = useState<string[]>([
-    'Colleagues',
-    'Clients',
-    'Business Contacts',
-    'Networking Event',
-    'Expo 2027'
-  ]);
+  const [contactTags, setContactTags] = useState<ContactTagSummary[]>([]);
+  const [activeContactTags, setActiveContactTags] = useState<string[]>([]);
+  const [pastEventLabels, setPastEventLabels] = useState<string[]>([]);
   const [emailConfigured, setEmailConfigured] = useState(false);
   const [isLoadingRecipients, setIsLoadingRecipients] = useState(false);
+  const [isAuthRequired, setIsAuthRequired] = useState(false);
+
+  const markAuthRequired = useCallback(() => {
+    setIsAuthRequired(true);
+    onAuthRequired?.();
+  }, [onAuthRequired]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isAuthRequired) return;
+    if (userProfiles && userProfiles.length > 0) return;
     let active = true;
     fetch('/api/profile/list')
-      .then((res) => res.json())
-      .then((data) => {
+      .then(async (res) => {
         if (!active) return;
-        if (data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
+        if (res.status === 401) {
+          markAuthRequired();
+          return;
+        }
+        if (!res.ok) return;
+        const data = await res.json();
+        if (active && data.profiles && Array.isArray(data.profiles) && data.profiles.length > 0) {
           setRoles(data.profiles);
         }
       })
@@ -181,30 +196,55 @@ export function UnifiedShareWorkspace({
     return () => {
       active = false;
     };
-  }, [isOpen]);
+  }, [isOpen, isAuthRequired, userProfiles, markAuthRequired]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isAuthRequired) return;
     let active = true;
     Promise.resolve().then(() => {
       if (active) setIsLoadingRecipients(true);
     });
     fetch('/api/share/recipients')
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
-        if (!active || !ok) return;
+      .then((res) =>
+        res
+          .json()
+          .catch(() => ({}))
+          .then((data) => ({ ok: res.ok, status: res.status, data }))
+      )
+      .then(({ ok, status, data }) => {
+        if (!active) return;
+        if (status === 401) {
+          markAuthRequired();
+          return;
+        }
+        if (!ok) {
+          throw new Error(data.error || 'Could not load contacts.');
+        }
         if (Array.isArray(data.recipients)) setRecipientsList(data.recipients);
-        if (Array.isArray(data.availableLabels)) setAvailableLabels(data.availableLabels);
+        if (Array.isArray(data.contactTags)) setContactTags(data.contactTags);
+        if (Array.isArray(data.activeContactTags)) {
+          setActiveContactTags(data.activeContactTags);
+        } else if (Array.isArray(data.availableLabels)) {
+          setActiveContactTags(data.availableLabels);
+        }
+        if (Array.isArray(data.eventLabels)) setPastEventLabels(data.eventLabels);
         setEmailConfigured(Boolean(data.emailConfigured));
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        if (active) {
+          setStatusFeedback({
+            type: 'error',
+            text: err instanceof Error ? err.message : 'Could not load contacts.'
+          });
+        }
+      })
       .finally(() => {
         if (active) setIsLoadingRecipients(false);
       });
     return () => {
       active = false;
     };
-  }, [isOpen]);
+  }, [isOpen, isAuthRequired, markAuthRequired]);
 
   const updateSelectedFields = useCallback(
     (next: string[]) => {
@@ -375,7 +415,11 @@ export function UnifiedShareWorkspace({
           updatedData: { fieldPrivacy: nextFieldPrivacy }
         })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        markAuthRequired();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok) {
         throw new Error(data.error || 'Failed to update privacy classification.');
       }
@@ -409,6 +453,10 @@ export function UnifiedShareWorkspace({
 
   const mintShareLink = useCallback(
     async (channel: ShareChannel = 'link'): Promise<ShareLinkClientView | null> => {
+      if (isAuthRequired) {
+        setStatusFeedback({ type: 'error', text: 'Your session has expired. Please sign in again.' });
+        return null;
+      }
       if (selectedFields.length === 0) {
         setStatusFeedback({ type: 'error', text: 'Select at least one field before creating a share link.' });
         return null;
@@ -434,7 +482,11 @@ export function UnifiedShareWorkspace({
           })
         });
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          markAuthRequired();
+          throw new Error(data.error || 'Your session has expired. Please sign in again.');
+        }
         if (!res.ok || !data.link) {
           throw new Error(data.error || 'Could not generate secure share link.');
         }
@@ -459,6 +511,8 @@ export function UnifiedShareWorkspace({
       confirmedPrivateFields,
       eventLabel,
       expiryOption,
+      isAuthRequired,
+      markAuthRequired,
       selectedFields,
       selectedRecipients,
       shareTitle
@@ -511,6 +565,10 @@ export function UnifiedShareWorkspace({
 
   const handleSaveQuickTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAuthRequired) {
+      setStatusFeedback({ type: 'error', text: 'Your session has expired. Please sign in again.' });
+      return;
+    }
     if (!quickTplName.trim()) return;
     setIsSavingQuickTpl(true);
     try {
@@ -523,7 +581,11 @@ export function UnifiedShareWorkspace({
           profileId: activeProfile.id
         })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        markAuthRequired();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok || !data.template) {
         throw new Error(data.error || 'Failed to save template.');
       }
@@ -562,7 +624,7 @@ export function UnifiedShareWorkspace({
       {subView === 'configure' && (
         <header className="sticky top-0 z-20 px-4 sm:px-6 pt-3.5 pb-3 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md">
           <div className="max-w-3xl mx-auto space-y-3">
-            {/* Row 1: Back / Title / Quick History */}
+            {/* Row 1: Back & Title */}
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
@@ -582,19 +644,7 @@ export function UnifiedShareWorkspace({
                   : 'Share Templates'}
               </h1>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab((prev) => (prev === 'links' ? 'share' : 'links'))}
-                className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-                  activeTab === 'links'
-                    ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                    : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                }`}
-                title="Shared Links History"
-                aria-label="Shared Links History"
-              >
-                <History className="w-4 h-4" />
-              </button>
+              <div className="w-[68px] shrink-0" aria-hidden="true" />
             </div>
 
             {/* Row 2: Active Profile Identity Card + Switcher */}
@@ -710,15 +760,66 @@ export function UnifiedShareWorkspace({
 
       {/* Main In-Page Content Body */}
       <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-5">
+        {isAuthRequired && (
+          <div
+            data-testid="share-auth-required-banner"
+            role="alert"
+            className="rounded-2xl border-2 border-zinc-900 dark:border-white bg-white dark:bg-[#111111] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-zinc-950 dark:text-white shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="text-xs sm:text-sm font-bold text-zinc-950 dark:text-white">
+                  Session expired — sign in required
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  Please sign in again to load your contacts, shared links, and custom templates.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              {onSwitchToPublicShare && (
+                <button
+                  type="button"
+                  onClick={onSwitchToPublicShare}
+                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-semibold text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 cursor-pointer"
+                >
+                  Public Share View
+                </button>
+              )}
+              <Link
+                href={`/login?returnUrl=${encodeURIComponent(
+                  buildProfileUrlForMode(activeProfile.slug || activeProfile.id, 'share')
+                )}`}
+                className="px-3.5 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity"
+              >
+                Sign In Again
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Inline Sub-Views (Recipients / Link & QR Ready / Tap Phones In-Person) */}
         {subView === 'recipients' && (
           <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111111] overflow-hidden">
             <RecipientPickerModal
               contacts={recipientsList}
-              availableLabels={availableLabels}
+              contactTags={contactTags}
+              activeContactTags={activeContactTags}
+              eventLabels={pastEventLabels}
               selectedRecipients={selectedRecipients}
               selectedEventLabel={eventLabel}
               isLoading={isLoadingRecipients}
+              onAuthRequired={markAuthRequired}
+              onContactsDataChange={(payload) => {
+                setRecipientsList(payload.recipients);
+                setContactTags(payload.contactTags);
+                setActiveContactTags(payload.activeContactTags);
+                setPastEventLabels(payload.eventLabels);
+                setSelectedRecipients((prev) =>
+                  prev.map((sel) => payload.recipients.find((r) => r.id === sel.id) || sel)
+                );
+              }}
               onBack={() => setSubView('configure')}
               onSaveSelection={(recs, label) => {
                 setSelectedRecipients(recs);
@@ -737,6 +838,7 @@ export function UnifiedShareWorkspace({
               link={generatedLink}
               emailConfigured={emailConfigured}
               isDark={isDark}
+              onAuthRequired={markAuthRequired}
               onBack={() => setSubView('configure')}
               onUpdateLink={(updated) => {
                 setGeneratedLink(updated);
@@ -784,8 +886,11 @@ export function UnifiedShareWorkspace({
               onChangeFieldPrivacy={handleChangeFieldPrivacy}
             />
 
-            {/* Preset Pills */}
+            {/* Step 1: Preset */}
             <div className="space-y-2">
+              <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                1 · Preset
+              </div>
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {(['everything', 'general', 'personal', 'embedded_jobs'] as const).map((pKey) => {
                   const active = activePreset === pKey;
@@ -807,14 +912,9 @@ export function UnifiedShareWorkspace({
                   );
                 })}
               </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                {activePreset !== 'custom'
-                  ? PRESET_DEFINITIONS[activePreset].description
-                  : `Customizing "${activeTemplateName}" — ${selectedFields.length} details selected.`}
-              </p>
             </div>
 
-            {/* Progress Meter & Live Preview Toggle */}
+            {/* Step 2: Fields & Preview Bar */}
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-bold text-zinc-800 dark:text-zinc-200">
@@ -877,8 +977,11 @@ export function UnifiedShareWorkspace({
               <LiveSharePreview profile={activeProfile} selectedFields={selectedFields} />
             )}
 
-            {/* Link Composer & Action Dock Card */}
+            {/* Step 3-5: Link Title, Contacts, Event, Expiry & Actions */}
             <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111111] p-4 space-y-3 shadow-2xs">
+              <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                3 · Recipients, Expiry &amp; Actions
+              </div>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1 min-w-0">
                   <Tag className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -1277,6 +1380,8 @@ export function UnifiedShareWorkspace({
               profile={activeProfile}
               allProfiles={roles}
               refreshSignal={linksRefreshSignal}
+              isAuthRequired={isAuthRequired}
+              onAuthRequired={markAuthRequired}
               onSelectLinkForQr={(link) => {
                 setGeneratedLink(link);
                 setSubView('ready');
@@ -1292,6 +1397,8 @@ export function UnifiedShareWorkspace({
               profile={activeProfile}
               activeTemplateId={activeTemplateId}
               currentSelectedFields={selectedFields}
+              isAuthRequired={isAuthRequired}
+              onAuthRequired={markAuthRequired}
               onApplyTemplate={handleApplyTemplate}
               onQuickQrAction={handleOpenQrReady}
               onQuickDownloadCardPdf={async () => {

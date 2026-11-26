@@ -12,7 +12,7 @@ interface ProjectDetailModalProps {
 
 export function ProjectDetailModal({ isOpen, onClose, project, profile }: ProjectDetailModalProps) {
   if (!isOpen || !project) return null;
-  const theme = getThemeConfig(profile?.theme || 'elegant');
+  const theme = getThemeConfig(profile?.theme || 'editorial');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 text-left overflow-y-auto">

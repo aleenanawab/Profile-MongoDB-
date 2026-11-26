@@ -50,7 +50,7 @@ export function SocialLinksSection({
   onSavePartial,
   onSelectSection 
 }: SocialLinksSectionProps) {
-  const theme = getThemeConfig(profile.theme || 'elegant');
+  const theme = getThemeConfig(profile.theme || 'editorial');
 
   const [socialsDraft, setSocialsDraft] = React.useState<SocialLink[]>(getInitialSocials(profile));
   const [snapshot, setSnapshot] = React.useState<SocialLink[]>(getInitialSocials(profile));

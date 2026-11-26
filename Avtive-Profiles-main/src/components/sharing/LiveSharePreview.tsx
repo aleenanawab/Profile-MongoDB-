@@ -122,31 +122,31 @@ export function LiveSharePreview({ profile, selectedFields }: LiveSharePreviewPr
         {sharing.contactInfo && (
           <div className="flex flex-wrap gap-1.5">
             {sharing.email && previewProfile.email && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[11px] text-slate-700 dark:text-slate-200">
-                <Mail className="w-3 h-3 text-rose-500" />
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-200">
+                <Mail className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
                 {previewProfile.email}
               </span>
             )}
             {sharing.phone && previewProfile.phone && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[11px] text-slate-700 dark:text-slate-200">
-                <Phone className="w-3 h-3 text-emerald-500" />
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-200">
+                <Phone className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
                 {previewProfile.phone}
               </span>
             )}
             {(sharing as any).website && previewProfile.website && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[11px] text-slate-700 dark:text-slate-200">
-                <Globe className="w-3 h-3 text-amber-500" />
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-200">
+                <Globe className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
                 {previewProfile.website}
               </span>
             )}
             {(sharing as any).location && previewProfile.location && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[11px] text-slate-700 dark:text-slate-200">
-                <MapPin className="w-3 h-3 text-zinc-700 dark:text-zinc-300" />
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-200">
+                <MapPin className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
                 {previewProfile.location}
               </span>
             )}
             {sharing.birthday && previewProfile.birthday && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-800 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-300">
                 <Calendar className="w-3 h-3" />
                 {previewProfile.birthday}
               </span>

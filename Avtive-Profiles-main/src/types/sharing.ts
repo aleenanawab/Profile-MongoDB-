@@ -13,7 +13,32 @@ export interface ShareRecipientAssociation {
   designation?: string;
   avatar?: string;
   source?: 'connection' | 'colleague' | 'manual';
+  tags?: string[];
   labels?: string[];
+}
+
+export interface ContactTagRecord {
+  id: string;
+  ownerUserId: string;
+  name: string;
+  normalizedName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContactTagSummary {
+  id: string;
+  name: string;
+  count: number;
+  createdAt: string;
+}
+
+export interface ContactTagLinkRecord {
+  id: string;
+  ownerUserId: string;
+  recipientId: string;
+  tags: string[];
+  updatedAt: string;
 }
 
 export interface ShareLinkRecord {

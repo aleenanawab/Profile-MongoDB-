@@ -124,12 +124,12 @@ const nextNavigation = require('next/navigation');
 const { createSessionToken } = require('../src/lib/auth');
 
 nextNavigation.useRouter = () => ({
-  push: () => {},
-  replace: () => {},
-  prefetch: () => {},
-  back: () => {},
-  forward: () => {},
-  refresh: () => {},
+  push: () => { },
+  replace: () => { },
+  prefetch: () => { },
+  back: () => { },
+  forward: () => { },
+  refresh: () => { },
 });
 nextNavigation.usePathname = () => '/profile/phase2-tester';
 nextNavigation.useSearchParams = () => new URLSearchParams();
@@ -151,7 +151,7 @@ nextHeaders.cookies = async () => ({
     }
     return undefined;
   },
-  set: () => {},
+  set: () => { },
 });
 
 // 4. Import app modules AFTER DB & headers setup
@@ -433,19 +433,21 @@ async function runTests() {
     g.MutationObserver = dom.window.MutationObserver;
     g.localStorage = dom.window.localStorage;
     g.ResizeObserver = class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
+      observe() { }
+      unobserve() { }
+      disconnect() { }
     };
-    dom.window.HTMLElement.prototype.scrollIntoView = () => {};
-    dom.window.HTMLElement.prototype.scrollTo = () => {};
+    dom.window.HTMLElement.prototype.scrollIntoView = () => { };
+    dom.window.HTMLElement.prototype.scrollTo = () => { };
     g.IS_REACT_ACT_ENVIRONMENT = true;
 
     let lastPutPayload: any = null;
+    const putPayloads: any[] = [];
     g.fetch = async (input: any, init?: any) => {
       const urlStr = typeof input === 'string' ? input : input?.url || '';
       if (urlStr.includes('/api/profile/update')) {
         lastPutPayload = init?.body ? JSON.parse(init.body) : null;
+        if (lastPutPayload) putPayloads.push(lastPutPayload);
         return updateProfilePUT(
           new NextRequest('http://localhost:3000/api/profile/update', {
             method: init?.method || 'PUT',
@@ -652,12 +654,15 @@ async function runTests() {
       assert.ok(doneBtn);
       await React.act(async () => {
         doneBtn!.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
-        await new Promise((r) => setTimeout(r, 500));
+        for (let i = 0; i < 30 && !doneSavedProfile; i++) {
+          await new Promise((r) => setTimeout(r, 100));
+        }
       });
       assert.ok(lastPutPayload, 'Done must trigger real /api/profile/update');
-      const sentVisibility =
-        lastPutPayload.patch?.profileVisibility ?? lastPutPayload.updatedData?.profileVisibility;
-      assert.strictEqual(sentVisibility, 'private');
+      const sentVisibilityPrivate = putPayloads.some(
+        (p) => (p.patch?.profileVisibility ?? p.updatedData?.profileVisibility) === 'private'
+      );
+      assert.strictEqual(sentVisibilityPrivate, true, 'profileVisibility private must be persisted in /api/profile/update');
       assert.ok(doneSavedProfile, 'Done must resolve with saved profile');
       assert.strictEqual((doneSavedProfile as ProfileData).profileVisibility, 'private');
 
@@ -692,12 +697,12 @@ async function runTests() {
               canEdit: false,
               isEditing: false,
               isDark: false,
-              onSaveContact: () => {},
-              onOpenShare: () => {},
-              onOpenConnect: () => {},
-              onOpenQRModal: () => {},
-              onOpenResumeModal: () => {},
-              onSelectProject: () => {},
+              onSaveContact: () => { },
+              onOpenShare: () => { },
+              onOpenConnect: () => { },
+              onOpenQRModal: () => { },
+              onOpenResumeModal: () => { },
+              onSelectProject: () => { },
             })
           )
         );
@@ -715,12 +720,12 @@ async function runTests() {
         'next/dist/shared/lib/app-router-context.shared-runtime'
       );
       const mockAppRouter: any = {
-        back: () => {},
-        forward: () => {},
-        refresh: () => {},
-        push: () => {},
-        replace: () => {},
-        prefetch: () => {},
+        back: () => { },
+        forward: () => { },
+        refresh: () => { },
+        push: () => { },
+        replace: () => { },
+        prefetch: () => { },
       };
 
       dom.window.history.replaceState(null, '', '/profile/phase2-tester');
@@ -749,6 +754,96 @@ async function runTests() {
       assert.ok((container.textContent || '').includes('Zero-Color OS'), 'Preview renders profile card');
       assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0);
       assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 0);
+
+      // Phase 4: Verify section nav sits INSIDE card below Hero action buttons (no duplicate top-level nav) and uses icon-only tabs
+      const desktopPanelEl = container.querySelector('#profile-scroll-panel');
+      const mobilePanelEl = container.querySelector('#mobile-profile-scroll-panel');
+      const desktopNav = desktopPanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
+      const mobileNav = mobilePanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
+      assert.ok(desktopNav && mobileNav, 'Section navigation must render inside both desktop and mobile profile panels');
+      assert.strictEqual(
+        container.querySelectorAll('[data-testid="profile-section-tabbar"]').length,
+        2,
+        'Must render strictly one ProfileSectionTabBar per preview layout without top-level duplicate navs'
+      );
+      const desktopHeroEl = desktopPanelEl?.querySelector('#section-hero');
+      const desktopAboutEl = desktopPanelEl?.querySelector('#section-personalDetails');
+      assert.ok(desktopHeroEl && desktopAboutEl && desktopNav, 'Hero, TabBar, and Content Sections exist in DOM');
+      assert.ok(
+        Boolean(desktopHeroEl.compareDocumentPosition(desktopNav) & 4), // DOCUMENT_POSITION_FOLLOWING
+        'ProfileSectionTabBar must appear AFTER HeroSection action buttons'
+      );
+      assert.ok(
+        Boolean(desktopNav.compareDocumentPosition(desktopAboutEl) & 4),
+        'ProfileSectionTabBar must appear BEFORE profile content sections'
+      );
+      const tabButtons = Array.from(desktopNav.querySelectorAll('button[data-section-tab]')) as HTMLButtonElement[];
+      assert.ok(tabButtons.length >= 4, 'Icon section buttons render');
+      for (const tabBtn of tabButtons) {
+        assert.ok(tabBtn.getAttribute('aria-label'), 'Each icon tab button requires aria-label');
+        assert.ok(tabBtn.getAttribute('title'), 'Each icon tab button requires tooltip title');
+        assert.strictEqual((tabBtn.textContent || '').trim(), '', 'Icon section tabs must not render visible text labels');
+      }
+      const aboutIconTab = desktopNav.querySelector('button[data-section-tab="personalDetails"]') as HTMLButtonElement | null;
+      assert.ok(aboutIconTab, 'About icon tab exists');
+      await React.act(async () => {
+        aboutIconTab!.click();
+      });
+      assert.strictEqual(aboutIconTab!.getAttribute('aria-current'), 'page', 'Clicking section icon updates active state');
+
+      // Company profile layout follows the same Hero -> Actions -> Section Nav -> Sections hierarchy
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ProfileEditorProvider,
+              { initialProfile: { ...clone(SAMPLE_PROFILE), type: 'team', id: 'prof-company-ui', name: 'Acme Robotics' }, userProfiles: [] },
+              React.createElement(AvtiveDigitalCard, {
+                profile: { ...clone(SAMPLE_PROFILE), type: 'team', id: 'prof-company-ui', name: 'Acme Robotics' },
+                canEdit: false,
+                isEditing: false,
+                isDark: false,
+                onSaveContact: () => { },
+                onOpenShare: () => { },
+                onOpenConnect: () => { },
+                onOpenQRModal: () => { },
+                onOpenResumeModal: () => { },
+                onSelectProject: () => { },
+              })
+            )
+          )
+        );
+      });
+      const companyNav = container.querySelector('[data-testid="profile-section-tabbar"]');
+      const companyHero = container.querySelector('#section-hero');
+      const companyFirstSection = container.querySelector('[data-section]');
+      assert.ok(companyNav && companyHero && companyFirstSection, 'Company card renders Hero -> Section Nav -> Content');
+      assert.ok(Boolean(companyHero.compareDocumentPosition(companyNav) & 4), 'Company section nav follows Hero actions');
+      assert.ok(Boolean(companyNav.compareDocumentPosition(companyFirstSection) & 4), 'Company section nav precedes sections');
+
+      // Restore full PublicProfileClient preview before switching Edit / Share modes
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ThemeProvider,
+              null,
+              React.createElement(PublicProfileClient, {
+                initialProfile: clone(SAMPLE_PROFILE),
+                session: OWNER_USER,
+                isOwner: true,
+                initialIsEditing: false,
+                initialIsSharing: false,
+                userProfiles: [clone(SAMPLE_PROFILE)],
+              })
+            )
+          )
+        );
+      });
 
       // Switch Preview -> Edit
       const editProfileBtn = container.querySelector('button[aria-label="Edit Profile"]') as HTMLButtonElement | null;
@@ -839,6 +934,54 @@ async function runTests() {
       assert.strictEqual(container.querySelectorAll('[data-testid="visitor-share-view"]').length, 1, 'Visitor share view renders in-page');
       assert.strictEqual(container.querySelector('[role="dialog"]'), null, 'Visitor share must not use popup dialog');
       assert.ok(!(container.textContent || '').includes('Zero-Color OS'), 'Visitor preview replaced during visitor share');
+
+      // Stale SSR isOwner downgrades cleanly if /api/auth/me returns { user: null } (and avoids redundant /api/profile/list fetches)
+      let profileListFetchCount = 0;
+      const prevTestFetch = g.fetch;
+      g.fetch = async (input: any, init?: any) => {
+        const urlStr = typeof input === 'string' ? input : input?.url || '';
+        if (urlStr.includes('/api/profile/list')) {
+          profileListFetchCount++;
+        }
+        if (urlStr.includes('/api/auth/me')) {
+          return new Response(JSON.stringify({ user: null, profile: null, profiles: [], onboardingCompleted: false }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        return prevTestFetch(input, init);
+      };
+      dom.window.history.replaceState(null, '', '/profile/phase2-tester?share=true');
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ThemeProvider,
+              null,
+              React.createElement(PublicProfileClient, {
+                initialProfile: clone(SAMPLE_PROFILE),
+                session: OWNER_USER,
+                isOwner: true,
+                initialIsEditing: false,
+                initialIsSharing: true,
+                userProfiles: [clone(SAMPLE_PROFILE)],
+              })
+            )
+          )
+        );
+      });
+      await React.act(async () => {
+        await new Promise((r) => setTimeout(r, 30));
+      });
+      assert.strictEqual(profileListFetchCount, 0, 'PublicProfileClient passes userProfiles to avoid redundant /api/profile/list fetches');
+      assert.strictEqual(
+        container.querySelectorAll('[data-testid="visitor-share-view"]').length,
+        1,
+        'PublicProfileClient downgrades stale owner share view to VisitorPublicShareView when /api/auth/me returns user: null'
+      );
+      g.fetch = prevTestFetch;
 
       await React.act(async () => {
         root.unmount();

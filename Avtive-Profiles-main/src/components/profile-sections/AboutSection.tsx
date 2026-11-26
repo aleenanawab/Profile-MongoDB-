@@ -25,7 +25,7 @@ export function AboutSection({
   onUpdateField,
   onSavePartial,
   onSelectSection,
-  theme = getThemeConfig(profile.theme || 'elegant')
+  theme = getThemeConfig(profile.theme || 'editorial')
 }: AboutSectionProps) {
   // Local state for editing fields
   const [taglineDraft, setTaglineDraft] = useState(profile.tagline || '');

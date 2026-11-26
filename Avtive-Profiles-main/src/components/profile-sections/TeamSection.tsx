@@ -22,7 +22,7 @@ interface TeamSectionProps {
 export function TeamSection({ 
   profile, 
   onSelectTeamMember,
-  theme = getThemeConfig(profile.theme || 'elegant'),
+  theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit,
   isEditing = false,
   onUpdateField,

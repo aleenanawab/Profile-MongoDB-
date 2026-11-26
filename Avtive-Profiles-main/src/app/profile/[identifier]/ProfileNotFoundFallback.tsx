@@ -56,8 +56,8 @@ export function ProfileNotFoundFallback({ identifier, session, initialIsEditing 
           }
         }
 
-        // 3. Fallback: Query /api/auth/me or /api/profile/list from client to recover user profile
-        if (!candidate) {
+        // 3. Fallback: Query /api/profile/list from client to recover user profile ONLY when authenticated
+        if (!candidate && session?.id) {
           try {
             const res = await fetch('/api/profile/list');
             if (res.ok) {

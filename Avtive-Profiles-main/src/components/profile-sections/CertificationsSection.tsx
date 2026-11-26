@@ -16,9 +16,9 @@ interface CertificationsSectionProps {
   onSelectSection?: (sectionKey: string, fieldKey?: string) => void;
 }
 
-export function CertificationsSection({ 
-  profile, 
-  theme = getThemeConfig(profile.theme || 'elegant'),
+export function CertificationsSection({
+  profile,
+  theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit = false,
   isEditing = false,
   onUpdateField,
@@ -112,11 +112,10 @@ export function CertificationsSection({
   };
 
   return (
-    <section 
+    <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('certifications')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-        canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
-      }`}
+      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
+        }`}
     >
       <div className="flex items-center justify-between">
         <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>

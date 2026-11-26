@@ -35,6 +35,8 @@ interface SharedLinksTabProps {
   profile: ProfileData;
   allProfiles: ProfileData[];
   refreshSignal: number;
+  isAuthRequired?: boolean;
+  onAuthRequired?: () => void;
   onSelectLinkForQr?: (link: ShareLinkClientView) => void;
 }
 
@@ -42,10 +44,16 @@ export function SharedLinksTab({
   profile,
   allProfiles,
   refreshSignal,
+  isAuthRequired = false,
+  onAuthRequired,
   onSelectLinkForQr
 }: SharedLinksTabProps) {
   const [links, setLinks] = useState<ShareLinkClientView[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const onAuthRequiredRef = React.useRef(onAuthRequired);
+  React.useEffect(() => {
+    onAuthRequiredRef.current = onAuthRequired;
+  }, [onAuthRequired]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | ShareLinkStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,15 +76,34 @@ export function SharedLinksTab({
 
   useEffect(() => {
     let cancelled = false;
+    if (isAuthRequired) {
+      Promise.resolve().then(() => {
+        if (cancelled) return;
+        setIsLoading(false);
+        setErrorMsg('Your session has expired. Sign in again to view shared links.');
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
     Promise.resolve().then(() => {
       if (cancelled) return;
       setIsLoading(true);
       setErrorMsg(null);
     });
     fetch('/api/share/links')
-      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-      .then(({ ok, data }) => {
+      .then((res) =>
+        res
+          .json()
+          .catch(() => ({}))
+          .then((data) => ({ ok: res.ok, status: res.status, data }))
+      )
+      .then(({ ok, status, data }) => {
         if (cancelled) return;
+        if (status === 401) {
+          onAuthRequiredRef.current?.();
+          throw new Error('Your session has expired. Please sign in again.');
+        }
         if (!ok) {
           throw new Error(data.error || 'Failed to load shared links.');
         }
@@ -93,7 +120,7 @@ export function SharedLinksTab({
     return () => {
       cancelled = true;
     };
-  }, [refreshSignal]);
+  }, [refreshSignal, isAuthRequired]);
 
   const filteredLinks = useMemo(() => {
     return links.filter((link) => {
@@ -135,7 +162,11 @@ export function SharedLinksTab({
       const res = await fetch(`/api/share/links/${encodeURIComponent(linkId)}/revoke`, {
         method: 'POST'
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok || !data.link) {
         throw new Error(data.error || 'Failed to revoke link.');
       }
@@ -157,10 +188,18 @@ export function SharedLinksTab({
     setLoadingEventsId(linkId);
     try {
       const res = await fetch(`/api/share/links/${encodeURIComponent(linkId)}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        return;
+      }
       if (res.ok && Array.isArray(data.events)) {
         setEventsByLinkId((prev) => ({ ...prev, [linkId]: data.events }));
+      } else if (!res.ok) {
+        setErrorMsg(data.error || 'Could not load activity history.');
       }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not load activity history.');
     } finally {
       setLoadingEventsId(null);
     }
@@ -186,7 +225,11 @@ export function SharedLinksTab({
           expiryOption: editExpiryDraft
         })
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Your session has expired. Please sign in again.');
+      }
       if (!res.ok || !data.link) {
         throw new Error(data.error || 'Failed to update share link.');
       }
@@ -262,8 +305,8 @@ export function SharedLinksTab({
                   type="button"
                   onClick={() => setStatusFilter(st)}
                   className={`px-3 py-1 rounded-full text-[11px] font-semibold capitalize border transition-all cursor-pointer shrink-0 ${active
-                      ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                      : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-slate-300'
+                    ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                    : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10 hover:border-slate-300'
                     }`}
                 >
                   {st}
@@ -275,14 +318,14 @@ export function SharedLinksTab({
           <button
             type="button"
             onClick={() => setShowTitles((v) => !v)}
-            className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer select-none"
+            className="flex items-center gap-2 text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 cursor-pointer select-none"
           >
             <span>Show link titles</span>
             <span
-              className={`w-8 h-4.5 rounded-full p-0.5 transition-colors inline-flex items-center ${showTitles ? 'bg-emerald-500 justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'
+              className={`w-8 h-4.5 rounded-full p-0.5 transition-colors inline-flex items-center ${showTitles ? 'bg-black dark:bg-white justify-end' : 'bg-zinc-300 dark:bg-zinc-700 justify-start'
                 }`}
             >
-              <span className="w-3.5 h-3.5 rounded-full bg-white shadow-xs" />
+              <span className="w-3.5 h-3.5 rounded-full bg-white dark:bg-black shadow-xs" />
             </span>
           </button>
         </div>
@@ -303,13 +346,13 @@ export function SharedLinksTab({
             <span className="text-xs">Loading shared links...</span>
           </div>
         ) : filteredLinks.length === 0 ? (
-          <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/15 text-center space-y-2 bg-slate-50/50 dark:bg-white/[0.02]">
-            <Link2 className="w-7 h-7 mx-auto text-slate-400" />
-            <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {links.length === 0 ? 'No share links created yet' : 'No links match current filters'}
+          <div className="p-6 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-1.5 bg-zinc-50/50 dark:bg-zinc-900/30">
+            <Link2 className="w-6 h-6 mx-auto text-zinc-400" />
+            <div className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+              {links.length === 0 ? 'No share links yet' : 'No matching links'}
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-              Generate a custom share link from the Share tab to track views, adjust permissions, or revoke access anytime.
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
+              Create a share link in the Share tab to manage access, views, and expiry.
             </p>
           </div>
         ) : (
@@ -437,8 +480,8 @@ export function SharedLinksTab({
                             type="button"
                             onClick={() => setEditExpiryDraft(opt)}
                             className={`py-1.5 px-2 rounded-lg text-[11px] font-semibold border cursor-pointer ${editExpiryDraft === opt
-                                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                                : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                              ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
+                              : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/10'
                               }`}
                           >
                             {opt === 'never' ? 'Never' : opt === '7d' ? '7 days' : '1 view'}
@@ -469,8 +512,8 @@ export function SharedLinksTab({
                                 )
                               }
                               className={`px-2 py-1 rounded-lg text-[10px] font-semibold border transition-colors cursor-pointer disabled:opacity-40 ${included
-                                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300'
-                                  : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500'
+                                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300'
+                                : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500'
                                 }`}
                             >
                               {isPriv && <Lock className="w-2.5 h-2.5 inline mr-1" />}

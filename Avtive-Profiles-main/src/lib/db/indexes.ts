@@ -39,6 +39,8 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   const shareLinksCol = db.collection(COLLECTIONS.SHARE_LINKS);
   const shareTemplatesCol = db.collection(COLLECTIONS.SHARE_TEMPLATES);
   const shareEventsCol = db.collection(COLLECTIONS.SHARE_EVENTS);
+  const contactTagsCol = db.collection(COLLECTIONS.CONTACT_TAGS);
+  const contactTagLinksCol = db.collection(COLLECTIONS.CONTACT_TAG_LINKS);
 
   // If old unique index on userId was created, drop it so users can own both individual and company profiles
   try {
@@ -220,6 +222,22 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
     { dedupKey: 1 },
     'idx_share_events_dedup_key',
     false,
+    true
+  );
+
+  // 10. Owner-scoped Contact Tags & Recipient Tag Links
+  await safeCreateIndex(
+    contactTagsCol,
+    COLLECTIONS.CONTACT_TAGS,
+    { ownerUserId: 1, normalizedName: 1 },
+    'idx_contact_tags_owner_name_unique',
+    true
+  );
+  await safeCreateIndex(
+    contactTagLinksCol,
+    COLLECTIONS.CONTACT_TAG_LINKS,
+    { ownerUserId: 1, recipientId: 1 },
+    'idx_contact_tag_links_owner_recipient_unique',
     true
   );
 

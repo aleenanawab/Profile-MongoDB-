@@ -3,23 +3,22 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   User,
-  FileText,
+  Info,
   Code,
-  FolderGit2,
+  Folder,
   GraduationCap,
   Phone,
   Link2,
   Briefcase,
-  Sparkles,
+  Wrench,
+  CreditCard,
   Award,
   Globe,
-  MessageSquare,
   Tag,
   Building2,
   Users,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   HeartHandshake,
   Quote,
   Trophy,
@@ -85,27 +84,27 @@ export function ProfileSectionTabBar({
         { key: 'profile', label: 'Overview', icon: Building2 },
         { key: 'teamMembers', label: 'Team', icon: Users },
         { key: 'skills', label: 'Skills', icon: Code },
-        { key: 'services', label: 'Services', icon: Sparkles },
-        { key: 'projects', label: 'Projects', icon: FolderGit2 },
+        { key: 'services', label: 'Services', icon: Wrench },
+        { key: 'projects', label: 'Projects', icon: Folder },
         { key: 'contactInfo', label: 'Contact', icon: Phone },
-        { key: 'socialLinks', label: 'Socials', icon: Link2 },
+        { key: 'socialLinks', label: 'Social Links', icon: Link2 },
       ];
       if ((profile.customFields && profile.customFields.length > 0) || isEditing) {
         baseTabs.push({ key: 'customFields', label: 'Highlights', icon: Tag });
       }
-      baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
+      baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: CreditCard });
       if (isEditing || canEdit) {
         baseTabs.push({ key: 'backgrounds', label: 'Themes', icon: Palette });
       }
     } else {
       baseTabs = [
         { key: 'profile', label: 'Profile', icon: User },
-        { key: 'personalDetails', label: 'About', icon: FileText },
+        { key: 'personalDetails', label: 'About', icon: Info },
         { key: 'featured', label: 'Featured', icon: Star },
         { key: 'skills', label: 'Skills', icon: Code },
-        { key: 'services', label: 'Services', icon: Sparkles },
+        { key: 'services', label: 'Services', icon: Wrench },
         { key: 'experience', label: 'Experience', icon: Briefcase },
-        { key: 'projects', label: 'Projects', icon: FolderGit2 },
+        { key: 'projects', label: 'Projects', icon: Folder },
         { key: 'education', label: 'Education', icon: GraduationCap },
         { key: 'certifications', label: 'Certificates', icon: Award },
         { key: 'volunteer', label: 'Volunteer', icon: HeartHandshake },
@@ -119,12 +118,12 @@ export function ProfileSectionTabBar({
         { key: 'languages', label: 'Languages', icon: Globe },
         { key: 'recommendations', label: 'Recommendations', icon: Quote },
         { key: 'contactInfo', label: 'Contact', icon: Phone },
-        { key: 'socialLinks', label: 'Socials', icon: Link2 },
+        { key: 'socialLinks', label: 'Social Links', icon: Link2 },
       ];
       if ((profile.customFields && profile.customFields.length > 0) || isEditing) {
-        baseTabs.push({ key: 'customFields', label: 'Custom', icon: Tag });
+        baseTabs.push({ key: 'customFields', label: 'Custom Fields', icon: Tag });
       }
-      baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: Sparkles });
+      baseTabs.push({ key: 'virtualCard', label: 'Virtual Card', icon: CreditCard });
       if (isEditing || canEdit) {
         baseTabs.push({ key: 'backgrounds', label: 'Themes', icon: Palette });
       }
@@ -199,7 +198,6 @@ export function ProfileSectionTabBar({
     if (normalizeSectionKey(activeSection) === normalizeSectionKey(key)) return true;
     if (key === 'profile' && (activeSection === 'hero' || activeSection === '')) return true;
     if (key === 'personalDetails' && (activeSection === 'about' || activeSection === 'personal')) return true;
-    if (key === 'skills' && activeSection === 'services') return true;
     if (key === 'projects' && activeSection === 'portfolio') return true;
     if (key === 'contactInfo' && (activeSection === 'contact' || activeSection === 'basicInfo')) return true;
     if (key === 'socialLinks' && activeSection === 'socials') return true;
@@ -212,48 +210,60 @@ export function ProfileSectionTabBar({
   return (
     <nav
       aria-label="Profile Section Navigation"
-      className={`relative w-full max-w-full overflow-hidden box-border ${theme.headerBg} border-b ${theme.divider} transition-colors select-none ${className}`}
+      data-testid="profile-section-tabbar"
+      className={`relative w-full max-w-full overflow-hidden box-border ${theme.cardBg} border-t ${theme.divider} transition-colors select-none ${className}`}
     >
-      <div className="w-full max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 relative flex items-center min-w-0 box-border">
+      <div className="w-full relative flex items-center min-w-0 box-border px-2 sm:px-4 md:px-6">
         {/* Left Scroll Arrow */}
         {showLeftArrow && (
           <button
             type="button"
             onClick={handleScrollLeft}
             aria-label="Scroll sections left"
-            className="flex absolute left-1 z-20 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/95 dark:bg-black/95 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="Scroll sections left"
+            className="flex absolute left-1.5 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/95 dark:bg-zinc-950/95 shadow-sm border border-zinc-200 dark:border-zinc-800 items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
         )}
 
-        {/* Horizontal Scrollable Tabs Container */}
+        {/* Horizontal Scrollable Icon Navigation Container */}
         <div
           ref={scrollContainerRef}
-          className="w-full min-w-0 flex-1 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none py-2 px-1 sm:px-2 scroll-smooth box-border"
+          className="w-full min-w-0 flex-1 overflow-x-auto scrollbar-none py-2.5 px-1 scroll-smooth box-border"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          {sections.map((item) => {
-            const Icon = item.icon;
-            const active = isCurrentActive(item.key);
+          <div className="w-max min-w-full flex items-center justify-center gap-1.5 sm:gap-2">
+            {sections.map((item) => {
+              const Icon = item.icon;
+              const active = isCurrentActive(item.key);
 
-            return (
-              <button
-                key={item.key}
-                ref={active ? activeTabRef : null}
-                type="button"
-                onClick={() => onSelectSection(item.key)}
-                aria-current={active ? 'page' : undefined}
-                className={`shrink-0 h-11 min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95 box-border ${active
-                  ? `${theme.btnPrimary} shadow-xs font-bold scale-[1.02]`
-                  : `${theme.textSecondary} hover:${theme.textPrimary} hover:bg-slate-100 dark:hover:bg-white/10 border border-transparent`
+              return (
+                <button
+                  key={item.key}
+                  ref={active ? activeTabRef : null}
+                  type="button"
+                  onClick={() => onSelectSection(item.key)}
+                  aria-label={item.label}
+                  aria-current={active ? 'page' : undefined}
+                  title={item.label}
+                  data-section-tab={item.key}
+                  className={`group shrink-0 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer active:scale-95 box-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white focus-visible:ring-offset-1 ${
+                    active
+                      ? `${theme.btnPrimary} shadow-xs`
+                      : `${theme.textSecondary} hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 border border-transparent hover:border-zinc-200/80 dark:hover:border-zinc-700/80`
                   }`}
-              >
-                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${active ? 'opacity-100' : 'opacity-70'}`} />
-                <span className="whitespace-nowrap">{item.label}</span>
-              </button>
-            );
-          })}
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className={`w-[18px] h-[18px] shrink-0 transition-transform group-hover:scale-105 ${
+                      active ? 'opacity-100' : 'opacity-75 group-hover:opacity-100'
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Right Scroll Arrow */}
@@ -262,7 +272,8 @@ export function ProfileSectionTabBar({
             type="button"
             onClick={handleScrollRight}
             aria-label="Scroll sections right"
-            className="flex absolute right-1 z-20 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/95 dark:bg-black/95 shadow-md border border-slate-200 dark:border-white/10 items-center justify-center text-slate-700 dark:text-slate-200 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="Scroll sections right"
+            className="flex absolute right-1.5 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/95 dark:bg-zinc-950/95 shadow-sm border border-zinc-200 dark:border-zinc-800 items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white transition-all cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

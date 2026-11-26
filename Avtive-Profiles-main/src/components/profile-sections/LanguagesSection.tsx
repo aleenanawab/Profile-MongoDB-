@@ -18,9 +18,9 @@ interface LanguagesSectionProps {
   onSelectSection?: (sectionKey: string, fieldKey?: string) => void;
 }
 
-export function LanguagesSection({ 
-  profile, 
-  theme = getThemeConfig(profile.theme || 'elegant'),
+export function LanguagesSection({
+  profile,
+  theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit = false,
   isEditing = false,
   onUpdateField,
@@ -118,11 +118,10 @@ export function LanguagesSection({
   };
 
   return (
-    <section 
+    <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('languages')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-        canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
-      }`}
+      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
+        }`}
     >
       <div className="flex items-center justify-between">
         <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
@@ -179,52 +178,52 @@ export function LanguagesSection({
                             allowCustom
                           />
                         </div>
+                        <div>
+                          <FormLabel>Proficiency Level</FormLabel>
+                          <select
+                            value={lang.proficiency || 'Professional Working'}
+                            onChange={(e) => handleUpdateLanguage(idx, { proficiency: e.target.value })}
+                            className={`w-full h-10 px-3 text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-zinc-900/15`}
+                          >
+                            {LANGUAGE_PROFICIENCY_LEVELS.map((lvl) => (
+                              <option key={lvl} value={lvl}>
+                                {lvl}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLanguage(idx)}
+                        className="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shrink-0 mt-6"
+                        title="Remove language"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* View Language Item */
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-7 h-7 rounded-lg ${theme.badgeBg} ${theme.accentText} flex items-center justify-center shrink-0`}>
+                        <Languages className="w-3.5 h-3.5" />
+                      </div>
                       <div>
-                        <FormLabel>Proficiency Level</FormLabel>
-                        <select
-                          value={lang.proficiency || 'Professional Working'}
-                          onChange={(e) => handleUpdateLanguage(idx, { proficiency: e.target.value })}
-                          className={`w-full h-10 px-3 text-xs font-medium rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 ${theme.textPrimary} focus:outline-none focus:ring-2 focus:ring-zinc-900/15`}
-                        >
-                          {LANGUAGE_PROFICIENCY_LEVELS.map((lvl) => (
-                            <option key={lvl} value={lvl}>
-                              {lvl}
-                            </option>
-                          ))}
-                        </select>
+                        <h4 className={`text-xs font-bold ${theme.textPrimary}`}>
+                          {lang.language}
+                        </h4>
+                        <p className={`text-[10px] ${theme.textSecondary}`}>
+                          {lang.proficiency}
+                        </p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveLanguage(idx)}
-                      className="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shrink-0 mt-6"
-                      title="Remove language"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
                   </div>
-                </div>
-              ) : (
-                /* View Language Item */
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-7 h-7 rounded-lg ${theme.badgeBg} ${theme.accentText} flex items-center justify-center shrink-0`}>
-                      <Languages className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <h4 className={`text-xs font-bold ${theme.textPrimary}`}>
-                        {lang.language}
-                      </h4>
-                      <p className={`text-[10px] ${theme.textSecondary}`}>
-                        {lang.proficiency}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center`}>

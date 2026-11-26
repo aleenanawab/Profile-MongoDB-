@@ -233,14 +233,19 @@ export async function createShareLink(
 
   const cleanRecipients: ShareRecipientAssociation[] = Array.isArray(params.recipients)
     ? params.recipients.slice(0, 25).map((r) => ({
-        id: String(r.id || '').slice(0, 80),
-        name: String(r.name || '').trim().slice(0, 100),
-        ...(r.email ? { email: String(r.email).trim().slice(0, 160) } : {}),
-        ...(r.company ? { company: String(r.company).trim().slice(0, 120) } : {}),
-        ...(r.designation ? { designation: String(r.designation).trim().slice(0, 120) } : {}),
-        ...(r.source ? { source: r.source } : {}),
-        ...(Array.isArray(r.labels) ? { labels: r.labels.slice(0, 6) } : {})
-      })).filter((r) => Boolean(r.name))
+      id: String(r.id || '').slice(0, 80),
+      name: String(r.name || '').trim().slice(0, 100),
+      ...(r.email ? { email: String(r.email).trim().slice(0, 160) } : {}),
+      ...(r.company ? { company: String(r.company).trim().slice(0, 120) } : {}),
+      ...(r.designation ? { designation: String(r.designation).trim().slice(0, 120) } : {}),
+      ...(r.source ? { source: r.source } : {}),
+      ...(() => {
+        const mergedTags = Array.isArray(r.tags) && r.tags.length > 0 ? r.tags : r.labels;
+        return Array.isArray(mergedTags)
+          ? { tags: mergedTags.slice(0, 6), labels: mergedTags.slice(0, 6) }
+          : {};
+      })()
+    })).filter((r) => Boolean(r.name))
     : [];
 
   const linkId = `sl-${crypto.randomUUID()}`;
@@ -282,7 +287,7 @@ export async function createShareLink(
     profileId: profile.id,
     eventType: 'share_created',
     channel: doc.shareChannel
-  }).catch(() => {});
+  }).catch(() => { });
 
   return {
     success: true,
@@ -490,7 +495,7 @@ export async function updateShareLinkForOwner(
     ownerUserId,
     profileId: String(existingDoc.profileId),
     eventType: 'access_updated'
-  }).catch(() => {});
+  }).catch(() => { });
 
   return {
     success: true,
@@ -548,7 +553,7 @@ export async function revokeShareLinkForOwner(
       ownerUserId,
       profileId: String(existingDoc.profileId),
       eventType: 'link_revoked'
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   return {
@@ -560,21 +565,21 @@ export async function revokeShareLinkForOwner(
 
 export type ResolveShareLinkResult =
   | {
-      outcome: 'valid';
-      profile: ProfileData;
-      shareMeta: {
-        title: string;
-        templateName?: string;
-        eventLabel?: string;
-        expiryOption: ShareExpiryOption;
-        expiresAt: string | null;
-        remainingViews: number | null;
-        selectedFieldsCount: number;
-      };
-    }
-  | {
-      outcome: 'not_found' | 'revoked' | 'expired' | 'rate_limited';
+    outcome: 'valid';
+    profile: ProfileData;
+    shareMeta: {
+      title: string;
+      templateName?: string;
+      eventLabel?: string;
+      expiryOption: ShareExpiryOption;
+      expiresAt: string | null;
+      remainingViews: number | null;
+      selectedFieldsCount: number;
     };
+  }
+  | {
+    outcome: 'not_found' | 'revoked' | 'expired' | 'rate_limited';
+  };
 
 /**
  * Resolves a visitor token on `/s/[token]`:
@@ -627,7 +632,7 @@ export async function consumeAndResolveShareLink(
         ownerUserId: record.ownerUserId,
         profileId: record.profileId,
         eventType: 'link_expired'
-      }).catch(() => {});
+      }).catch(() => { });
     }
     return { outcome: 'expired' };
   }
@@ -703,17 +708,17 @@ export async function consumeAndResolveShareLink(
       profileId: record.profileId,
       eventType,
       channel
-    }).catch(() => {});
+    }).catch(() => { });
 
     if (remainingViews === 0) {
-      await col.updateOne({ id: record.id }, { $set: { status: 'expired' } }).catch(() => {});
+      await col.updateOne({ id: record.id }, { $set: { status: 'expired' } }).catch(() => { });
       await recordShareEvent({
         shareLinkId: record.id,
         ownerUserId: record.ownerUserId,
         profileId: record.profileId,
         eventType: 'link_expired',
         channel
-      }).catch(() => {});
+      }).catch(() => { });
     }
   } else {
     // Unlimited views (until revoked or 7d expiry): apply short deduplication window to avoid inflating analytics on accidental double-hits
@@ -753,7 +758,7 @@ export async function consumeAndResolveShareLink(
         eventType,
         channel,
         dedupKey
-      }).catch(() => {});
+      }).catch(() => { });
     } else {
       const validDoc = await col.findOne(checkFilter);
       if (!validDoc) {

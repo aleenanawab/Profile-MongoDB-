@@ -19,8 +19,8 @@ interface TeamSectionProps {
   onSelectSection?: (sectionId: string) => void;
 }
 
-export function TeamSection({ 
-  profile, 
+export function TeamSection({
+  profile,
   onSelectTeamMember,
   theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit,
@@ -111,12 +111,11 @@ export function TeamSection({
   };
 
   return (
-    <section 
+    <section
       id="team"
       onClick={() => canEdit && !isEditing && onSelectSection?.('teamMembers')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-4 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-        canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
-      }`}
+      className={`px-4 sm:px-6 md:px-8 py-5 space-y-4 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
+        }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -143,7 +142,7 @@ export function TeamSection({
               <button
                 type="button"
                 onClick={() => onSelectSection?.('teamMembers')}
-                className="px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-[11px] font-bold border border-zinc-200 dark:border-zinc-800 cursor-pointer flex items-center gap-1 transition-colors"
+                className={`px-2.5 py-1 rounded-lg ${theme.btnSecondary} text-[11px] font-bold cursor-pointer flex items-center gap-1 transition-colors`}
               >
                 <span>+ Add Member</span>
               </button>
@@ -166,130 +165,129 @@ export function TeamSection({
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {teamDraft.map((member) => {
-            const isLinked = Boolean(member.profileId);
-            const isPending = member.status === 'PENDING';
+            {teamDraft.map((member) => {
+              const isLinked = Boolean(member.profileId);
+              const isPending = member.status === 'PENDING';
 
-            return (
-              <div
-                key={member.id}
-                className={`p-3.5 sm:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} shadow-2xs`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {isEditing ? (
-                  /* Editable Team Member Card */
-                  <div className="space-y-2.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 space-y-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          <div>
-                            <FormLabel required>Full Name</FormLabel>
-                            <FormInput
-                              value={member.name || ''}
-                              onChange={(val) => handleUpdateMember(member.id, { name: val })}
-                              placeholder="e.g. Alex Morgan"
-                            />
+              return (
+                <div
+                  key={member.id}
+                  className={`p-3.5 sm:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} shadow-2xs`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {isEditing ? (
+                    /* Editable Team Member Card */
+                    <div className="space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                              <FormLabel required>Full Name</FormLabel>
+                              <FormInput
+                                value={member.name || ''}
+                                onChange={(val) => handleUpdateMember(member.id, { name: val })}
+                                placeholder="e.g. Alex Morgan"
+                              />
+                            </div>
+                            <div>
+                              <FormLabel>Role / Job Title</FormLabel>
+                              <FormInput
+                                value={member.role || ''}
+                                onChange={(val) => handleUpdateMember(member.id, { role: val })}
+                                placeholder="e.g. Chief Technology Officer"
+                              />
+                            </div>
                           </div>
-                          <div>
-                            <FormLabel>Role / Job Title</FormLabel>
-                            <FormInput
-                              value={member.role || ''}
-                              onChange={(val) => handleUpdateMember(member.id, { role: val })}
-                              placeholder="e.g. Chief Technology Officer"
-                            />
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                              <FormLabel>Department</FormLabel>
+                              <FormInput
+                                value={member.department || ''}
+                                onChange={(val) => handleUpdateMember(member.id, { department: val })}
+                                placeholder="e.g. Product Engineering"
+                              />
+                            </div>
+                            <div>
+                              <FormLabel>Email</FormLabel>
+                              <FormInput
+                                type="email"
+                                value={member.email || ''}
+                                onChange={(val) => handleUpdateMember(member.id, { email: val })}
+                                placeholder="e.g. alex@company.com"
+                              />
+                            </div>
                           </div>
                         </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          <div>
-                            <FormLabel>Department</FormLabel>
-                            <FormInput
-                              value={member.department || ''}
-                              onChange={(val) => handleUpdateMember(member.id, { department: val })}
-                              placeholder="e.g. Product Engineering"
-                            />
-                          </div>
-                          <div>
-                            <FormLabel>Email</FormLabel>
-                            <FormInput
-                              type="email"
-                              value={member.email || ''}
-                              onChange={(val) => handleUpdateMember(member.id, { email: val })}
-                              placeholder="e.g. alex@company.com"
-                            />
-                          </div>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shrink-0 mt-6"
+                          title="Remove member"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveMember(member.id)}
-                        className="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shrink-0 mt-6"
-                        title="Remove member"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
                     </div>
-                  </div>
-                ) : (
-                  /* View Team Member Card */
-                  <div
-                    onClick={() => {
-                      if (onSelectTeamMember) {
-                        onSelectTeamMember(member);
-                      } else if (member.profileId) {
-                        window.location.href = `/profile/${encodeURIComponent(member.profileId)}`;
-                      }
-                    }}
-                    className={`flex items-center justify-between ${
-                      isLinked || onSelectTeamMember ? 'cursor-pointer' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="relative shrink-0">
-                        <img
-                          src={member.avatar || '/images/default-avatar.png'}
-                          alt={member.name}
-                          onError={(e) => { e.currentTarget.src = '/images/default-avatar.png'; }}
-                          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 ${theme.cardBorder} shadow-xs bg-slate-100 dark:bg-zinc-800`}
-                        />
-                        {isPending && (
-                          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white dark:border-zinc-900" title="Pending invite" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className={`text-xs font-bold ${theme.textPrimary} group-hover:${theme.accentText} transition-colors truncate`}>
-                            {member.name}
-                          </h4>
+                  ) : (
+                    /* View Team Member Card */
+                    <div
+                      onClick={() => {
+                        if (onSelectTeamMember) {
+                          onSelectTeamMember(member);
+                        } else if (member.profileId) {
+                          window.location.href = `/profile/${encodeURIComponent(member.profileId)}`;
+                        }
+                      }}
+                      className={`flex items-center justify-between ${isLinked || onSelectTeamMember ? 'cursor-pointer' : ''
+                        }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative shrink-0">
+                          <img
+                            src={member.avatar || '/images/default-avatar.png'}
+                            alt={member.name}
+                            onError={(e) => { e.currentTarget.src = '/images/default-avatar.png'; }}
+                            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 ${theme.cardBorder} shadow-xs bg-slate-100 dark:bg-zinc-800`}
+                          />
                           {isPending && (
-                            <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300">
-                              Pending
-                            </span>
+                            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white dark:border-zinc-900" title="Pending invite" />
                           )}
                         </div>
-                        <p className={`text-[11px] font-medium ${theme.accentText} truncate mt-0.5`}>
-                          {member.role || 'Team Member'}
-                        </p>
-                        {member.department && (
-                          <p className={`text-[10px] ${theme.textSecondary} truncate`}>
-                            {member.department}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className={`text-xs font-bold ${theme.textPrimary} group-hover:${theme.accentText} transition-colors truncate`}>
+                              {member.name}
+                            </h4>
+                            {isPending && (
+                              <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-[11px] font-medium ${theme.accentText} truncate mt-0.5`}>
+                            {member.role || 'Team Member'}
                           </p>
-                        )}
+                          {member.department && (
+                            <p className={`text-[10px] ${theme.textSecondary} truncate`}>
+                              {member.department}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {isLinked && (
-                      <div className={`text-xs font-bold ${theme.textPrimary} shrink-0 ml-2 group-hover:translate-x-1 transition-transform flex items-center gap-0.5`}>
-                        <span className="hidden sm:inline text-[11px]">View Profile</span>
-                        <ArrowRight className={`w-3.5 h-3.5 ${theme.accentText}`} />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                      {isLinked && (
+                        <div className={`text-xs font-bold ${theme.textPrimary} shrink-0 ml-2 group-hover:translate-x-1 transition-transform flex items-center gap-0.5`}>
+                          <span className="hidden sm:inline text-[11px]">View Profile</span>
+                          <ArrowRight className={`w-3.5 h-3.5 ${theme.accentText}`} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </>
       ) : (
         <div className="p-4 rounded-2xl border border-dashed border-slate-300 dark:border-white/10 flex flex-col items-center justify-center text-center gap-2">

@@ -4,6 +4,7 @@ import React from 'react';
 import { Wifi, Battery, Signal, Smartphone } from 'lucide-react';
 import { ProfileData } from '@/types/profile';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
+import { ProfileBackgroundLayer, resolveBackgroundAppearance } from '@/components/editor/BackgroundRenderer';
 
 interface PhonePreviewProps {
   profile: ProfileData;
@@ -25,8 +26,8 @@ interface PhonePreviewProps {
   onSelectSection?: (sectionKey: string, fieldKey?: string) => void;
 }
 
-export function PhonePreview({ 
-  profile, 
+export function PhonePreview({
+  profile,
   isDark = false,
   canEdit = false,
   isEditing = false,
@@ -44,11 +45,13 @@ export function PhonePreview({
   headerTitle = 'Live Mobile Preview',
   onSelectSection
 }: PhonePreviewProps) {
+  const { hasCustomBg, bgIsDark } = resolveBackgroundAppearance(profile);
+
   return (
     <div className="w-full max-w-[340px] sm:max-w-[360px] 2xl:max-w-[375px] flex flex-col items-center select-none box-border">
       {/* Phone Header Label */}
       {!hideHeaderLabel && (
-        <div 
+        <div
           className="w-full flex items-center justify-between pb-2 px-3 text-xs font-bold text-slate-500 dark:text-zinc-400 transition-all"
         >
           <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] truncate font-mono">
@@ -63,15 +66,26 @@ export function PhonePreview({
       )}
 
       {/* Realistic Standard Smartphone Chassis (Responsive viewport-adaptive) */}
-      <div 
+      <div
         className="relative w-full max-w-[340px] sm:max-w-[360px] 2xl:max-w-[375px] h-[min(667px,calc(100dvh-2.5rem))] rounded-[32px] sm:rounded-[40px] p-2 sm:p-2.5 bg-gradient-to-b from-[#222736] via-[#141824] to-[#0A0D15] shadow-2xl shadow-black/80 ring-1 ring-white/15 border border-white/10 flex flex-col transition-all overflow-hidden shrink-0 box-border"
       >
-        
+
         {/* Internal Screen Frame */}
-        <div className="relative w-full h-full rounded-[32px] overflow-hidden bg-white dark:bg-[#0E1528] flex flex-col border border-black/40 select-text">
-          
+        <div
+          className={`relative w-full h-full rounded-[32px] overflow-hidden flex flex-col border border-black/40 select-text ${hasCustomBg ? 'bg-transparent' : 'bg-white dark:bg-[#0E1528]'
+            }`}
+        >
+          <ProfileBackgroundLayer profile={profile} contained={true} />
+
           {/* iOS Status Bar */}
-          <div className="relative z-30 flex items-center justify-between px-5 pt-2 pb-1 text-[11px] font-semibold text-slate-800 dark:text-white select-none bg-transparent shrink-0">
+          <div
+            className={`relative z-30 flex items-center justify-between px-5 pt-2 pb-1 text-[11px] font-semibold select-none bg-transparent shrink-0 ${hasCustomBg
+                ? bgIsDark
+                  ? 'text-white'
+                  : 'text-zinc-900'
+                : 'text-slate-800 dark:text-white'
+              }`}
+          >
             <span className="tabular-nums font-mono text-[11px]">9:41</span>
 
             {/* Dynamic Notch */}
@@ -89,23 +103,23 @@ export function PhonePreview({
           </div>
 
           {/* Scrollable Live Profile Screen */}
-          <div className="flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden scrollbar-none overscroll-contain">
+          <div className="relative z-10 flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden scrollbar-none overscroll-contain">
             <AvtiveDigitalCard
               profile={profile}
               canEdit={canEdit}
               isEditing={isEditing}
               isConnected={false}
-              onOpenEdit={onOpenEdit || (() => {})}
-              onCancelEdit={() => {}}
+              onOpenEdit={onOpenEdit || (() => { })}
+              onCancelEdit={() => { }}
               onSaveEdits={onSaveEdits}
-              onSaveContact={onSaveContact || (() => {})}
-              onOpenShare={onOpenShare || (() => {})}
-              onOpenConnect={onOpenConnect || (() => {})}
-              onOpenQRModal={onOpenQRModal || (() => {})}
-              onOpenResumeModal={onOpenResumeModal || (() => {})}
-              onSelectProject={onSelectProject || (() => {})}
-              onSelectTeamMember={onSelectTeamMember || (() => {})}
-              onViewCompany={onViewCompany || (() => {})}
+              onSaveContact={onSaveContact || (() => { })}
+              onOpenShare={onOpenShare || (() => { })}
+              onOpenConnect={onOpenConnect || (() => { })}
+              onOpenQRModal={onOpenQRModal || (() => { })}
+              onOpenResumeModal={onOpenResumeModal || (() => { })}
+              onSelectProject={onSelectProject || (() => { })}
+              onSelectTeamMember={onSelectTeamMember || (() => { })}
+              onViewCompany={onViewCompany || (() => { })}
               isDark={isDark}
               viewMode="standard"
               onSelectSection={onSelectSection}

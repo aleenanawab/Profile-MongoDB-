@@ -54,7 +54,7 @@ import { SocialLinksSection } from '@/components/profile-sections/SocialLinksSec
 import { CustomFieldsSection } from '@/components/profile-sections/CustomFieldsSection';
 import { BackgroundThemeGallery } from '@/components/themes/BackgroundThemeGallery';
 import { BackgroundTheme } from '@/data/backgroundThemes';
-import { getThemeConfig, PROFILE_THEMES, ThemeConfig } from '@/components/ui/themeStyles';
+import { getThemeConfig, getSurfaceThemeConfig, PROFILE_THEMES, ThemeConfig } from '@/components/ui/themeStyles';
 
 import { useProfileEditor } from '@/context/ProfileEditorContext';
 
@@ -68,10 +68,11 @@ interface AvtiveDigitalCardProps {
   isConnected?: boolean;
   onOpenEdit?: () => void;
   onSaveEdits?: (updatedProfile: ProfileData) => Promise<void>;
-  onSavePartial?: (partialData: Partial<ProfileData>) => Promise<ProfileData>;
+  onSavePartial?: (partialData: Partial<ProfileData>, clearFields?: string[]) => Promise<ProfileData>;
   onCancelEdit?: () => void;
   onThemePreview?: (theme: ProfileTheme) => void;
   onPreviewBackgroundTheme?: (theme: BackgroundTheme | null) => void;
+  overrideOccasionThemeId?: string | null;
   onSaveContact: () => void;
   onOpenShare: () => void;
   onOpenConnect: () => void;
@@ -120,6 +121,7 @@ export function AvtiveDigitalCard({
   onCancelEdit,
   onThemePreview,
   onPreviewBackgroundTheme,
+  overrideOccasionThemeId = null,
   onSaveContact,
   onOpenShare,
   onOpenConnect,
@@ -148,7 +150,7 @@ export function AvtiveDigitalCard({
 
   const activeProfile = profile;
   const activeThemeKey = activeProfile.theme || 'editorial';
-  const theme = getThemeConfig(activeThemeKey);
+  const theme = getSurfaceThemeConfig(activeThemeKey, activeProfile, overrideOccasionThemeId);
 
   const isCompany = normalizeProfileType(activeProfile.type) === 'team';
   const companyName = activeProfile.company || activeProfile.companyInfo?.name || 'Avtive';
@@ -158,10 +160,10 @@ export function AvtiveDigitalCard({
     if (errorMessage) setErrorMessage(null);
   };
 
-  const handleSavePartial = async (partialData: Partial<ProfileData>): Promise<ProfileData> => {
+  const handleSavePartial = async (partialData: Partial<ProfileData>, clearFields?: string[]): Promise<ProfileData> => {
     updateProfilePartial(partialData);
     if (onSavePartial) {
-      return await onSavePartial(partialData);
+      return await onSavePartial(partialData, clearFields);
     }
     const next = { ...profile, ...partialData };
     if (onSaveEdits) {
@@ -209,11 +211,11 @@ export function AvtiveDigitalCard({
       <div className="relative w-full text-center">
         <div
           data-theme={activeThemeKey}
-          className={`w-full overflow-hidden transition-colors duration-200 px-6 py-16 sm:py-24 ${theme.cardBg}`}
+          className={`w-full overflow-x-clip transition-colors duration-200 px-6 py-16 sm:py-24 ${theme.cardBg}`}
         >
           <div className="max-w-sm mx-auto space-y-4">
-            <div className="w-12 h-12 mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-zinc-900 dark:text-white" />
+            <div className={`w-12 h-12 mx-auto rounded-2xl border ${theme.cardBorder} ${theme.subCardBg} flex items-center justify-center`}>
+              <Lock className={`w-5 h-5 ${theme.textPrimary}`} />
             </div>
             <h1 className={`text-2xl font-bold tracking-tight ${theme.textPrimary}`}>
               {activeProfile.name || 'Private Profile'}
@@ -222,7 +224,7 @@ export function AvtiveDigitalCard({
               Private profile — Only this person&apos;s name is visible publicly.
             </p>
           </div>
-          <div className="mt-12 pt-5 border-t border-zinc-200/70 dark:border-zinc-800/70">
+          <div className={`mt-12 pt-5 border-t ${theme.divider}`}>
             <div className={`flex items-center justify-center gap-1 text-xs ${theme.textSecondary}`}>
               <span>Powered by</span>
               <a
@@ -245,7 +247,7 @@ export function AvtiveDigitalCard({
       {/* Main Profile Container Card with dynamic theme styling */}
       <div
         data-theme={activeThemeKey}
-        className="w-full overflow-hidden transition-colors duration-200"
+        className="w-full overflow-x-clip transition-colors duration-200"
       >
 
         {/* Error banner if save fails */}

@@ -9,6 +9,7 @@ import {
   Tag,
   Building2,
   Plus,
+  Edit2,
   Loader2,
   X,
   Calendar,
@@ -65,6 +66,8 @@ export function RecipientPickerModal({
   const [isMutatingTags, setIsMutatingTags] = useState(false);
   const [editingTagsForContactId, setEditingTagsForContactId] = useState<string | null>(null);
   const [inlineNewTagByContact, setInlineNewTagByContact] = useState<Record<string, string>>({});
+  const [renamingTagId, setRenamingTagId] = useState<string | null>(null);
+  const [renameTagDraft, setRenameTagDraft] = useState('');
   const [tagFeedback, setTagFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Derive tag catalog cleanly from saved contactTags or assigned recipient tags
@@ -168,8 +171,8 @@ export function RecipientPickerModal({
       activeContactTags: Array.isArray(data.activeContactTags)
         ? data.activeContactTags
         : Array.isArray(data.availableLabels)
-        ? data.availableLabels
-        : [],
+          ? data.availableLabels
+          : [],
       eventLabels: Array.isArray(data.eventLabels) ? data.eventLabels : eventLabels
     });
   };
@@ -277,11 +280,54 @@ export function RecipientPickerModal({
         throw new Error(data.error || 'Failed to delete tag.');
       }
       applyApiPayload(data);
+      if (activeTagFilter.toLowerCase() === tag.name.toLowerCase()) {
+        setActiveTagFilter('All');
+      }
       setTagFeedback({ type: 'success', text: `Deleted tag "${tag.name}".` });
     } catch (err: unknown) {
       setTagFeedback({
         type: 'error',
         text: err instanceof Error ? err.message : 'Failed to delete tag.'
+      });
+    } finally {
+      setIsMutatingTags(false);
+    }
+  };
+
+  const handleRenameTag = async (tag: ContactTagSummary) => {
+    const cleanNext = renameTagDraft.trim();
+    if (!cleanNext || cleanNext === tag.name) {
+      setRenamingTagId(null);
+      setRenameTagDraft('');
+      return;
+    }
+    setIsMutatingTags(true);
+    setTagFeedback(null);
+    try {
+      const res = await fetch('/api/share/recipients', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tagId: tag.id, tagName: tag.name, newName: cleanNext })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        onAuthRequired?.();
+        throw new Error(data.error || 'Session expired. Please sign in again.');
+      }
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to rename tag.');
+      }
+      applyApiPayload(data);
+      if (activeTagFilter.toLowerCase() === tag.name.toLowerCase()) {
+        setActiveTagFilter(cleanNext);
+      }
+      setRenamingTagId(null);
+      setRenameTagDraft('');
+      setTagFeedback({ type: 'success', text: `Renamed tag "${tag.name}" to "${cleanNext}".` });
+    } catch (err: unknown) {
+      setTagFeedback({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to rename tag.'
       });
     } finally {
       setIsMutatingTags(false);
@@ -336,11 +382,10 @@ export function RecipientPickerModal({
                 key={chip}
                 type="button"
                 onClick={() => setActiveTagFilter(chip)}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all shrink-0 cursor-pointer border inline-flex items-center gap-1 ${
-                  active
-                    ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                    : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
-                }`}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all shrink-0 cursor-pointer border inline-flex items-center gap-1 ${active
+                  ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                  : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
+                  }`}
               >
                 <span>{chip}</span>
                 {chip !== 'All' && summary && summary.count > 0 && (
@@ -357,11 +402,10 @@ export function RecipientPickerModal({
         {tagFeedback && (
           <div
             role="status"
-            className={`px-3 py-2 rounded-xl text-xs font-medium border flex items-center justify-between gap-2 ${
-              tagFeedback.type === 'success'
-                ? 'bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100'
-                : 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300'
-            }`}
+            className={`px-3 py-2 rounded-xl text-xs font-medium border flex items-center justify-between gap-2 ${tagFeedback.type === 'success'
+              ? 'bg-zinc-100 dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100'
+              : 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300'
+              }`}
           >
             <span className="flex items-center gap-1.5">
               {tagFeedback.type === 'error' && <AlertCircle className="w-3.5 h-3.5 shrink-0" />}
@@ -415,19 +459,67 @@ export function RecipientPickerModal({
           {resolvedContactTags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-0.5">
               {resolvedContactTags.map((tag) => {
+                const tagKey = tag.id || tag.name;
+                const isRenaming = renamingTagId === tagKey;
                 const allSelectedHaveTag =
                   draftSelectedIds.length > 0 &&
                   selectedContacts.every((c) =>
                     (c.tags || c.labels || []).some((t) => t.toLowerCase() === tag.name.toLowerCase())
                   );
+                if (isRenaming) {
+                  return (
+                    <div
+                      key={tagKey}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-zinc-400 dark:border-zinc-600 bg-white dark:bg-zinc-950"
+                    >
+                      <input
+                        type="text"
+                        value={renameTagDraft}
+                        onChange={(e) => setRenameTagDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleRenameTag(tag);
+                          } else if (e.key === 'Escape') {
+                            setRenamingTagId(null);
+                            setRenameTagDraft('');
+                          }
+                        }}
+                        aria-label={`Rename tag ${tag.name}`}
+                        maxLength={40}
+                        className="w-24 bg-transparent text-[11px] font-medium text-zinc-950 dark:text-white focus:outline-none"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        disabled={isMutatingTags}
+                        onClick={() => handleRenameTag(tag)}
+                        aria-label={`Save renamed tag ${tag.name}`}
+                        className="text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRenamingTagId(null);
+                          setRenameTagDraft('');
+                        }}
+                        aria-label={`Cancel rename ${tag.name}`}
+                        className="text-zinc-400 hover:text-zinc-800 dark:hover:text-white cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                }
                 return (
                   <div
-                    key={tag.id || tag.name}
-                    className={`inline-flex items-center rounded-full border text-[11px] font-medium transition-colors ${
-                      allSelectedHaveTag
-                        ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                        : 'bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-200 border-zinc-200 dark:border-zinc-800'
-                    }`}
+                    key={tagKey}
+                    className={`inline-flex items-center rounded-full border text-[11px] font-medium transition-colors ${allSelectedHaveTag
+                      ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                      : 'bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-200 border-zinc-200 dark:border-zinc-800'
+                      }`}
                   >
                     <button
                       type="button"
@@ -441,6 +533,11 @@ export function RecipientPickerModal({
                           );
                         } else if (tag.count > 0) {
                           setActiveTagFilter((prev) => (prev === tag.name ? 'All' : tag.name));
+                        } else {
+                          setTagFeedback({
+                            type: 'error',
+                            text: `Select one or more contacts below first, then tap "${tag.name}" to apply it.`
+                          });
                         }
                       }}
                       title={
@@ -449,14 +546,27 @@ export function RecipientPickerModal({
                             ? `Remove "${tag.name}" from ${draftSelectedIds.length} selected`
                             : `Apply "${tag.name}" to ${draftSelectedIds.length} selected`
                           : tag.count > 0
-                          ? `Filter by ${tag.name}`
-                          : `Select contacts below to assign "${tag.name}"`
+                            ? `Filter by ${tag.name}`
+                            : `Select contacts below to assign "${tag.name}"`
                       }
-                      className="pl-2.5 pr-1.5 py-1 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      className="pl-2.5 pr-1 py-1 flex items-center gap-1 cursor-pointer disabled:opacity-50"
                     >
                       {draftSelectedIds.length > 0 && allSelectedHaveTag && <Check className="w-3 h-3" />}
                       <span>{tag.name}</span>
                       <span className="text-[10px] opacity-65 font-mono">{tag.count}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isMutatingTags}
+                      onClick={() => {
+                        setRenamingTagId(tagKey);
+                        setRenameTagDraft(tag.name);
+                      }}
+                      aria-label={`Edit tag ${tag.name}`}
+                      title={`Rename tag ${tag.name}`}
+                      className="px-1 py-1 opacity-60 hover:opacity-100 cursor-pointer disabled:opacity-40"
+                    >
+                      <Edit2 className="w-2.5 h-2.5" />
                     </button>
                     <button
                       type="button"
@@ -496,9 +606,8 @@ export function RecipientPickerModal({
               return (
                 <div
                   key={contact.id}
-                  className={`p-3 transition-colors ${
-                    isSelected ? 'bg-zinc-100/90 dark:bg-zinc-900' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
-                  }`}
+                  className={`p-3 transition-colors ${isSelected ? 'bg-zinc-100/90 dark:bg-zinc-900' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
+                    }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <button
@@ -551,11 +660,10 @@ export function RecipientPickerModal({
                         onClick={() => toggleRecipient(contact)}
                         aria-label={isSelected ? `Deselect ${contact.name}` : `Select ${contact.name}`}
                         aria-pressed={isSelected}
-                        className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-black border-black text-white dark:bg-white dark:border-white dark:text-black'
-                            : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950'
-                        }`}
+                        className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer ${isSelected
+                          ? 'bg-black border-black text-white dark:bg-white dark:border-white dark:text-black'
+                          : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950'
+                          }`}
                       >
                         {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </button>
@@ -704,11 +812,10 @@ export function RecipientPickerModal({
                     key={evLbl}
                     type="button"
                     onClick={() => setEventLabelDraft((prev) => (prev === evLbl ? '' : evLbl))}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer ${
-                      active
-                        ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                        : 'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400'
-                    }`}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer ${active
+                      ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                      : 'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400'
+                      }`}
                   >
                     {evLbl}
                   </button>

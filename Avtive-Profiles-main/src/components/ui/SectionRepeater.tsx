@@ -111,7 +111,7 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
             </span>
           )}
           {hasItems && (
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-neutral-200/60 dark:bg-neutral-800/60 ${theme.textSecondary}`}>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${theme.badgeBg} ${theme.badgeText}`}>
               {items.length}
             </span>
           )}
@@ -130,7 +130,7 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
             </button>
           ) : (
             canEdit && (
-              <span className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 opacity-80 hover:opacity-100">
+              <span className={`text-[10px] font-mono ${theme.textMuted} opacity-80 hover:opacity-100`}>
                 Click to edit ↗
               </span>
             )

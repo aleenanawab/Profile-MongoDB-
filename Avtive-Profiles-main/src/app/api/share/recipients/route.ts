@@ -4,9 +4,13 @@ import {
   createContactTagForOwner,
   deleteContactTagForOwner,
   getShareRecipientsForUser,
+  renameContactTagForOwner,
   updateRecipientTagsForOwner
 } from '@/lib/db';
 import { isEmailServiceConfigured } from '@/lib/email';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function buildRecipientsResponsePayload(userId: string, q: string = '') {
   const data = await getShareRecipientsForUser(userId, q);
@@ -82,6 +86,19 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
+
+    // Optional tag rename operation: { tagId / tagName, newName }
+    const renameTarget =
+      (typeof body.tagId === 'string' && body.tagId.trim()) ||
+      (typeof body.tagName === 'string' && body.tagName.trim()) ||
+      '';
+    const newName = typeof body.newName === 'string' ? body.newName : '';
+    if (renameTarget && typeof body.newName === 'string') {
+      const renamedTag = await renameContactTagForOwner(session.id, renameTarget, newName);
+      const payload = await buildRecipientsResponsePayload(session.id);
+      return NextResponse.json({ ...payload, tag: renamedTag }, { status: 200 });
+    }
+
     const recipientIds: string[] = Array.isArray(body.recipientIds)
       ? body.recipientIds.map((id: unknown) => String(id || '').trim()).filter(Boolean)
       : typeof body.recipientId === 'string' && body.recipientId.trim()
@@ -104,7 +121,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error('Share Recipients PATCH Tags Error:', error);
     const message = error instanceof Error ? error.message : 'Failed to update contact tags.';
-    const status = message.includes('Select at least') ? 400 : 500;
+    const status = message.includes('Select at least') || message.includes('cannot be empty') ? 400 : 500;
     return NextResponse.json({ error: message }, { status });
   }
 }

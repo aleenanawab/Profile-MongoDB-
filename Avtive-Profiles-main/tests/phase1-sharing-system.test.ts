@@ -224,6 +224,8 @@ import {
   getPresetFieldsForProfile
 } from '../src/lib/sharing/presets';
 import { sanitizeProfileForShare } from '../src/lib/sharing/sanitize';
+import { hasFieldValue } from '../src/lib/sharing/presets';
+import { mapDocToProfileData } from '../src/lib/db/profiles';
 import { generateVCardString } from '../src/lib/vcard';
 import { resetRateLimitsForTests } from '../src/lib/sharing/rateLimit';
 import { consumeAndResolveShareLink } from '../src/lib/db/shareLinks';
@@ -383,6 +385,38 @@ async function runSuite() {
     assert.ok(vcf.includes(PROFILE_A.email!), 'vCard contains allowed email');
     assert.ok(!vcf.includes(PROFILE_A.phone!), 'vCard omits excluded phone');
     assert.ok(!vcf.includes('DE893704'), 'vCard never contains Never Share bank IBAN');
+
+    // Legacy logoUrl & coverUrl fallback with empty string avatar/coverImage
+    const legacyDoc = {
+      _id: 'prof-legacy-img',
+      id: 'prof-legacy-img',
+      slug: 'legacy-co',
+      name: 'Legacy Co',
+      type: 'team',
+      avatar: '',
+      coverImage: '',
+      logoUrl: 'https://cdn.example.com/legacy-logo.png',
+      coverUrl: 'https://cdn.example.com/legacy-cover.jpg'
+    };
+    const mappedLegacy = mapDocToProfileData(legacyDoc);
+    assert.strictEqual(mappedLegacy.avatar, 'https://cdn.example.com/legacy-logo.png', 'mapDocToProfileData falls back from empty avatar to logoUrl');
+    assert.strictEqual(mappedLegacy.coverImage, 'https://cdn.example.com/legacy-cover.jpg', 'mapDocToProfileData falls back from empty coverImage to coverUrl');
+    assert.strictEqual(hasFieldValue(legacyDoc as any, 'photo'), true, 'hasFieldValue detects legacy logoUrl');
+    assert.strictEqual(hasFieldValue(legacyDoc as any, 'coverImage'), true, 'hasFieldValue detects legacy coverUrl');
+
+    const sharedLegacyAllowed = sanitizeProfileForShare(legacyDoc as any, {
+      selectedFields: ['name', 'photo', 'coverImage']
+    });
+    assert.strictEqual(sharedLegacyAllowed.avatar, 'https://cdn.example.com/legacy-logo.png', 'Shared profile preserves legacy logoUrl as avatar when permitted');
+    assert.strictEqual(sharedLegacyAllowed.coverImage, 'https://cdn.example.com/legacy-cover.jpg', 'Shared profile preserves legacy coverUrl as coverImage when permitted');
+
+    const sharedLegacyDenied = sanitizeProfileForShare(legacyDoc as any, {
+      selectedFields: ['name']
+    });
+    assert.strictEqual(sharedLegacyDenied.avatar, '', 'Avatar cleared when photo unselected');
+    assert.strictEqual(sharedLegacyDenied.coverImage, undefined, 'Cover cleared when coverImage unselected');
+    assert.strictEqual((sharedLegacyDenied as any).logoUrl, undefined, 'Legacy logoUrl stripped when photo unselected');
+    assert.strictEqual((sharedLegacyDenied as any).coverUrl, undefined, 'Legacy coverUrl stripped when coverImage unselected');
   });
 
   // ── GROUP 2: Share Link API Security & CRUD ───────────────────────────────
@@ -815,6 +849,33 @@ async function runSuite() {
     assert.strictEqual(marcusAfter?.tags?.includes('VIP'), false);
     assert.strictEqual(marcusAfter?.tags?.includes('Recruiters'), true);
 
+    // Rename tag ('Recruiters' -> 'Hiring Partners') updates catalog + assignments & persists
+    const renameTagRes = await recipientsPATCH(
+      new NextRequest('http://localhost:3000/api/share/recipients', {
+        method: 'PATCH',
+        body: JSON.stringify({ tagName: 'Recruiters', newName: 'Hiring Partners' })
+      })
+    );
+    assert.strictEqual(renameTagRes.status, 200, 'Renaming tag returns 200');
+    const renamedData = await renameTagRes.json();
+    assert.ok(
+      renamedData.activeContactTags.includes('Hiring Partners') && !renamedData.activeContactTags.includes('Recruiters'),
+      'Renamed tag replaces old name in activeContactTags'
+    );
+    const marcusAfterRename = renamedData.recipients.find((r: any) => r.id === 'conn-prof-client-2');
+    assert.ok(marcusAfterRename?.tags?.includes('Hiring Partners'), 'Renamed tag updates contact assignments');
+    const freshReloadRes = await recipientsGET(new NextRequest('http://localhost:3000/api/share/recipients?q=Hiring'));
+    const freshReloadData = await freshReloadRes.json();
+    assert.strictEqual(freshReloadData.recipients.length, 2, 'Renamed tag remains persisted on reload & search');
+
+    // Rename back to 'Recruiters' before cleanup check so downstream expectations stay consistent
+    await recipientsPATCH(
+      new NextRequest('http://localhost:3000/api/share/recipients', {
+        method: 'PATCH',
+        body: JSON.stringify({ tagName: 'Hiring Partners', newName: 'Recruiters' })
+      })
+    );
+
     // Delete custom tag cleans up catalog and assignments
     const delTagRes = await recipientsDELETE(
       new NextRequest('http://localhost:3000/api/share/recipients', {
@@ -1136,6 +1197,41 @@ async function runSuite() {
         'Removed tag updates immediately in UI'
       );
 
+      // Rename tag 'Founders' -> 'Angels' and filter by 'Angels' in UI
+      const editFoundersBtn = pickerEl!.querySelector('button[aria-label="Edit tag Founders"]') as HTMLButtonElement | null;
+      assert.ok(editFoundersBtn, 'Inline edit tag button exists');
+      await React.act(async () => {
+        editFoundersBtn!.click();
+      });
+      const renameTagInput = pickerEl!.querySelector('input[aria-label="Rename tag Founders"]') as HTMLInputElement | null;
+      assert.ok(renameTagInput, 'Rename tag input renders');
+      await React.act(async () => {
+        const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value')?.set;
+        setter?.call(renameTagInput, 'Angels');
+        renameTagInput!.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      });
+      const saveRenameBtn = pickerEl!.querySelector('button[aria-label="Save renamed tag Founders"]') as HTMLButtonElement | null;
+      assert.ok(saveRenameBtn, 'Save renamed tag button renders');
+      await React.act(async () => {
+        saveRenameBtn!.click();
+        await new Promise((r) => setTimeout(r, 40));
+      });
+      const angelsChip = Array.from(pickerEl!.querySelectorAll('[role="tablist"] button')).find((b) =>
+        (b.textContent || '').includes('Angels')
+      ) as HTMLButtonElement | undefined;
+      assert.ok(angelsChip, 'Renamed tag Angels updates filter chip in UI');
+      await React.act(async () => {
+        angelsChip!.click();
+      });
+      assert.ok((pickerEl!.textContent || '').includes('Elena Rostova'), 'Filtering by renamed tag shows matching contact');
+      assert.ok(!(pickerEl!.textContent || '').includes('Marcus Lind'), 'Filtering hides contact without renamed tag');
+      const allChip = Array.from(pickerEl!.querySelectorAll('[role="tablist"] button')).find((b) =>
+        (b.textContent || '').trim() === 'All'
+      ) as HTMLButtonElement | undefined;
+      await React.act(async () => {
+        allChip?.click();
+      });
+
       // Separate Share Event Label input and finish selection
       const evInput = pickerEl!.querySelector('#share-event-label-input') as HTMLInputElement | null;
       assert.ok(evInput, 'Share Event Label input exists separately');
@@ -1230,7 +1326,7 @@ async function runSuite() {
       expiredContainer.remove();
       activeCookieUser = USER_A;
 
-      // 5. Render SharedProfileClient in valid, revoked, and expired states
+      // 5. Render SharedProfileClient in valid (images permitted & unpermitted), mobile preview toggle, revoked, and expired states
       const { AppRouterContext } = await import(
         'next/dist/shared/lib/app-router-context.shared-runtime'
       );
@@ -1244,6 +1340,7 @@ async function runSuite() {
         bfcacheId: 'test-bfcache'
       };
 
+      // 5a. Shared link with photo, coverImage, and resume permitted
       await React.act(async () => {
         root.render(
           React.createElement(
@@ -1253,14 +1350,14 @@ async function runSuite() {
               result: {
                 outcome: 'valid',
                 profile: sanitizeProfileForShare(PROFILE_A, {
-                  selectedFields: ['name', 'bio', 'skills', 'custom-field-cf-portfolio']
+                  selectedFields: ['photo', 'coverImage', 'name', 'bio', 'skills', 'resume', 'custom-field-cf-portfolio']
                 }),
                 shareMeta: {
                   shareLinkId: 'lnk-ui-1',
                   title: 'AI Meetup Share',
                   eventLabel: 'Expo 2027',
                   expiryOption: 'never',
-                  selectedFieldsCount: 4
+                  selectedFieldsCount: 7
                 }
               }
             })
@@ -1270,6 +1367,69 @@ async function runSuite() {
       const visitorValidText = container.textContent || '';
       assert.ok(visitorValidText.includes('AI Meetup Share') && visitorValidText.includes('Expo 2027'));
       assert.ok(!visitorValidText.includes('DE89370400440532013000'), 'Shared visitor view excludes Never Share items');
+
+      const headerEl = container.querySelector('header');
+      assert.ok(headerEl, 'Shared view renders minimalist sticky header');
+      const headerConnectBtns = Array.from(headerEl!.querySelectorAll('button')).filter((b) =>
+        (b.textContent || '').includes('Connect') || (b.getAttribute('aria-label') || '').includes('Connect')
+      );
+      assert.strictEqual(headerConnectBtns.length, 0, 'Sticky header must NOT contain duplicate Connect button');
+
+      const allConnectBtns = Array.from(container.querySelectorAll('button')).filter(
+        (b) => (b.textContent || '').trim() === 'Connect'
+      );
+      assert.strictEqual(allConnectBtns.length, 1, 'Exactly one Connect action exists inside Hero section');
+      assert.ok(headerEl!.querySelector('button[aria-label="Save Contact"]'), 'Compact Save Contact icon present');
+      assert.ok(headerEl!.querySelector('button[aria-label="View CV"]'), 'CV icon shown when resume access is permitted');
+      assert.ok(headerEl!.querySelector('button[aria-label="Download PDF"]'), 'Compact PDF icon present');
+      assert.ok(headerEl!.querySelector('button[aria-label="Copy Share Link"]'), 'Compact Copy icon present');
+      assert.ok(headerEl!.querySelector('button[aria-label="Share Profile"]'), 'Compact Share icon present');
+
+      const renderedImgs = Array.from(container.querySelectorAll('img')).map((img) => img.getAttribute('src') || '');
+      assert.ok(renderedImgs.includes(PROFILE_A.coverImage!), 'Permitted coverImage renders on shared preview');
+      assert.ok(renderedImgs.includes(PROFILE_A.avatar!), 'Permitted profile avatar renders on shared preview');
+
+      // Toggle Desktop -> Mobile preview on SharedProfileClient
+      const mobilePreviewToggle = headerEl!.querySelector('button[aria-label="Mobile preview"]') as HTMLButtonElement | null;
+      assert.ok(mobilePreviewToggle, 'Desktop/Mobile preview switch exists on shared page header');
+      await React.act(async () => {
+        mobilePreviewToggle!.click();
+      });
+      const mobilePreviewChassis = container.querySelector('[data-testid="shared-mobile-preview"]');
+      assert.ok(mobilePreviewChassis, 'Clicking Mobile preview renders PhonePreview chassis on desktop');
+      assert.strictEqual(
+        mobilePreviewChassis!.querySelector('button[aria-label="Edit Profile"]'),
+        null,
+        'Mobile preview on shared link must never expose owner Edit controls'
+      );
+
+      // 5b. Shared link where photo, coverImage, and resume are NOT selected -> images & CV strictly hidden
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(SharedProfileClient, {
+              result: {
+                outcome: 'valid',
+                profile: sanitizeProfileForShare(PROFILE_A, {
+                  selectedFields: ['name', 'bio', 'skills']
+                }),
+                shareMeta: {
+                  shareLinkId: 'lnk-ui-2',
+                  title: 'Minimal Share',
+                  expiryOption: 'never',
+                  selectedFieldsCount: 3
+                }
+              }
+            })
+          )
+        );
+      });
+      assert.strictEqual(container.querySelector('button[aria-label="View CV"]'), null, 'CV action hidden when resume is not permitted');
+      const unpermittedImgs = Array.from(container.querySelectorAll('img')).map((img) => img.getAttribute('src') || '');
+      assert.ok(!unpermittedImgs.includes(PROFILE_A.coverImage!), 'Unselected coverImage must not render');
+      assert.ok(!unpermittedImgs.includes(PROFILE_A.avatar!), 'Unselected avatar must not render');
 
       await React.act(async () => {
         root.render(

@@ -179,7 +179,7 @@ export function UnifiedShareWorkspace({
     if (!isOpen || isAuthRequired) return;
     if (userProfiles && userProfiles.length > 0) return;
     let active = true;
-    fetch('/api/profile/list')
+    fetch('/api/profile/list', { cache: 'no-store' })
       .then(async (res) => {
         if (!active) return;
         if (res.status === 401) {
@@ -192,7 +192,7 @@ export function UnifiedShareWorkspace({
           setRoles(data.profiles);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       active = false;
     };
@@ -204,7 +204,7 @@ export function UnifiedShareWorkspace({
     Promise.resolve().then(() => {
       if (active) setIsLoadingRecipients(true);
     });
-    fetch('/api/share/recipients')
+    fetch('/api/share/recipients', { cache: 'no-store' })
       .then((res) =>
         res
           .json()
@@ -314,8 +314,8 @@ export function UnifiedShareWorkspace({
       return getCustomFieldDisplay(cf, getFieldPrivacyTier(activeProfile, fieldKey));
     }
     switch (fieldKey) {
-      case 'photo': return activeProfile.avatar ? 'Profile headshot configured' : 'Not uploaded';
-      case 'coverImage': return activeProfile.coverImage ? 'Cover banner configured' : 'Default cover';
+      case 'photo': return (activeProfile.avatar || (activeProfile as any).logoUrl) ? 'Profile headshot configured' : 'Not uploaded';
+      case 'coverImage': return (activeProfile.coverImage || (activeProfile as any).coverUrl) ? 'Cover banner configured' : 'Default cover';
       case 'name': return activeProfile.name || 'Not set';
       case 'title': return activeProfile.designation || activeProfile.professionalTitle || 'Not set';
       case 'bio': return activeProfile.shortBio || activeProfile.about || 'Not set';
@@ -640,8 +640,8 @@ export function UnifiedShareWorkspace({
                 {activeTab === 'share'
                   ? 'Share Profile'
                   : activeTab === 'links'
-                  ? 'Shared Links'
-                  : 'Share Templates'}
+                    ? 'Shared Links'
+                    : 'Share Templates'}
               </h1>
 
               <div className="w-[68px] shrink-0" aria-hidden="true" />
@@ -651,9 +651,8 @@ export function UnifiedShareWorkspace({
             <div className="relative">
               <div
                 onClick={() => roles.length > 1 && setIsProfileMenuOpen((v) => !v)}
-                className={`p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 flex items-center justify-between gap-2.5 ${
-                  roles.length > 1 ? 'cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-600' : ''
-                }`}
+                className={`p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 flex items-center justify-between gap-2.5 ${roles.length > 1 ? 'cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-600' : ''
+                  }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   {activeProfile.avatar ? (
@@ -699,11 +698,10 @@ export function UnifiedShareWorkspace({
                         key={r.id}
                         type="button"
                         onClick={() => handleSwitchProfile(r)}
-                        className={`w-full p-2 rounded-xl flex items-center justify-between gap-2 text-left transition-colors cursor-pointer ${
-                          isSel
-                            ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-white font-bold'
-                            : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-700 dark:text-zinc-200'
-                        }`}
+                        className={`w-full p-2 rounded-xl flex items-center justify-between gap-2 text-left transition-colors cursor-pointer ${isSel
+                          ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-white font-bold'
+                          : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50 text-zinc-700 dark:text-zinc-200'
+                          }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-white/10 flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
@@ -742,11 +740,10 @@ export function UnifiedShareWorkspace({
                     key={t.id}
                     type="button"
                     onClick={() => setActiveTab(t.id)}
-                    className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      active
-                        ? 'bg-black text-white dark:bg-white dark:text-black shadow-2xs'
-                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
-                    }`}
+                    className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${active
+                      ? 'bg-black text-white dark:bg-white dark:text-black shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
+                      }`}
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{t.label}</span>
@@ -868,11 +865,10 @@ export function UnifiedShareWorkspace({
           <div className="space-y-4">
             {statusFeedback && (
               <div
-                className={`p-3 rounded-xl text-xs font-semibold border ${
-                  statusFeedback.type === 'success'
-                    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300'
-                }`}
+                className={`p-3 rounded-xl text-xs font-semibold border ${statusFeedback.type === 'success'
+                  ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-rose-500/10 border-rose-500/25 text-rose-700 dark:text-rose-300'
+                  }`}
               >
                 {statusFeedback.text}
               </div>
@@ -900,11 +896,10 @@ export function UnifiedShareWorkspace({
                       key={pKey}
                       type="button"
                       onClick={() => handleSelectPreset(pKey)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 shrink-0 transition-all cursor-pointer ${
-                        active
-                          ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-2xs'
-                          : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
-                      }`}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 shrink-0 transition-all cursor-pointer ${active
+                        ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-2xs'
+                        : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400'
+                        }`}
                     >
                       {active && <Check className="w-3 h-3 stroke-[3]" />}
                       <span>{def.name}</span>
@@ -1069,11 +1064,10 @@ export function UnifiedShareWorkspace({
                         setExpiryOption(opt.k);
                         setGeneratedLink(null);
                       }}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${
-                        expiryOption === opt.k
-                          ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                          : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800'
-                      }`}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors cursor-pointer ${expiryOption === opt.k
+                        ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+                        : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800'
+                        }`}
                     >
                       {opt.label}
                     </button>
@@ -1230,13 +1224,12 @@ export function UnifiedShareWorkspace({
                                   aria-checked={isOn}
                                   aria-label={`Toggle ${label}`}
                                   onClick={() => handleToggleField(cfKey, label)}
-                                  className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer shrink-0 flex items-center ${
-                                    isNeverShare || hiddenOnProfile
-                                      ? 'bg-zinc-200 dark:bg-zinc-800 justify-start opacity-60'
-                                      : isOn
+                                  className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer shrink-0 flex items-center ${isNeverShare || hiddenOnProfile
+                                    ? 'bg-zinc-200 dark:bg-zinc-800 justify-start opacity-60'
+                                    : isOn
                                       ? 'bg-black dark:bg-white justify-end'
                                       : 'bg-zinc-300 dark:bg-zinc-700 justify-start'
-                                  }`}
+                                    }`}
                                 >
                                   <span className="w-4.5 h-4.5 rounded-full bg-white dark:bg-black shadow-xs" />
                                 </button>
@@ -1351,13 +1344,12 @@ export function UnifiedShareWorkspace({
                                 aria-checked={isOn}
                                 aria-label={`Toggle ${field.label}`}
                                 onClick={() => handleToggleField(field.key, field.label)}
-                                className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer shrink-0 flex items-center ${
-                                  isNeverShare || ownerHidden
-                                    ? 'bg-zinc-200 dark:bg-zinc-800 justify-start opacity-60'
-                                    : isOn
+                                className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer shrink-0 flex items-center ${isNeverShare || ownerHidden
+                                  ? 'bg-zinc-200 dark:bg-zinc-800 justify-start opacity-60'
+                                  : isOn
                                     ? 'bg-black dark:bg-white justify-end'
                                     : 'bg-zinc-300 dark:bg-zinc-700 justify-start'
-                                }`}
+                                  }`}
                               >
                                 <span className="w-4.5 h-4.5 rounded-full bg-white dark:bg-black shadow-xs" />
                               </button>

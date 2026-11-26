@@ -92,6 +92,30 @@ export function resolveBackgroundMode(profile: Partial<ProfileData>): 'default' 
   return 'default';
 }
 
+export interface BackgroundAppearance {
+  mode: 'default' | 'image' | 'video' | 'occasion';
+  hasCustomBg: boolean;
+  bgIsDark: boolean;
+}
+
+export function resolveBackgroundAppearance(
+  profile: Partial<ProfileData>,
+  overrideOccasionThemeId?: string | null
+): BackgroundAppearance {
+  const mode = overrideOccasionThemeId ? 'occasion' : resolveBackgroundMode(profile);
+  if (mode === 'default') {
+    return { mode: 'default', hasCustomBg: false, bgIsDark: false };
+  }
+  if (mode === 'occasion') {
+    const occasionTheme = getBackgroundTheme(overrideOccasionThemeId || profile.activeBackgroundThemeId);
+    if (!occasionTheme) {
+      return { mode: 'default', hasCustomBg: false, bgIsDark: false };
+    }
+    return { mode: 'occasion', hasCustomBg: true, bgIsDark: occasionTheme.isDark };
+  }
+  return { mode, hasCustomBg: true, bgIsDark: true };
+}
+
 export function getBackgroundDescription(profile: Partial<ProfileData>): string {
   const mode = resolveBackgroundMode(profile);
   if (mode === 'image') {
@@ -197,10 +221,29 @@ export function ProfileBackgroundLayer({
   if (mode === 'occasion') {
     const theme = getBackgroundTheme(overrideOccasionThemeId || profile.activeBackgroundThemeId);
     if (!theme) return null;
+    const backgroundStyle: React.CSSProperties = {
+      ...theme.backgroundStyle,
+      ...(contained ? { backgroundAttachment: 'scroll' } : {}),
+      zIndex: 0
+    };
+    if (contained) {
+      return (
+        <div
+          data-contained="true"
+          data-background-mode="occasion"
+          className={`${posClass} pointer-events-none z-0 transition-all duration-500 ease-in-out`}
+          aria-hidden="true"
+        >
+          <div className="sticky top-0 w-full h-full max-h-[100dvh]" style={backgroundStyle} />
+        </div>
+      );
+    }
     return (
       <div
+        data-contained="false"
+        data-background-mode="occasion"
         className={`${posClass} pointer-events-none z-0 transition-all duration-500 ease-in-out`}
-        style={{ ...theme.backgroundStyle, zIndex: 0 }}
+        style={backgroundStyle}
         aria-hidden="true"
       />
     );
@@ -209,15 +252,19 @@ export function ProfileBackgroundLayer({
   if (mode === 'image' && profile.customBackgroundImage) {
     return (
       <div
-        className={`${posClass} pointer-events-none z-0 overflow-hidden`}
+        data-contained={contained ? 'true' : 'false'}
+        data-background-mode="image"
+        className={`${posClass} pointer-events-none z-0 ${contained ? '' : 'overflow-hidden'}`}
         aria-hidden="true"
       >
-        <img
-          src={profile.customBackgroundImage}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/20 dark:bg-black/45" />
+        <div className={contained ? 'sticky top-0 w-full h-full max-h-[100dvh] overflow-hidden' : 'relative w-full h-full overflow-hidden'}>
+          <img
+            src={profile.customBackgroundImage}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/25 dark:bg-black/45" />
+        </div>
       </div>
     );
   }
@@ -228,22 +275,26 @@ export function ProfileBackgroundLayer({
 
     return (
       <div
-        className={`${posClass} pointer-events-none z-0 overflow-hidden`}
+        data-contained={contained ? 'true' : 'false'}
+        data-background-mode="video"
+        className={`${posClass} pointer-events-none z-0 ${contained ? '' : 'overflow-hidden'}`}
         aria-hidden="true"
       >
-        {preset ? (
-          <AnimatedVideoBackdrop variant={preset.variant} />
-        ) : (
-          <video
-            src={src}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-black/20 dark:bg-black/45" />
+        <div className={contained ? 'sticky top-0 w-full h-full max-h-[100dvh] overflow-hidden' : 'relative w-full h-full overflow-hidden'}>
+          {preset ? (
+            <AnimatedVideoBackdrop variant={preset.variant} />
+          ) : (
+            <video
+              src={src}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-black/25 dark:bg-black/45" />
+        </div>
       </div>
     );
   }

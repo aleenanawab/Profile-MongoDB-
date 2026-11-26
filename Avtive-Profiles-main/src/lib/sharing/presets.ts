@@ -35,13 +35,13 @@ export const SHAREABLE_FIELD_GROUPS: Array<{
   id: ShareFieldDefinition['group'];
   label: string;
 }> = [
-  { id: 'basics', label: 'Profile Basics' },
-  { id: 'about', label: 'About & Media' },
-  { id: 'contact', label: 'Contact & Personal Details' },
-  { id: 'career', label: 'Career & Credentials' },
-  { id: 'extended', label: 'Additional Sections' },
-  { id: 'custom', label: 'Custom Fields' }
-];
+    { id: 'basics', label: 'Profile Basics' },
+    { id: 'about', label: 'About & Media' },
+    { id: 'contact', label: 'Contact & Personal Details' },
+    { id: 'career', label: 'Career & Credentials' },
+    { id: 'extended', label: 'Additional Sections' },
+    { id: 'custom', label: 'Custom Fields' }
+  ];
 
 export const SHAREABLE_FIELDS: ShareFieldDefinition[] = [
   // Basics
@@ -395,7 +395,10 @@ export function isFieldOwnerHidden(profile: ProfileData, fieldKey: string): bool
     }
   } else if (fieldKey === 'photo' && (visibility.photo === false || sharing.photo === false)) {
     return true;
-  } else if (fieldKey === 'coverImage' && ((sharing as any).coverImage === false || visibility.coverImage === false)) {
+  } else if (
+    fieldKey === 'coverImage' &&
+    ((sharing as any).coverImage === false || visibility.coverImage === false || (visibility as any).cover === false)
+  ) {
     return true;
   } else if ((fieldKey === 'name' || fieldKey === 'title') && sharing.nameAndTitle === false) {
     return true;
@@ -424,8 +427,17 @@ export function hasFieldValue(profile: ProfileData, fieldKey: string): boolean {
   }
 
   switch (fieldKey) {
-    case 'photo': return Boolean(profile.avatar);
-    case 'coverImage': return Boolean(profile.coverImage);
+    case 'photo':
+      return Boolean(
+        (profile.avatar && profile.avatar.trim()) ||
+        ((profile as any).logoUrl && String((profile as any).logoUrl).trim()) ||
+        (profile.companyLogo && profile.companyLogo.trim())
+      );
+    case 'coverImage':
+      return Boolean(
+        (profile.coverImage && profile.coverImage.trim()) ||
+        ((profile as any).coverUrl && String((profile as any).coverUrl).trim())
+      );
     case 'name': return Boolean(profile.name);
     case 'title': return Boolean(profile.designation || profile.professionalTitle || profile.profession || profile.headline);
     case 'bio': return Boolean(profile.bio || profile.shortBio || profile.about || profile.fullBio || profile.tagline);

@@ -54,7 +54,7 @@ export function AvtivePlatformHeader() {
     } finally {
       try {
         sessionStorage.removeItem('avtive_active_session');
-      } catch {}
+      } catch { }
       setUser(null);
       setProfile(null);
       setProfiles([]);
@@ -64,26 +64,33 @@ export function AvtivePlatformHeader() {
 
   const primarySlug = profiles?.[0]?.slug || profiles?.[0]?.id || profile?.slug || profile?.id || user?.id;
   const isAuthPage = pathname === '/login' || pathname === '/register';
+  const [hasEditQuery, setHasEditQuery] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setHasEditQuery(window.location.search.includes('edit=true'));
+    }
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 w-full transition-colors duration-200 border-b bg-white/95 text-slate-900 border-slate-200 shadow-xs dark:bg-[#0B0D13]/95 dark:text-white dark:border-white/10 dark:shadow-none backdrop-blur-md pt-[max(0rem,env(safe-area-inset-top))]">
       <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex items-center justify-between gap-3">
-        
+
         {/* Left Section: Brand Logo */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="min-h-[44px] flex items-center gap-2.5 sm:gap-3 shrink-0 group hover:opacity-95 transition-opacity"
           aria-label="Avtive Home"
         >
           {/* Avtive Symbol Logo */}
           <div className="h-8 flex items-center">
-            <img 
-              src="/images/avtive-symbol.png" 
-              alt="Avtive Logo" 
+            <img
+              src="/images/avtive-symbol.png"
+              alt="Avtive Logo"
               className="h-7 w-auto object-contain"
             />
           </div>
-          
+
           <span className="font-bold text-base sm:text-lg tracking-tight font-sans text-slate-900 dark:text-white">
             Avtive
           </span>
@@ -99,11 +106,17 @@ export function AvtivePlatformHeader() {
                   {primarySlug && (
                     <Link
                       href={`/profile/${encodeURIComponent(primarySlug)}?edit=true`}
-                      className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
-                        pathname?.includes('/edit') || (typeof window !== 'undefined' && window.location.search.includes('edit=true'))
+                      onClick={(e) => {
+                        const targetBase = `/profile/${encodeURIComponent(primarySlug)}`;
+                        if (pathname === targetBase || pathname === `/profile/${primarySlug}`) {
+                          e.preventDefault();
+                          window.dispatchEvent(new CustomEvent('avtive_open_edit_mode'));
+                        }
+                      }}
+                      className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${pathname?.includes('/edit') || hasEditQuery
                           ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-slate-900 dark:border-white'
                           : 'bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15'
-                      }`}
+                        }`}
                       title="Open Profile Editor"
                     >
                       <Edit3 className="w-4 h-4" />
@@ -113,11 +126,10 @@ export function AvtivePlatformHeader() {
 
                   <Link
                     href="/dashboard"
-                    className={`hidden md:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
-                      pathname === '/dashboard'
+                    className={`hidden md:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-full text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${pathname === '/dashboard'
                         ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-slate-900 dark:border-white'
                         : 'bg-white hover:bg-slate-100 text-slate-900 border-slate-300 dark:bg-[#161821] dark:hover:bg-[#1f222e] dark:text-white dark:border-white/15'
-                    }`}
+                      }`}
                     title="Workspaces Dashboard"
                   >
                     <LayoutGrid className="w-4 h-4" />

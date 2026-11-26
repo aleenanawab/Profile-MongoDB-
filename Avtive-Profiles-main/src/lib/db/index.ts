@@ -103,6 +103,7 @@ export {
 export {
   getShareRecipientsForUser,
   createContactTagForOwner,
+  renameContactTagForOwner,
   deleteContactTagForOwner,
   updateRecipientTagsForOwner,
   DEFAULT_EVENT_LABELS

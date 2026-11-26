@@ -8,11 +8,15 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import {
   BACKGROUND_THEMES,
   BACKGROUND_THEME_CATEGORIES,
   getBackgroundTheme
 } from '../src/data/backgroundThemes';
+import { ProfileBackgroundLayer, resolveBackgroundAppearance } from '../src/components/editor/BackgroundRenderer';
+import { getSurfaceThemeConfig } from '../src/components/ui/themeStyles';
 import { parseExternalVideoUrl } from '../src/components/profile-sections/ProfileIntroductionMedia';
 import { diffProfile, isProfileDirty } from '../src/lib/profileDiff';
 import { sanitizeProfileForPublic, mapDocToProfileData } from '../src/lib/db/profiles';
@@ -309,5 +313,76 @@ describe('Sanitization & Backward Compatibility', () => {
     assert.deepStrictEqual(mapped.savedBackgroundThemeIds, ['aurora-borealis', 'royal-amethyst']);
     assert.ok(mapped.introductionMedia);
     assert.strictEqual(mapped.introductionMedia?.type, 'external');
+  });
+
+  it('resolveBackgroundAppearance & getSurfaceThemeConfig adapt translucent surfaces across all 4 background modes', () => {
+    const baseProfile: Partial<ProfileData> = {
+      id: 'p-bg',
+      name: 'Background Tester',
+      slug: 'bg-tester',
+      theme: 'editorial'
+    };
+
+    const defaultApp = resolveBackgroundAppearance(baseProfile);
+    assert.deepStrictEqual(defaultApp, { mode: 'default', hasCustomBg: false, bgIsDark: false });
+    const defaultSurface = getSurfaceThemeConfig('editorial', baseProfile);
+    assert.ok(defaultSurface.cardBg.includes('bg-white'), 'Default surface keeps editorial light base');
+
+    const darkOccasionProfile: Partial<ProfileData> = {
+      ...baseProfile,
+      backgroundType: 'occasion',
+      activeBackgroundThemeId: 'aurora-borealis'
+    };
+    const darkOccApp = resolveBackgroundAppearance(darkOccasionProfile);
+    assert.deepStrictEqual(darkOccApp, { mode: 'occasion', hasCustomBg: true, bgIsDark: true });
+    const darkOccSurface = getSurfaceThemeConfig('editorial', darkOccasionProfile);
+    assert.ok(darkOccSurface.cardBg.includes('backdrop-blur-md') && darkOccSurface.cardBg.includes('/45'), 'Dark occasion uses translucent frosted surface');
+    assert.ok(darkOccSurface.textPrimary.includes('text-white'), 'Dark occasion forces readable white text even with editorial profile theme');
+
+    const lightOccasionProfile: Partial<ProfileData> = {
+      ...baseProfile,
+      backgroundType: 'occasion',
+      activeBackgroundThemeId: 'soft-linen'
+    };
+    const lightOccApp = resolveBackgroundAppearance(lightOccasionProfile);
+    assert.deepStrictEqual(lightOccApp, { mode: 'occasion', hasCustomBg: true, bgIsDark: false });
+    const lightOccSurface = getSurfaceThemeConfig('editorial', lightOccasionProfile);
+    assert.ok(lightOccSurface.cardBg.includes('bg-white/65') && lightOccSurface.cardBg.includes('backdrop-blur-md'), 'Light occasion uses bright translucent frosted glass');
+    assert.ok(lightOccSurface.textPrimary.includes('text-zinc-950'), 'Light occasion uses dark text');
+
+    const imageProfile: Partial<ProfileData> = {
+      ...baseProfile,
+      backgroundType: 'image',
+      customBackgroundImage: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=80'
+    };
+    assert.deepStrictEqual(resolveBackgroundAppearance(imageProfile), { mode: 'image', hasCustomBg: true, bgIsDark: true });
+    assert.ok(getSurfaceThemeConfig('editorial', imageProfile).cardBg.includes('bg-zinc-950/55'));
+
+    const videoProfile: Partial<ProfileData> = {
+      ...baseProfile,
+      backgroundType: 'video',
+      customBackgroundVideo: 'preset:waves'
+    };
+    assert.deepStrictEqual(resolveBackgroundAppearance(videoProfile), { mode: 'video', hasCustomBg: true, bgIsDark: true });
+    assert.ok(getSurfaceThemeConfig('editorial', videoProfile).cardBg.includes('bg-zinc-950/55'));
+
+    const containedOccasionHtml = renderToStaticMarkup(
+      React.createElement(ProfileBackgroundLayer, { profile: darkOccasionProfile, contained: true })
+    );
+    assert.ok(containedOccasionHtml.includes('data-contained="true"'));
+    assert.ok(containedOccasionHtml.includes('data-background-mode="occasion"'));
+    assert.ok(containedOccasionHtml.includes('background-attachment:scroll'), 'Contained background overrides fixed attachment for mobile compatibility');
+
+    const containedImageHtml = renderToStaticMarkup(
+      React.createElement(ProfileBackgroundLayer, { profile: imageProfile, contained: true })
+    );
+    assert.ok(containedImageHtml.includes('data-background-mode="image"'));
+    assert.ok(containedImageHtml.includes('sticky top-0'));
+
+    const containedVideoHtml = renderToStaticMarkup(
+      React.createElement(ProfileBackgroundLayer, { profile: videoProfile, contained: true })
+    );
+    assert.ok(containedVideoHtml.includes('data-background-mode="video"'));
+    assert.ok(containedVideoHtml.includes('sticky top-0'));
   });
 });

@@ -1,4 +1,5 @@
-import { ProfileTheme } from '@/types/profile';
+import { ProfileData, ProfileTheme } from '@/types/profile';
+import { resolveBackgroundAppearance } from '@/components/editor/BackgroundRenderer';
 
 export interface ThemeConfig {
   id: ProfileTheme;
@@ -357,6 +358,83 @@ export function getThemeConfig(theme?: ProfileTheme | string): ThemeConfig {
     return PROFILE_THEMES.soft;
   }
   return PROFILE_THEMES[theme as ProfileTheme] || PROFILE_THEMES.editorial;
+}
+
+/**
+ * Resolves profile surface tokens so custom backgrounds (images, animated videos,
+ * and light/dark occasion themes) integrate directly into translucent profile sections
+ * without hiding the background behind opaque white or dark boxes, while keeping text
+ * contrast readable independently of system Light/Dark mode.
+ */
+export function getSurfaceThemeConfig(
+  theme?: ProfileTheme | string,
+  profile?: Partial<ProfileData> | null,
+  overrideOccasionThemeId?: string | null
+): ThemeConfig {
+  const base = getThemeConfig(theme);
+  if (!profile && !overrideOccasionThemeId) {
+    return base;
+  }
+
+  const { mode, hasCustomBg, bgIsDark } = resolveBackgroundAppearance(
+    profile || {},
+    overrideOccasionThemeId
+  );
+
+  if (!hasCustomBg) {
+    return base;
+  }
+
+  if (bgIsDark) {
+    const surfaceBg = mode === 'occasion' ? 'bg-zinc-950/45 backdrop-blur-md' : 'bg-zinc-950/55 backdrop-blur-md';
+    return {
+      ...base,
+      pageBg: 'bg-transparent',
+      headerBg: 'bg-black/55 backdrop-blur-md border-white/15',
+      container: `${surfaceBg} text-white border border-white/15 shadow-none`,
+      cardBg: surfaceBg,
+      cardBorder: 'border-white/15',
+      subCardBg: 'bg-white/10 backdrop-blur-sm',
+      subCardBorder: 'border-white/15',
+      hoverBorder: 'hover:border-white/35',
+      textPrimary: `text-white ${base.fontFamily}`,
+      textSecondary: 'text-zinc-200',
+      textMuted: 'text-zinc-300',
+      accentText: 'text-white',
+      badgeBg: 'bg-white/15',
+      badgeText: 'text-zinc-100 border border-white/20',
+      btnPrimary: 'bg-white hover:bg-zinc-200 text-zinc-950 font-semibold rounded-xl shadow-sm',
+      btnSecondary: 'bg-white/15 hover:bg-white/25 text-white border border-white/25 rounded-xl',
+      divider: 'border-white/15',
+      pillTheme: 'bg-white/15 text-white',
+      coverFallback: 'bg-black/30',
+      accentRim: 'bg-gradient-to-r from-transparent via-white/35 to-transparent'
+    };
+  }
+
+  return {
+    ...base,
+    pageBg: 'bg-transparent',
+    headerBg: 'bg-white/75 backdrop-blur-md border-zinc-900/10',
+    container: 'bg-white/65 backdrop-blur-md text-zinc-950 border border-zinc-900/10 shadow-none',
+    cardBg: 'bg-white/65 backdrop-blur-md',
+    cardBorder: 'border-zinc-900/15',
+    subCardBg: 'bg-white/75 backdrop-blur-sm',
+    subCardBorder: 'border-zinc-900/10',
+    hoverBorder: 'hover:border-zinc-900/35',
+    textPrimary: `text-zinc-950 ${base.fontFamily}`,
+    textSecondary: 'text-zinc-700',
+    textMuted: 'text-zinc-600',
+    accentText: 'text-zinc-950',
+    badgeBg: 'bg-zinc-900/5',
+    badgeText: 'text-zinc-900 border border-zinc-900/15',
+    btnPrimary: 'bg-zinc-950 hover:bg-zinc-800 text-white font-semibold rounded-xl shadow-xs',
+    btnSecondary: 'bg-white/80 hover:bg-white text-zinc-950 border border-zinc-900/15 rounded-xl',
+    divider: 'border-zinc-900/10',
+    pillTheme: 'bg-zinc-900/10 text-zinc-950',
+    coverFallback: 'bg-white/40',
+    accentRim: 'bg-gradient-to-r from-transparent via-zinc-900/20 to-transparent'
+  };
 }
 
 

@@ -321,14 +321,14 @@ export function SkillsSection({
               key={skill.id || `view-skill-${idx}`}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold shadow-xs transition-all ${
                 skill.pinned
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200 ring-1 ring-amber-500/20'
-                  : 'bg-slate-100 dark:bg-zinc-800/80 border-slate-200 dark:border-zinc-700/80 text-slate-800 dark:text-zinc-200'
+                  ? 'bg-amber-500/15 border-amber-500/35 text-amber-500 dark:text-amber-300 ring-1 ring-amber-500/20'
+                  : `${theme.badgeBg} ${theme.badgeText}`
               }`}
             >
               {skill.pinned && <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />}
               <span>{skill.name}</span>
               {skill.level && (
-                <span className="text-[10px] font-mono text-neutral-400 font-normal">
+                <span className={`text-[10px] font-mono ${theme.textMuted} font-normal`}>
                   • {skill.level}
                 </span>
               )}

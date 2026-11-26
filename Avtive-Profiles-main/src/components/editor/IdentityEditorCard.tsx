@@ -13,7 +13,7 @@ import {
 import { ProfileData, ProfileTheme } from '@/types/profile';
 import { ThemeConfig, PROFILE_THEMES } from '@/components/ui/themeStyles';
 import { FormInput, FormLabel } from '@/components/ui/formControls';
-import { uploadImageToStorage } from '@/lib/imageCompression';
+import { compressImageFile, uploadImageToStorage } from '@/lib/imageCompression';
 import { ProfileIntroductionMediaSection } from '@/components/profile-sections/ProfileIntroductionMedia';
 
 const DEFAULT_AVATAR =
@@ -40,6 +40,9 @@ export function IdentityEditorCard({
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  const avatarSrc = profile.avatar || (profile as any).logoUrl || '';
+  const coverSrc = profile.coverImage || (profile as any).coverUrl || '';
+
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -47,7 +50,11 @@ export function IdentityEditorCard({
 
     setIsUploadingAvatar(true);
     try {
-      const url = await uploadImageToStorage(file, 'avatars');
+      const { file: compressedFile } = await compressImageFile(file);
+      const url = await uploadImageToStorage(compressedFile, 'avatars', {
+        profileId: profile.id || profile.slug,
+        field: 'avatar'
+      });
       onUpdateField('avatar', url);
       onShowToast?.('Profile photo updated');
     } catch (err: unknown) {
@@ -64,7 +71,11 @@ export function IdentityEditorCard({
 
     setIsUploadingCover(true);
     try {
-      const url = await uploadImageToStorage(file, 'profiles');
+      const { file: compressedFile } = await compressImageFile(file);
+      const url = await uploadImageToStorage(compressedFile, 'profiles', {
+        profileId: profile.id || profile.slug,
+        field: 'coverImage'
+      });
       onUpdateField('coverImage', url);
       onShowToast?.('Cover image updated');
     } catch (err: unknown) {
@@ -104,12 +115,15 @@ export function IdentityEditorCard({
             className="w-16 h-16 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-900 cursor-pointer relative group"
             title="Upload profile photo"
           >
-            {profile.avatar ? (
+            {avatarSrc ? (
               <img
-                src={profile.avatar}
+                src={avatarSrc}
                 alt={profile.name || 'Profile photo'}
                 onError={(e) => {
-                  e.currentTarget.src = DEFAULT_AVATAR;
+                  if (!e.currentTarget.dataset.fallbackApplied) {
+                    e.currentTarget.dataset.fallbackApplied = '1';
+                    e.currentTarget.src = DEFAULT_AVATAR;
+                  }
                 }}
                 className="w-full h-full object-cover"
               />
@@ -148,7 +162,7 @@ export function IdentityEditorCard({
             <h3 className="text-sm font-semibold text-zinc-950 dark:text-white truncate">
               Profile Identity
             </h3>
-            {profile.avatar && (
+            {avatarSrc && (
               <button
                 type="button"
                 onClick={() => onUpdateField('avatar', '')}
@@ -244,19 +258,19 @@ export function IdentityEditorCard({
             <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-10 h-7 rounded-lg overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0 flex items-center justify-center">
-                  {profile.coverImage ? (
-                    <img src={profile.coverImage} alt="" className="w-full h-full object-cover" />
+                  {coverSrc ? (
+                    <img src={coverSrc} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
                   )}
                 </div>
                 <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">
-                  {profile.coverImage ? 'Cover image active' : 'No cover image set'}
+                  {coverSrc ? 'Cover image active' : 'No cover image set'}
                 </span>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                {profile.coverImage && (
+                {coverSrc && (
                   <button
                     type="button"
                     onClick={() => onUpdateField('coverImage', '')}

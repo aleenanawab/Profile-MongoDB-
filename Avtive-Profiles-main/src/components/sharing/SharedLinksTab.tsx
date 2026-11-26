@@ -91,7 +91,7 @@ export function SharedLinksTab({
       setIsLoading(true);
       setErrorMsg(null);
     });
-    fetch('/api/share/links')
+    fetch('/api/share/links', { cache: 'no-store' })
       .then((res) =>
         res
           .json()

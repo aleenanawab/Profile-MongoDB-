@@ -11,21 +11,24 @@ import {
   FileDown,
   FileText,
   Tag,
-  ShieldCheck,
   Loader2,
-  UserPlus,
   Share2,
-  Check
+  Copy,
+  Check,
+  Monitor,
+  Smartphone
 } from 'lucide-react';
 import type { ResolveShareLinkResult } from '@/lib/db/shareLinks';
+import type { ProjectItem } from '@/types/profile';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
-import { ProfileBackgroundLayer, resolveBackgroundMode } from '@/components/editor/BackgroundRenderer';
-import { getThemeConfig } from '@/components/ui/themeStyles';
-import { getBackgroundTheme } from '@/data/backgroundThemes';
+import { PhonePreview } from '@/components/card/PhonePreview';
+import { ProfileBackgroundLayer, resolveBackgroundAppearance } from '@/components/editor/BackgroundRenderer';
+import { getSurfaceThemeConfig } from '@/components/ui/themeStyles';
 import { downloadVCard } from '@/lib/vcard';
 import { generateCardPdf } from '@/lib/cardPdfGenerator';
 import { ExchangeContactModal } from '@/components/modals/ExchangeContactModal';
 import { ResumeViewerModal } from '@/components/modals/ResumeViewerModal';
+import { ProjectDetailModal } from '@/components/modals/ProjectDetailModal';
 
 interface SharedProfileClientProps {
   result: ResolveShareLinkResult;
@@ -35,8 +38,11 @@ interface SharedProfileClientProps {
 export function SharedProfileClient({ result, isBotPreview = false }: SharedProfileClientProps) {
   const [isConnectOpen, setIsConnectOpen] = useState(false);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [activeSection, setActiveSection] = useState<string>('profile');
 
   if (isBotPreview || result.outcome !== 'valid') {
     const config =
@@ -107,23 +113,30 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
 
   const { profile, shareMeta } = result;
   const activeThemeKey = profile.theme && profile.theme !== 'default' ? profile.theme : 'editorial';
-  const themeConfig = getThemeConfig(activeThemeKey);
-  const bgTheme = getBackgroundTheme(profile.activeBackgroundThemeId);
+  const { hasCustomBg } = resolveBackgroundAppearance(profile);
+  const themeConfig = getSurfaceThemeConfig(activeThemeKey, profile);
   const canDownloadResume = profile.sharingSettings?.resume === true;
 
   const handleCopyCurrentLink = async () => {
     if (typeof window === 'undefined') return;
     try {
-      if (navigator.share) {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    } catch {}
+  };
+
+  const handleShareCurrentLink = async () => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (typeof navigator.share === 'function') {
         await navigator.share({
           title: shareMeta.title || `${profile.name} | Avtive`,
           url: window.location.href
         });
         return;
       }
-      await navigator.clipboard.writeText(window.location.href);
-      setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 2000);
+      await handleCopyCurrentLink();
     } catch {}
   };
 
@@ -137,60 +150,111 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
     }
   };
 
-  const bgMode = resolveBackgroundMode(profile);
-  const hasCustomBg = bgMode !== 'default';
+  const handleVisitorSectionSelect = (sectionKey: string) => {
+    setActiveSection(sectionKey);
+    if (typeof document === 'undefined') return;
+    const target =
+      document.getElementById(`section-${sectionKey}`) ||
+      document.querySelector(`[data-section="${sectionKey}"]`);
+    if (target && typeof target.scrollIntoView === 'function') {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div
       data-theme={activeThemeKey}
-      className={`min-h-[100dvh] w-full ${hasCustomBg ? 'bg-transparent' : themeConfig.pageBg} ${themeConfig.textPrimary} font-sans relative`}
+      className={`min-h-[100dvh] w-full flex flex-col relative overflow-x-clip ${
+        hasCustomBg ? 'bg-transparent' : themeConfig.pageBg
+      } ${themeConfig.textPrimary} font-sans`}
     >
-      <ProfileBackgroundLayer profile={profile} />
-      {/* Top Visitor Action Strip */}
-      <header className={`sticky top-0 z-30 backdrop-blur-md ${themeConfig.headerBg} border-b ${themeConfig.divider}`}>
-        <div className="max-w-3xl mx-auto px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2 flex-wrap">
+      <ProfileBackgroundLayer profile={profile} contained={true} />
+      <div className="relative z-10 w-full flex-1 flex flex-col">
+        {/* Minimalist Visitor Action Strip */}
+        <header className={`sticky top-0 z-30 backdrop-blur-md ${themeConfig.headerBg} border-b ${themeConfig.divider}`}>
+        <div className="max-w-3xl mx-auto px-3 sm:px-5 py-2 flex items-center justify-between gap-2 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/images/avtive-symbol.png" alt="Avtive" className="h-6 w-auto shrink-0" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-bold truncate max-w-[180px] sm:max-w-[260px]">
-                  {shareMeta.title}
+            <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-bold truncate max-w-[140px] sm:max-w-[260px]">
+                {shareMeta.title}
+              </span>
+              {shareMeta.eventLabel && (
+                <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-semibold shrink-0">
+                  <Tag className="w-2.5 h-2.5" />
+                  <span className="truncate max-w-[90px] sm:max-w-[140px]">{shareMeta.eventLabel}</span>
                 </span>
-                {shareMeta.eventLabel && (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-black text-white dark:bg-white dark:text-black font-semibold">
-                    <Tag className="w-2.5 h-2.5" />
-                    {shareMeta.eventLabel}
-                  </span>
-                )}
-              </div>
-              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-                <ShieldCheck className="w-3 h-3 text-zinc-700 dark:text-zinc-300 shrink-0" />
-                <span>
-                  Permission-scoped pass ({shareMeta.selectedFieldsCount} items)
-                  {shareMeta.expiryOption === '1_view' ? ' · Single-view link consumed' : ''}
+              )}
+              {shareMeta.expiryOption === '1_view' && (
+                <span className="hidden sm:inline-flex text-[10px] text-zinc-500 dark:text-zinc-400 font-medium shrink-0">
+                  Single-view
                 </span>
-              </div>
+              )}
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Desktop / Mobile preview switch on desktop viewports only */}
+            <div
+              role="group"
+              aria-label="Preview viewport mode"
+              className={`hidden md:inline-flex items-center p-0.5 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.cardBg}`}
+            >
+              <button
+                type="button"
+                onClick={() => setPreviewDevice('desktop')}
+                aria-label="Desktop preview"
+                aria-pressed={previewDevice === 'desktop'}
+                title="Desktop preview"
+                className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+                  previewDevice === 'desktop'
+                    ? themeConfig.btnPrimary
+                    : `${themeConfig.textMuted} hover:opacity-80`
+                }`}
+              >
+                <Monitor className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewDevice('mobile')}
+                aria-label="Mobile preview"
+                aria-pressed={previewDevice === 'mobile'}
+                title="Mobile preview"
+                className={`h-8 w-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+                  previewDevice === 'mobile'
+                    ? themeConfig.btnPrimary
+                    : `${themeConfig.textMuted} hover:opacity-80`
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => downloadVCard(profile)}
-              className={`min-h-[36px] px-2.5 py-1.5 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.btnSecondary} text-[11px] font-bold flex items-center gap-1 cursor-pointer`}
+              className={`group relative h-9 w-9 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.btnSecondary} flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90`}
+              title="Save Contact"
+              aria-label="Save Contact"
             >
-              <Contact className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">Save Contact</span>
+              <Contact className="w-4 h-4" />
+              <span className="pointer-events-none hidden sm:group-hover:block sm:group-focus-visible:block absolute top-full mt-1.5 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-medium whitespace-nowrap shadow-md">
+                Save Contact
+              </span>
             </button>
 
             {canDownloadResume && (
               <button
                 type="button"
                 onClick={() => setIsResumeOpen(true)}
-                className={`min-h-[36px] px-2.5 py-1.5 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.btnSecondary} text-[11px] font-bold flex items-center gap-1 cursor-pointer`}
+                className={`group relative h-9 w-9 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.btnSecondary} flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90`}
+                title="View CV"
+                aria-label="View CV"
               >
-                <FileText className="w-3.5 h-3.5" />
-                <span>CV</span>
+                <FileText className="w-4 h-4" />
+                <span className="pointer-events-none hidden sm:group-hover:block sm:group-focus-visible:block absolute top-full mt-1.5 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-medium whitespace-nowrap shadow-md">
+                  CV
+                </span>
               </button>
             )}
 
@@ -198,57 +262,95 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
               type="button"
               disabled={isDownloadingPdf}
               onClick={handleDownloadPdf}
-              className={`min-h-[36px] px-2.5 py-1.5 rounded-xl ${themeConfig.btnPrimary} text-[11px] font-bold flex items-center gap-1 cursor-pointer disabled:opacity-60`}
+              className={`group relative h-9 w-9 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.btnSecondary} flex items-center justify-center cursor-pointer disabled:opacity-60 transition-opacity hover:opacity-90`}
+              title="Download PDF"
+              aria-label="Download PDF"
             >
-              {isDownloadingPdf ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">PDF</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsConnectOpen(true)}
-              className={`min-h-[36px] px-2.5 py-1.5 rounded-xl ${themeConfig.btnPrimary} text-[11px] font-bold flex items-center gap-1 cursor-pointer`}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Connect</span>
+              {isDownloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+              <span className="pointer-events-none hidden sm:group-hover:block sm:group-focus-visible:block absolute top-full mt-1.5 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-medium whitespace-nowrap shadow-md">
+                PDF
+              </span>
             </button>
 
             <button
               type="button"
               onClick={handleCopyCurrentLink}
-              className={`min-h-[36px] w-9 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.cardBg} flex items-center justify-center cursor-pointer`}
+              className={`group relative h-9 w-9 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.btnSecondary} flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90`}
               title="Copy Share Link"
               aria-label="Copy Share Link"
             >
-              {copiedUrl ? <Check className="w-3.5 h-3.5 text-zinc-900 dark:text-white" /> : <Share2 className="w-3.5 h-3.5" />}
+              {copiedUrl ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              <span className="pointer-events-none hidden sm:group-hover:block sm:group-focus-visible:block absolute top-full mt-1.5 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-medium whitespace-nowrap shadow-md">
+                {copiedUrl ? 'Copied' : 'Copy'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleShareCurrentLink}
+              className={`group relative h-9 w-9 rounded-xl ${themeConfig.btnPrimary} flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90`}
+              title="Share Profile"
+              aria-label="Share Profile"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="pointer-events-none hidden sm:group-hover:block sm:group-focus-visible:block absolute top-full mt-1.5 right-0 px-2 py-0.5 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[10px] font-medium whitespace-nowrap shadow-md">
+                Share
+              </span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Sanitized Card */}
-      <main className="py-0 sm:py-6 px-0 sm:px-4">
+      {/* Main Sanitized Profile Preview */}
+      <main className="w-full flex-1">
+        {/* Desktop Card View (Always used cleanly on mobile viewports < md) */}
         <div
-          className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${themeConfig.cardBorder} ${themeConfig.cardBg} ${
-            bgTheme ? 'backdrop-blur-md shadow-2xl' : 'shadow-none sm:shadow-xl'
-          } overflow-hidden`}
+          data-testid="shared-desktop-view"
+          className={`${previewDevice === 'mobile' ? 'block md:hidden' : 'block'} w-full max-w-3xl mx-auto`}
         >
           <AvtiveDigitalCard
             profile={profile}
             canEdit={false}
             isEditing={false}
+            isConnected={false}
             isDark={false}
+            viewMode="standard"
+            activeSection={activeSection}
+            onSelectSection={handleVisitorSectionSelect}
             onSaveContact={() => downloadVCard(profile)}
-            onOpenShare={handleCopyCurrentLink}
+            onOpenShare={handleShareCurrentLink}
             onOpenConnect={() => setIsConnectOpen(true)}
             onOpenQRModal={() => {}}
             onOpenResumeModal={() => {
               if (canDownloadResume) setIsResumeOpen(true);
             }}
-            onSelectProject={() => {}}
+            onSelectProject={(project) => setSelectedProject(project)}
           />
         </div>
+
+        {/* Desktop Mobile-Preview Chassis (Shown on desktop >= md when toggled to Mobile) */}
+        {previewDevice === 'mobile' && (
+          <div data-testid="shared-mobile-preview" className="hidden md:flex justify-center py-6 px-4">
+            <PhonePreview
+              profile={profile}
+              isDark={false}
+              canEdit={false}
+              isEditing={false}
+              headerTitle="Mobile Preview"
+              onSaveContact={() => downloadVCard(profile)}
+              onOpenShare={handleShareCurrentLink}
+              onOpenConnect={() => setIsConnectOpen(true)}
+              onOpenQRModal={() => {}}
+              onOpenResumeModal={() => {
+                if (canDownloadResume) setIsResumeOpen(true);
+              }}
+              onSelectProject={(project) => setSelectedProject(project)}
+              onSelectSection={handleVisitorSectionSelect}
+            />
+          </div>
+        )}
       </main>
+      </div>
 
       {isConnectOpen && (
         <ExchangeContactModal
@@ -262,6 +364,15 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
         <ResumeViewerModal
           isOpen={isResumeOpen}
           onClose={() => setIsResumeOpen(false)}
+          profile={profile}
+        />
+      )}
+
+      {selectedProject && (
+        <ProjectDetailModal
+          isOpen={Boolean(selectedProject)}
+          onClose={() => setSelectedProject(null)}
+          project={selectedProject}
           profile={profile}
         />
       )}

@@ -80,7 +80,7 @@ export function ShareTemplatesTab({
     Promise.resolve().then(() => {
       if (!cancelled) setIsLoading(true);
     });
-    fetch('/api/share/templates')
+    fetch('/api/share/templates', { cache: 'no-store' })
       .then((res) =>
         res
           .json()

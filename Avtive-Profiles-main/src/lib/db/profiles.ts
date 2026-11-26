@@ -15,8 +15,27 @@ import { slugify } from '../validation';
 import { deleteFromCloudinary } from '@/lib/storage';
 import { isCanonicalSectionVisible, isFieldShared } from '@/lib/sections';
 
+function pickNonEmptyString(...candidates: unknown[]): string | undefined {
+  for (const val of candidates) {
+    if (typeof val === 'string' && val.trim().length > 0) {
+      return val.trim();
+    }
+  }
+  return undefined;
+}
+
 export function syncProfileAliases(data: Record<string, any>): Record<string, any> {
   const synced = { ...data };
+
+  // avatar <-> legacy logoUrl (only fill missing/empty avatar from non-empty logoUrl unless cleared intentionally)
+  if (!('avatar' in synced) && typeof synced.logoUrl === 'string' && synced.logoUrl.trim()) {
+    synced.avatar = synced.logoUrl.trim();
+  }
+
+  // coverImage <-> legacy coverUrl
+  if (!('coverImage' in synced) && typeof synced.coverUrl === 'string' && synced.coverUrl.trim()) {
+    synced.coverImage = synced.coverUrl.trim();
+  }
 
   // bio <-> shortBio
   if ('bio' in synced && !('shortBio' in synced)) synced.shortBio = synced.bio;
@@ -162,8 +181,8 @@ export function mapDocToProfileData(doc: any): ProfileData {
     officeAddress: doc.officeAddress ?? '',
     customContacts: Array.isArray(doc.customContacts) ? doc.customContacts : [],
     contactOrder: Array.isArray(doc.contactOrder) ? doc.contactOrder : [],
-    avatar: doc.avatar ?? doc.logoUrl ?? '',
-    coverImage: doc.coverImage ?? doc.coverUrl ?? undefined,
+    avatar: pickNonEmptyString(doc.avatar, doc.logoUrl) ?? '',
+    coverImage: pickNonEmptyString(doc.coverImage, doc.coverUrl),
     shortBio: doc.shortBio ?? doc.bio ?? '',
     fullBio: doc.fullBio ?? doc.about ?? '',
     bio: doc.bio ?? doc.shortBio ?? '',
@@ -328,9 +347,15 @@ export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean 
   const settings = profile.sharingSettings || DEFAULT_SHARING_SETTINGS;
   const visibility = profile.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
 
-  if (settings.photo === false || !isCanonicalSectionVisible(visibility, settings, 'profile') || visibility['photo'] === false) {
+  const profileSectionHidden = !isCanonicalSectionVisible(visibility, settings, 'profile');
+  if (profileSectionHidden || settings.photo === false || visibility['photo'] === false) {
     sanitized.avatar = '';
+    delete (sanitized as any).logoUrl;
+    sanitized.companyLogo = '';
+  }
+  if (profileSectionHidden || (settings as any).coverImage === false || visibility['coverImage'] === false) {
     sanitized.coverImage = undefined;
+    delete (sanitized as any).coverUrl;
   }
 
   if (settings.nameAndTitle === false) {
@@ -781,6 +806,12 @@ export async function updateProfile(
   }
   if (clearFieldsSet.has('customFields')) {
     clearFieldsSet.add('customFields');
+  }
+  if (clearFieldsSet.has('avatar')) {
+    clearFieldsSet.add('logoUrl');
+  }
+  if (clearFieldsSet.has('coverImage')) {
+    clearFieldsSet.add('coverUrl');
   }
   if (clearFieldsSet.has('introductionMedia')) {
     clearFieldsSet.add('introductionMedia');

@@ -130,6 +130,99 @@ export async function deleteContactTagForOwner(
 }
 
 /**
+ * Renames an owner-scoped ContactTagRecord and updates all owner CONTACT_TAG_LINKS references cleanly.
+ */
+export async function renameContactTagForOwner(
+  ownerUserId: string,
+  tagIdentifier: string,
+  rawNewName: string
+): Promise<ContactTagRecord> {
+  if (!ownerUserId) {
+    throw new Error('Authentication required to rename a contact tag.');
+  }
+  const raw = String(tagIdentifier || '').trim();
+  if (!raw) {
+    throw new Error('Original tag identifier is required.');
+  }
+  const { name: nextName, normalizedName: nextNormalized } = normalizeContactTagName(rawNewName);
+  if (!nextName) {
+    throw new Error('New tag name cannot be empty.');
+  }
+
+  await lazyEnsureIndexes();
+  const db = await getMongoDb();
+  const tagsCol = db.collection(COLLECTIONS.CONTACT_TAGS);
+  const linksCol = db.collection(COLLECTIONS.CONTACT_TAG_LINKS);
+
+  const { normalizedName: oldNormalizedFromIdentifier } = normalizeContactTagName(raw);
+  const existing = await tagsCol.findOne({
+    ownerUserId,
+    $or: [{ id: raw }, { normalizedName: oldNormalizedFromIdentifier }]
+  });
+
+  const oldNormalized = existing ? String(existing.normalizedName) : oldNormalizedFromIdentifier;
+  const now = new Date().toISOString();
+
+  // Check if another tag already owns the destination normalizedName (merge case or rename)
+  const conflictingTarget = await tagsCol.findOne({ ownerUserId, normalizedName: nextNormalized });
+  let resultTag: ContactTagRecord;
+
+  if (existing && conflictingTarget && String(conflictingTarget.id || conflictingTarget._id) !== String(existing.id || existing._id)) {
+    // Merge into existing destination tag with updated display name
+    await tagsCol.updateOne(
+      { ownerUserId, id: String(conflictingTarget.id || conflictingTarget._id) },
+      { $set: { name: nextName, normalizedName: nextNormalized, updatedAt: now } }
+    );
+    await tagsCol.deleteOne({ ownerUserId, id: String(existing.id || existing._id) });
+    resultTag = {
+      id: String(conflictingTarget.id || conflictingTarget._id),
+      ownerUserId,
+      name: nextName,
+      normalizedName: nextNormalized,
+      createdAt: String(conflictingTarget.createdAt || now),
+      updatedAt: now
+    };
+  } else if (existing) {
+    await tagsCol.updateOne(
+      { ownerUserId, id: String(existing.id || existing._id) },
+      { $set: { name: nextName, normalizedName: nextNormalized, updatedAt: now } }
+    );
+    resultTag = {
+      id: String(existing.id || existing._id),
+      ownerUserId,
+      name: nextName,
+      normalizedName: nextNormalized,
+      createdAt: String(existing.createdAt || now),
+      updatedAt: now
+    };
+  } else {
+    resultTag = await createContactTagForOwner(ownerUserId, nextName);
+  }
+
+  // Update every owner link carrying oldNormalized
+  const linkDocs = await linksCol.find({ ownerUserId }).toArray();
+  for (const linkDoc of linkDocs) {
+    const currentTags: string[] = Array.isArray(linkDoc.tags) ? linkDoc.tags.map(String) : [];
+    let changed = false;
+    const mapped = currentTags.map((t) => {
+      if (normalizeContactTagName(t).normalizedName === oldNormalized) {
+        changed = true;
+        return nextName;
+      }
+      return t;
+    });
+    if (changed) {
+      await linksCol.updateOne(
+        { ownerUserId, recipientId: String(linkDoc.recipientId) },
+        { $set: { tags: dedupeTagList(mapped), updatedAt: now } }
+      );
+    }
+  }
+
+  return resultTag;
+}
+
+/**
  * Assigns or removes owner-scoped contact tags on one or more saved contacts cleanly in MongoDB.
  * Never mutates any other user's profile or user record.
  */
@@ -293,13 +386,13 @@ export async function getShareRecipientsForUser(
   const companyColleagues =
     companyIds.length > 0
       ? await db
-          .collection(COLLECTIONS.COMPANY_MEMBERS)
-          .find({
-            companyId: { $in: companyIds },
-            status: { $ne: 'REMOVED' },
-            userId: { $ne: userId }
-          })
-          .toArray()
+        .collection(COLLECTIONS.COMPANY_MEMBERS)
+        .find({
+          companyId: { $in: companyIds },
+          status: { $ne: 'REMOVED' },
+          userId: { $ne: userId }
+        })
+        .toArray()
       : [];
 
   for (const colMember of companyColleagues) {

@@ -755,17 +755,22 @@ async function runTests() {
       assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0);
       assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 0);
 
-      // Phase 4: Verify section nav sits INSIDE card below Hero action buttons (no duplicate top-level nav) and uses icon-only tabs
+      // Unified single-canvas preview: strictly one ProfileSectionTabBar below Hero action area, no duplicate mobile phone panel, natural vertical scroll
       const desktopPanelEl = container.querySelector('#profile-scroll-panel');
       const mobilePanelEl = container.querySelector('#mobile-profile-scroll-panel');
       const desktopNav = desktopPanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
-      const mobileNav = mobilePanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
-      assert.ok(desktopNav && mobileNav, 'Section navigation must render inside both desktop and mobile profile panels');
+      assert.ok(desktopPanelEl && desktopNav, 'Section navigation must render inside primary profile panel');
+      assert.strictEqual(mobilePanelEl, null, 'Preview must not render a duplicate mobile phone panel');
       assert.strictEqual(
         container.querySelectorAll('[data-testid="profile-section-tabbar"]').length,
-        2,
-        'Must render strictly one ProfileSectionTabBar per preview layout without top-level duplicate navs'
+        1,
+        'Must render strictly one ProfileSectionTabBar in unified preview layout without duplicated navs'
       );
+      const previewRootEl = container.firstElementChild as HTMLElement | null;
+      assert.ok(previewRootEl?.className.includes('min-h-[100dvh]'), 'Preview uses natural document min-height scrolling');
+      assert.ok(!previewRootEl?.className.includes('max-h-[100dvh] overflow-hidden'), 'Preview avoids vertical scroll trap');
+      assert.strictEqual(desktopPanelEl?.querySelector('.rounded-3xl'), null, 'AvtiveDigitalCard is not wrapped inside an outer rounded-3xl box');
+
       const desktopHeroEl = desktopPanelEl?.querySelector('#section-hero');
       const desktopAboutEl = desktopPanelEl?.querySelector('#section-personalDetails');
       assert.ok(desktopHeroEl && desktopAboutEl && desktopNav, 'Hero, TabBar, and Content Sections exist in DOM');
@@ -790,6 +795,41 @@ async function runTests() {
         aboutIconTab!.click();
       });
       assert.strictEqual(aboutIconTab!.getAttribute('aria-current'), 'page', 'Clicking section icon updates active state');
+
+      // Custom occasion background renders inside unified canvas with translucent glass & scroll attachment
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ThemeProvider,
+              null,
+              React.createElement(PublicProfileClient, {
+                key: 'aurora-preview',
+                initialProfile: {
+                  ...clone(SAMPLE_PROFILE),
+                  theme: 'editorial',
+                  backgroundType: 'occasion',
+                  activeBackgroundThemeId: 'aurora-borealis',
+                },
+                session: OWNER_USER,
+                isOwner: true,
+                initialIsEditing: false,
+                initialIsSharing: false,
+                userProfiles: [clone(SAMPLE_PROFILE)],
+              })
+            )
+          )
+        );
+      });
+      const bgLayerEl = container.querySelector('[data-background-mode="occasion"]') as HTMLElement | null;
+      assert.ok(bgLayerEl, 'Occasion background layer renders directly in profile preview');
+      assert.strictEqual(bgLayerEl?.getAttribute('data-contained'), 'true', 'Profile background layer is contained inside single canvas');
+      assert.ok(
+        container.querySelector('#section-personalDetails .backdrop-blur-md'),
+        'Profile sections use translucent glass surface instead of opaque card'
+      );
 
       // Company profile layout follows the same Hero -> Actions -> Section Nav -> Sections hierarchy
       await React.act(async () => {
@@ -868,6 +908,35 @@ async function runTests() {
       assert.strictEqual(dom.window.location.search, '', 'Cancel returns to clean profile URL');
       assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0, 'Editor unmounts on return');
       assert.ok((container.textContent || '').includes('Zero-Color OS'), 'Preview restores on Cancel');
+
+      // Clicking Hero CTA Edit Profile button OR dispatching avtive_open_edit_mode also switches strictly in-page
+      const heroEditBtn = Array.from(container.querySelectorAll('button')).find(
+        (b) => (b.textContent || '').trim() === 'Edit Profile'
+      ) as HTMLButtonElement | undefined;
+      assert.ok(heroEditBtn, 'Hero section Edit Profile button exists in preview');
+      await React.act(async () => {
+        heroEditBtn!.click();
+      });
+      assert.strictEqual(dom.window.location.search, '?edit=true', 'Hero Edit Profile updates URL query in-page');
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 1, 'Hero Edit Profile opens in-page editor');
+      await React.act(async () => {
+        const cancelAgainBtn = Array.from(container.querySelectorAll('button')).find(
+          (b) => b.textContent?.trim() === 'Cancel'
+        );
+        cancelAgainBtn?.click();
+      });
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0);
+      await React.act(async () => {
+        dom.window.dispatchEvent(new dom.window.CustomEvent('avtive_open_edit_mode'));
+      });
+      assert.strictEqual(dom.window.location.search, '?edit=true', 'avtive_open_edit_mode opens in-page editor without navigation');
+      assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 1);
+      await React.act(async () => {
+        const cancelThirdBtn = Array.from(container.querySelectorAll('button')).find(
+          (b) => b.textContent?.trim() === 'Cancel'
+        );
+        cancelThirdBtn?.click();
+      });
 
       // Switch Preview -> Share
       const shareProfileBtn = container.querySelector('button[aria-label="Share Profile"]') as HTMLButtonElement | null;

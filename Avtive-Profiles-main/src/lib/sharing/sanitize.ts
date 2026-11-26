@@ -88,12 +88,32 @@ export function sanitizeProfileForShare(
     birthday: isAllowed('birthday')
   };
 
-  // Basics
+  // Basics (preserve & normalize legacy logoUrl/coverUrl when permitted; strip completely when disallowed)
+  const resolvedAvatar =
+    (typeof cloned.avatar === 'string' && cloned.avatar.trim()) ||
+    (typeof (profile as any).logoUrl === 'string' && (profile as any).logoUrl.trim()) ||
+    (typeof cloned.companyLogo === 'string' && cloned.companyLogo.trim()) ||
+    '';
+  const resolvedCover =
+    (typeof cloned.coverImage === 'string' && cloned.coverImage.trim()) ||
+    (typeof (profile as any).coverUrl === 'string' && (profile as any).coverUrl.trim()) ||
+    undefined;
+
   if (!nextSharing.photo) {
     cloned.avatar = '';
+    cloned.companyLogo = undefined;
+    delete (cloned as any).logoUrl;
+    if (cloned.companyInfo && typeof cloned.companyInfo === 'object') {
+      cloned.companyInfo = { ...cloned.companyInfo, logo: '' };
+    }
+  } else {
+    cloned.avatar = resolvedAvatar;
   }
   if (!nextSharing.coverImage) {
     cloned.coverImage = undefined;
+    delete (cloned as any).coverUrl;
+  } else {
+    cloned.coverImage = resolvedCover;
   }
   if (!nextSharing.name) {
     cloned.name = isAllowed('title') ? (profile.designation || 'Shared Profile') : 'Shared Profile';

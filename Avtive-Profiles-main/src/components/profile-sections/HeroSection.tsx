@@ -26,7 +26,7 @@ interface HeroSectionProps {
   isEditing?: boolean;
   isConnected?: boolean;
   onUpdateField?: (field: keyof ProfileData, value: any) => void;
-  onSavePartial?: (partialData: Partial<ProfileData>) => Promise<ProfileData>;
+  onSavePartial?: (partialData: Partial<ProfileData>, clearFields?: string[]) => Promise<ProfileData>;
   onOpenEdit?: () => void;
   onOpenShare?: () => void;
   onOpenConnect?: () => void;
@@ -102,9 +102,17 @@ export function HeroSection({
   const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
 
-  const coverUrl = heroDraft.coverImage || profile.coverImage || (profile as any).coverUrl || DEFAULT_COVER;
-  const avatarUrl = heroDraft.avatar || profile.avatar || (profile as any).logoUrl || DEFAULT_AVATAR;
   const sharing = profile.sharingSettings || {};
+  const allowCoverDisplay = (sharing as any).coverImage !== false || isEditing || canEdit;
+  const allowPhotoDisplay = sharing.photo !== false || isEditing || canEdit;
+  const rawCoverUrl = isEditing
+    ? (heroDraft.coverImage || profile.coverImage || (profile as any).coverUrl || '')
+    : (profile.coverImage || (profile as any).coverUrl || '');
+  const rawAvatarUrl = isEditing
+    ? (heroDraft.avatar || profile.avatar || (profile as any).logoUrl || '')
+    : (profile.avatar || (profile as any).logoUrl || '');
+  const coverUrl = allowCoverDisplay ? (rawCoverUrl || DEFAULT_COVER) : '';
+  const avatarUrl = allowPhotoDisplay ? (rawAvatarUrl || DEFAULT_AVATAR) : '';
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -187,7 +195,7 @@ export function HeroSection({
     onUpdateField?.('coverImage', '');
     if (onSavePartial) {
       try {
-        await onSavePartial({ coverImage: '' });
+        await onSavePartial({ coverImage: '' }, ['coverImage']);
       } catch (err: any) {
         setErrorMessage(err?.message || 'Failed to remove cover banner.');
       }
@@ -201,7 +209,7 @@ export function HeroSection({
     onUpdateField?.('avatar', '');
     if (onSavePartial) {
       try {
-        await onSavePartial({ avatar: '' });
+        await onSavePartial({ avatar: '' }, ['avatar']);
       } catch (err: any) {
         setErrorMessage(err?.message || 'Failed to remove profile photo.');
       }
@@ -390,12 +398,12 @@ export function HeroSection({
   const renderSocialIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'github':
-        return <GithubIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
+        return <GithubIcon className={`w-4 h-4 ${theme.textPrimary}`} />;
       case 'linkedin':
-        return <LinkedInIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
+        return <LinkedInIcon className={`w-4 h-4 ${theme.textPrimary}`} />;
       case 'twitter':
       case 'x':
-        return <TwitterXIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
+        return <TwitterXIcon className={`w-4 h-4 ${theme.textPrimary}`} />;
       case 'whatsapp':
         return <WhatsAppIcon className="w-4 h-4 text-emerald-500" />;
       case 'email':
@@ -410,7 +418,7 @@ export function HeroSection({
   };
 
   return (
-    <div className="relative w-full text-left font-sans">
+    <div className="relative w-full max-w-full overflow-x-clip text-left font-sans">
       {/* Hidden File Inputs for Cover and Avatar */}
       <input
         ref={coverInputRef}
@@ -442,13 +450,16 @@ export function HeroSection({
           }`}
         title={isEditing ? 'Click to change cover image' : canEdit ? 'Click to edit profile' : undefined}
       >
-        {((sharing as any).coverImage !== false || isEditing || canEdit) && (
+        {allowCoverDisplay && coverUrl && (
           <>
             <img
               src={coverUrl}
               alt={`${profile.name} Cover`}
               onError={(e) => {
-                e.currentTarget.src = DEFAULT_COVER;
+                if (!e.currentTarget.dataset.fallbackApplied) {
+                  e.currentTarget.dataset.fallbackApplied = '1';
+                  e.currentTarget.src = DEFAULT_COVER;
+                }
               }}
               className="w-full h-full object-cover object-center"
             />
@@ -614,715 +625,723 @@ export function HeroSection({
       </div>
 
       {/* 2. Identity Header */}
-      <div className="px-4 sm:px-6 md:px-8 pb-6 -mt-10 sm:-mt-14 md:-mt-18 relative z-10 space-y-4">
-        {/* Profile Photo / Company Logo */}
-        {sharing.photo !== false && (
-          isCompany ? (
-            /* Corporate Logo Frame */
-            <div
-              onClick={() => {
-                if (isEditing) {
-                  avatarInputRef.current?.click();
-                } else if (canEdit) {
-                  onOpenEdit?.();
-                }
-              }}
-              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
-                }`}
-              title={isEditing ? 'Click to change logo' : canEdit ? 'Click to edit profile' : undefined}
-            >
-              <img
-                src={avatarUrl}
-                alt={profile.name}
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_AVATAR;
+      <div className={`px-4 sm:px-6 md:px-8 pb-6 ${theme.cardBg} transition-colors`}>
+        <div className={`${allowPhotoDisplay ? '-mt-10 sm:-mt-14 md:-mt-18' : 'pt-5 sm:pt-6'} relative z-10 space-y-4`}>
+          {/* Profile Photo / Company Logo */}
+          {allowPhotoDisplay && avatarUrl && (
+            isCompany ? (
+              /* Corporate Logo Frame */
+              <div
+                onClick={() => {
+                  if (isEditing) {
+                    avatarInputRef.current?.click();
+                  } else if (canEdit) {
+                    onOpenEdit?.();
+                  }
                 }}
-                className="w-full h-full object-contain rounded-xl sm:rounded-2xl"
-              />
-              {(canEdit || isEditing) && (
-                <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded-2xl sm:rounded-3xl transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
-                  }`}>
-                  {isUploadingAvatar ? (
-                    <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
-                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
-                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Logo' : 'Edit Logo'}</span>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            /* Individual Circular Headshot */
-            <div
-              onClick={() => {
-                if (isEditing) {
-                  avatarInputRef.current?.click();
-                } else if (canEdit) {
-                  onOpenEdit?.();
-                }
-              }}
-              className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white dark:border-[#18181B] shadow-md bg-zinc-100 dark:bg-zinc-800 shrink-0 ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
-                }`}
-              title={isEditing ? 'Click to change photo' : canEdit ? 'Click to edit profile' : undefined}
-            >
-              <img
-                src={avatarUrl}
-                alt={profile.name}
-                onError={(e) => {
-                  e.currentTarget.src = DEFAULT_AVATAR;
+                className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 overflow-hidden border-4 border-white dark:border-[#18181B] shadow-xl bg-white dark:bg-zinc-900 shrink-0 flex items-center justify-center ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
+                  }`}
+                title={isEditing ? 'Click to change logo' : canEdit ? 'Click to edit profile' : undefined}
+              >
+                <img
+                  src={avatarUrl}
+                  alt={profile.name}
+                  onError={(e) => {
+                    if (!e.currentTarget.dataset.fallbackApplied) {
+                      e.currentTarget.dataset.fallbackApplied = '1';
+                      e.currentTarget.src = DEFAULT_AVATAR;
+                    }
+                  }}
+                  className="w-full h-full object-contain rounded-xl sm:rounded-2xl"
+                />
+                {(canEdit || isEditing) && (
+                  <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded-2xl sm:rounded-3xl transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
+                    }`}>
+                    {isUploadingAvatar ? (
+                      <>
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
+                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
+                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Logo' : 'Edit Logo'}</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Individual Circular Headshot */
+              <div
+                onClick={() => {
+                  if (isEditing) {
+                    avatarInputRef.current?.click();
+                  } else if (canEdit) {
+                    onOpenEdit?.();
+                  }
                 }}
-                className="w-full h-full object-cover"
-              />
-              {(canEdit || isEditing) && (
-                <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
-                  }`}>
-                  {isUploadingAvatar ? (
-                    <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
-                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
-                      <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Photo' : 'Edit Photo'}</span>
-                    </>
-                  )}
-                </div>
-              )}
+                className={`relative w-20 h-20 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white dark:border-[#18181B] shadow-md bg-zinc-100 dark:bg-zinc-800 shrink-0 ${canEdit || isEditing ? 'cursor-pointer group/avatar hover:ring-4 hover:ring-zinc-900/20 dark:hover:ring-white/25 transition-all' : ''
+                  }`}
+                title={isEditing ? 'Click to change photo' : canEdit ? 'Click to edit profile' : undefined}
+              >
+                <img
+                  src={avatarUrl}
+                  alt={profile.name}
+                  onError={(e) => {
+                    if (!e.currentTarget.dataset.fallbackApplied) {
+                      e.currentTarget.dataset.fallbackApplied = '1';
+                      e.currentTarget.src = DEFAULT_AVATAR;
+                    }
+                  }}
+                  className="w-full h-full object-cover"
+                />
+                {(canEdit || isEditing) && (
+                  <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
+                    }`}>
+                    {isUploadingAvatar ? (
+                      <>
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
+                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
+                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Photo' : 'Edit Photo'}</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          )}
+          {isEditing && (heroDraft.avatar || profile.avatar) && (
+            <div className="pt-2 pb-1">
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                className="inline-flex min-h-[44px] items-center gap-1.5 px-3.5 py-2 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-semibold transition-all cursor-pointer select-none"
+                title="Remove profile photo"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Remove Photo</span>
+              </button>
             </div>
-          )
-        )}
-        {isEditing && (heroDraft.avatar || profile.avatar) && (
-          <div className="pt-2 pb-1">
-            <button
-              type="button"
-              onClick={handleRemoveAvatar}
-              className="inline-flex min-h-[44px] items-center gap-1.5 px-3.5 py-2 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-xs font-semibold transition-all cursor-pointer select-none"
-              title="Remove profile photo"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Remove Photo</span>
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* Profile Role Badge & Name */}
-        {sharing.nameAndTitle !== false && (
-          <div className="space-y-2 pt-1">
-            <div className="flex items-center gap-2">
-              {isCompany ? (
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800">
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>Company · Organization</span>
-                </div>
-              ) : (
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-black/5 dark:bg-white/10 text-slate-700 dark:text-zinc-300 border border-black/5 dark:border-white/10">
-                  {typeBadgeLabel}
-                </div>
-              )}
-            </div>
+          {/* Profile Role Badge & Name */}
+          {sharing.nameAndTitle !== false && (
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-2">
+                {isCompany ? (
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold ${theme.badgeBg} ${theme.badgeText}`}>
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>Company · Organization</span>
+                  </div>
+                ) : (
+                  <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${theme.badgeBg} ${theme.badgeText}`}>
+                    {typeBadgeLabel}
+                  </div>
+                )}
+              </div>
 
-            {/* In-Place Name and Username/Slug Input or Heading */}
-            {isEditing ? (
-              <div className="space-y-3 pt-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <FormLabel required>Full Name / Display Name</FormLabel>
-                    <FormInput
-                      value={heroDraft.name}
-                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, name: val }))}
-                      placeholder="Your Full Name"
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Username / Slug</FormLabel>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-mono">@</span>
-                      <FormInput
-                        value={heroDraft.username}
-                        onChange={(val) => {
-                          const cleanSlug = val.toLowerCase().replace(/[^a-z0-9_-]/g, '');
-                          setHeroDraft((prev) => ({ ...prev, username: cleanSlug, slug: cleanSlug }));
-                        }}
-                        placeholder="username"
-                        className="pl-7 font-mono"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <FormLabel>Professional Title / Role</FormLabel>
-                  <FormInput
-                    value={heroDraft.designation}
-                    onChange={(val) => setHeroDraft((prev) => ({ ...prev, designation: val, profession: val }))}
-                    placeholder="e.g. Senior Software Engineer"
-                  />
-                </div>
-
-                <div>
-                  <FormLabel>Headline</FormLabel>
-                  <FormInput
-                    value={heroDraft.headline}
-                    onChange={(val) => setHeroDraft((prev) => ({ ...prev, headline: val }))}
-                    placeholder="e.g. Building next-gen software at Acme | Ex-Google"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <FormLabel>Pronouns</FormLabel>
-                    <FormInput
-                      value={heroDraft.pronouns}
-                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, pronouns: val }))}
-                      placeholder="e.g. they/them, she/her, he/him"
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Status Badge</FormLabel>
-                    <FormInput
-                      value={heroDraft.statusBadge}
-                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, statusBadge: val }))}
-                      placeholder="e.g. Available, Open for Mentorship"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <FormLabel>Department</FormLabel>
-                    <FormInput
-                      value={heroDraft.department}
-                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, department: val }))}
-                      placeholder="e.g. Engineering / Product"
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Industry</FormLabel>
-                    <FormInput
-                      value={heroDraft.industry}
-                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, industry: val }))}
-                      placeholder="e.g. Software Development, Financial Services"
-                    />
-                  </div>
-                </div>
-
-                {/* Open to Work Configuration */}
-                <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="hero-open-to-work"
-                      checked={Boolean(heroDraft.openToWork?.enabled)}
-                      onChange={(e) =>
-                        setHeroDraft((prev) => ({
-                          ...prev,
-                          openToWork: {
-                            ...(prev.openToWork || { roles: [] }),
-                            enabled: e.target.checked,
-                          },
-                        }))
-                      }
-                      className="rounded border-emerald-400 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
-                    />
-                    <label htmlFor="hero-open-to-work" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
-                      Show &ldquo;Open to work&rdquo; badge
-                    </label>
-                  </div>
-                  {heroDraft.openToWork?.enabled && (
-                    <div>
-                      <FormLabel>Target Job Titles / Roles (comma-separated)</FormLabel>
-                      <FormInput
-                        value={Array.isArray(heroDraft.openToWork.roles) ? heroDraft.openToWork.roles.join(', ') : ''}
-                        onChange={(val) => {
-                          const parsedRoles = val.split(',').map((r) => r.trim()).filter(Boolean);
-                          setHeroDraft((prev) => ({
-                            ...prev,
-                            openToWork: { ...(prev.openToWork || {}), enabled: true, roles: parsedRoles },
-                          }));
-                        }}
-                        placeholder="e.g. Software Engineer, Tech Lead, Engineering Manager"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Custom CTA Button Configuration */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <FormLabel>Custom CTA Button Label</FormLabel>
-                    <FormInput
-                      value={heroDraft.customCta?.label || ''}
-                      onChange={(val) =>
-                        setHeroDraft((prev) => ({
-                          ...prev,
-                          customCta: { ...(prev.customCta || {}), label: val },
-                        }))
-                      }
-                      placeholder="e.g. Visit my Portfolio, Book a Call"
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Custom CTA Button URL</FormLabel>
-                    <FormInput
-                      value={heroDraft.customCta?.url || ''}
-                      onChange={(val) =>
-                        setHeroDraft((prev) => ({
-                          ...prev,
-                          customCta: { ...(prev.customCta || {}), url: val },
-                        }))
-                      }
-                      placeholder="https://cal.com/... or https://..."
-                    />
-                  </div>
-                </div>
-
-                {isCompany && (
+              {/* In-Place Name and Username/Slug Input or Heading */}
+              {isEditing ? (
+                <div className="space-y-3 pt-1">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                      <FormLabel>Team Size</FormLabel>
+                      <FormLabel required>Full Name / Display Name</FormLabel>
                       <FormInput
-                        value={heroDraft.companyInfo?.employeeCount || ''}
+                        value={heroDraft.name}
+                        onChange={(val) => setHeroDraft((prev) => ({ ...prev, name: val }))}
+                        placeholder="Your Full Name"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>Username / Slug</FormLabel>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-mono">@</span>
+                        <FormInput
+                          value={heroDraft.username}
+                          onChange={(val) => {
+                            const cleanSlug = val.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+                            setHeroDraft((prev) => ({ ...prev, username: cleanSlug, slug: cleanSlug }));
+                          }}
+                          placeholder="username"
+                          className="pl-7 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <FormLabel>Professional Title / Role</FormLabel>
+                    <FormInput
+                      value={heroDraft.designation}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, designation: val, profession: val }))}
+                      placeholder="e.g. Senior Software Engineer"
+                    />
+                  </div>
+
+                  <div>
+                    <FormLabel>Headline</FormLabel>
+                    <FormInput
+                      value={heroDraft.headline}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, headline: val }))}
+                      placeholder="e.g. Building next-gen software at Acme | Ex-Google"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <FormLabel>Pronouns</FormLabel>
+                      <FormInput
+                        value={heroDraft.pronouns}
+                        onChange={(val) => setHeroDraft((prev) => ({ ...prev, pronouns: val }))}
+                        placeholder="e.g. they/them, she/her, he/him"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>Status Badge</FormLabel>
+                      <FormInput
+                        value={heroDraft.statusBadge}
+                        onChange={(val) => setHeroDraft((prev) => ({ ...prev, statusBadge: val }))}
+                        placeholder="e.g. Available, Open for Mentorship"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <FormLabel>Department</FormLabel>
+                      <FormInput
+                        value={heroDraft.department}
+                        onChange={(val) => setHeroDraft((prev) => ({ ...prev, department: val }))}
+                        placeholder="e.g. Engineering / Product"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>Industry</FormLabel>
+                      <FormInput
+                        value={heroDraft.industry}
+                        onChange={(val) => setHeroDraft((prev) => ({ ...prev, industry: val }))}
+                        placeholder="e.g. Software Development, Financial Services"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Open to Work Configuration */}
+                  <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="hero-open-to-work"
+                        checked={Boolean(heroDraft.openToWork?.enabled)}
+                        onChange={(e) =>
+                          setHeroDraft((prev) => ({
+                            ...prev,
+                            openToWork: {
+                              ...(prev.openToWork || { roles: [] }),
+                              enabled: e.target.checked,
+                            },
+                          }))
+                        }
+                        className="rounded border-emerald-400 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                      />
+                      <label htmlFor="hero-open-to-work" className="text-xs font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
+                        Show &ldquo;Open to work&rdquo; badge
+                      </label>
+                    </div>
+                    {heroDraft.openToWork?.enabled && (
+                      <div>
+                        <FormLabel>Target Job Titles / Roles (comma-separated)</FormLabel>
+                        <FormInput
+                          value={Array.isArray(heroDraft.openToWork.roles) ? heroDraft.openToWork.roles.join(', ') : ''}
+                          onChange={(val) => {
+                            const parsedRoles = val.split(',').map((r) => r.trim()).filter(Boolean);
+                            setHeroDraft((prev) => ({
+                              ...prev,
+                              openToWork: { ...(prev.openToWork || {}), enabled: true, roles: parsedRoles },
+                            }));
+                          }}
+                          placeholder="e.g. Software Engineer, Tech Lead, Engineering Manager"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Custom CTA Button Configuration */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <FormLabel>Custom CTA Button Label</FormLabel>
+                      <FormInput
+                        value={heroDraft.customCta?.label || ''}
                         onChange={(val) =>
                           setHeroDraft((prev) => ({
                             ...prev,
-                            companyInfo: { ...(prev.companyInfo || {}), employeeCount: val },
+                            customCta: { ...(prev.customCta || {}), label: val },
                           }))
                         }
-                        placeholder="e.g. 20-50 Employees"
+                        placeholder="e.g. Visit my Portfolio, Book a Call"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>Custom CTA Button URL</FormLabel>
+                      <FormInput
+                        value={heroDraft.customCta?.url || ''}
+                        onChange={(val) =>
+                          setHeroDraft((prev) => ({
+                            ...prev,
+                            customCta: { ...(prev.customCta || {}), url: val },
+                          }))
+                        }
+                        placeholder="https://cal.com/... or https://..."
                       />
                     </div>
                   </div>
-                )}
 
-                <div>
-                  <FormLabel>Tagline / Motto</FormLabel>
-                  <FormInput
-                    value={heroDraft.tagline}
-                    onChange={(val) => setHeroDraft((prev) => ({ ...prev, tagline: val }))}
-                    placeholder="Tagline or motto (e.g. Building next-generation digital identities)"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <FormLabel>City / State</FormLabel>
-                    <FormInput
-                      value={heroDraft.location}
-                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, location: val }))}
-                      placeholder="e.g. San Francisco, CA"
-                    />
-                  </div>
-                  <div>
-                    <FormLabel>Country</FormLabel>
-                    <SearchableCombobox
-                      options={COUNTRIES}
-                      value={heroDraft.country}
-                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, country: val as string }))}
-                      placeholder="Select Country..."
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <FormLabel>Quick Bio</FormLabel>
-                  <FormTextarea
-                    rows={2}
-                    value={heroDraft.shortBio}
-                    onChange={(val) => setHeroDraft((prev) => ({ ...prev, shortBio: val }))}
-                    placeholder="A concise overview of your background or focus..."
-                  />
-                </div>
-
-                {/* Profile Introduction Media inside Edit Form */}
-                <ProfileIntroductionMediaSection
-                  profile={profile}
-                  isEditing={isEditing}
-                  canEdit={canEdit}
-                  theme={theme}
-                  onUpdateField={onUpdateField}
-                  onSavePartial={onSavePartial}
-                  onOpenEdit={onOpenEdit}
-                />
-
-                <SectionSaveBar
-                  onSave={handleSaveHero}
-                  onCancel={handleCancelHero}
-                  isSaving={saveStatus === 'saving' || isUploadingAvatar || isUploadingCover}
-                  isSaved={saveStatus === 'saved'}
-                  isDirty={isDirty}
-                  errorMessage={errorMessage}
-                  saveLabel={isUploadingAvatar || isUploadingCover ? "Uploading image..." : "Save Profile Info"}
-                  cancelLabel="Cancel"
-                  className="pt-1"
-                />
-              </div>
-            ) : (
-              <>
-                <div
-                  onClick={() => canEdit && onOpenEdit?.()}
-                  className={`space-y-0.5 ${canEdit ? 'cursor-pointer group/name hover:opacity-85 transition-opacity' : ''}`}
-                  title={canEdit ? 'Click to edit name' : undefined}
-                >
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words`}>
-                      <span>{profile.name}</span>
-                    </h1>
-                    {profile.pronouns && (canEdit || profile.sharingSettings?.pronouns === true) && (
-                      <span className={`text-xs font-normal ${theme.textMuted} opacity-80`}>
-                        ({profile.pronouns})
-                      </span>
-                    )}
-                    {profile.statusBadge && (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${theme.badgeBg} ${theme.badgeText}`}>
-                        {profile.statusBadge}
-                      </span>
-                    )}
-                  </div>
-                  {(profile.username || profile.slug) && (
-                    <p className={`text-xs font-mono ${theme.textMuted} font-medium`}>
-                      @{profile.username || profile.slug}
-                    </p>
+                  {isCompany && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <FormLabel>Team Size</FormLabel>
+                        <FormInput
+                          value={heroDraft.companyInfo?.employeeCount || ''}
+                          onChange={(val) =>
+                            setHeroDraft((prev) => ({
+                              ...prev,
+                              companyInfo: { ...(prev.companyInfo || {}), employeeCount: val },
+                            }))
+                          }
+                          placeholder="e.g. 20-50 Employees"
+                        />
+                      </div>
+                    </div>
                   )}
-                </div>
 
-                {/* Open to Work Badge */}
-                {profile.openToWork?.enabled && (
-                  <div className="pt-1">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} text-xs font-medium`}>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span>Open to work</span>
-                      {Array.isArray(profile.openToWork.roles) && profile.openToWork.roles.length > 0 && (
-                        <span className={`text-[11px] font-normal ${theme.textSecondary}`}>
-                          • {profile.openToWork.roles.join(', ')}
+                  <div>
+                    <FormLabel>Tagline / Motto</FormLabel>
+                    <FormInput
+                      value={heroDraft.tagline}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, tagline: val }))}
+                      placeholder="Tagline or motto (e.g. Building next-generation digital identities)"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <FormLabel>City / State</FormLabel>
+                      <FormInput
+                        value={heroDraft.location}
+                        onChange={(val) => setHeroDraft((prev) => ({ ...prev, location: val }))}
+                        placeholder="e.g. San Francisco, CA"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel>Country</FormLabel>
+                      <SearchableCombobox
+                        options={COUNTRIES}
+                        value={heroDraft.country}
+                        onChange={(val) => setHeroDraft((prev) => ({ ...prev, country: val as string }))}
+                        placeholder="Select Country..."
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <FormLabel>Quick Bio</FormLabel>
+                    <FormTextarea
+                      rows={2}
+                      value={heroDraft.shortBio}
+                      onChange={(val) => setHeroDraft((prev) => ({ ...prev, shortBio: val }))}
+                      placeholder="A concise overview of your background or focus..."
+                    />
+                  </div>
+
+                  {/* Profile Introduction Media inside Edit Form */}
+                  <ProfileIntroductionMediaSection
+                    profile={profile}
+                    isEditing={isEditing}
+                    canEdit={canEdit}
+                    theme={theme}
+                    onUpdateField={onUpdateField}
+                    onSavePartial={onSavePartial}
+                    onOpenEdit={onOpenEdit}
+                  />
+
+                  <SectionSaveBar
+                    onSave={handleSaveHero}
+                    onCancel={handleCancelHero}
+                    isSaving={saveStatus === 'saving' || isUploadingAvatar || isUploadingCover}
+                    isSaved={saveStatus === 'saved'}
+                    isDirty={isDirty}
+                    errorMessage={errorMessage}
+                    saveLabel={isUploadingAvatar || isUploadingCover ? "Uploading image..." : "Save Profile Info"}
+                    cancelLabel="Cancel"
+                    className="pt-1"
+                  />
+                </div>
+              ) : (
+                <>
+                  <div
+                    onClick={() => canEdit && onOpenEdit?.()}
+                    className={`space-y-0.5 ${canEdit ? 'cursor-pointer group/name hover:opacity-85 transition-opacity' : ''}`}
+                    title={canEdit ? 'Click to edit name' : undefined}
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words`}>
+                        <span>{profile.name}</span>
+                      </h1>
+                      {profile.pronouns && (canEdit || profile.sharingSettings?.pronouns === true) && (
+                        <span className={`text-xs font-normal ${theme.textMuted} opacity-80`}>
+                          ({profile.pronouns})
+                        </span>
+                      )}
+                      {profile.statusBadge && (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${theme.badgeBg} ${theme.badgeText}`}>
+                          {profile.statusBadge}
                         </span>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* Headline (distinct from title & bio) */}
-                {profile.headline && (
-                  <p
-                    onClick={() => canEdit && onOpenEdit?.()}
-                    className={`text-sm sm:text-base font-semibold ${theme.textPrimary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-                    title={canEdit ? 'Click to edit headline' : undefined}
-                  >
-                    {profile.headline}
-                  </p>
-                )}
-
-                {(sharing as any).title !== false && (
-                  <p
-                    onClick={() => canEdit && onOpenEdit?.()}
-                    className={`text-sm sm:text-base font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-                    title={canEdit ? 'Click to edit title' : undefined}
-                  >
-                    {[
-                      getTitle(profile) || profile.profileName || (isCompany ? 'Organization' : 'Professional'),
-                      !isCompany && profile.department,
-                      profile.industry
-                    ].filter(Boolean).join(' • ')}
-                  </p>
-                )}
-
-                {/* Custom CTA Button */}
-                {profile.customCta?.active !== false && profile.customCta?.url && profile.customCta?.label && (
-                  <div className="pt-1">
-                    <a
-                      href={profile.customCta.url.startsWith('http') ? profile.customCta.url : `https://${profile.customCta.url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-90 transition-all ${theme.btnPrimary}`}
-                    >
-                      <span>{profile.customCta.label}</span>
-                    </a>
-                  </div>
-                )}
-
-                {/* Corporate Metadata Strip */}
-                {isCompany && (
-                  <div className="flex items-center gap-2 pt-1 flex-wrap text-xs">
-                    {profile.companyInfo?.industry && (
-                      <span
-                        onClick={() => canEdit && onOpenEdit?.()}
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-                        title={canEdit ? 'Click to edit company details' : undefined}
-                      >
-                        {profile.companyInfo.industry}
-                      </span>
+                    {(profile.username || profile.slug) && (
+                      <p className={`text-xs font-mono ${theme.textMuted} font-medium`}>
+                        @{profile.username || profile.slug}
+                      </p>
                     )}
-                    {profile.companyInfo?.employeeCount && (
-                      <span
-                        onClick={() => canEdit && onOpenEdit?.()}
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-                        title={canEdit ? 'Click to edit company details' : undefined}
-                      >
-                        {profile.companyInfo.employeeCount}
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectSection ? onSelectSection('teamMembers') : null;
-                      }}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                      title="View organization team"
-                    >
-                      <Users className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
-                      <span>{activeMemberCount} {activeMemberCount === 1 ? 'Team Member' : 'Team Members'}</span>
-                    </button>
                   </div>
-                )}
 
-                {/* Tagline */}
-                {profile.tagline && (
-                  <p
-                    onClick={() => canEdit && onOpenEdit?.()}
-                    className={`text-xs sm:text-sm font-medium ${theme.textSecondary} italic pt-0.5 break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-                    title={canEdit ? 'Click to edit tagline' : undefined}
-                  >
-                    &ldquo;{profile.tagline}&rdquo;
-                  </p>
-                )}
+                  {/* Open to Work Badge */}
+                  {profile.openToWork?.enabled && (
+                    <div className="pt-1">
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} text-xs font-medium`}>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span>Open to work</span>
+                        {Array.isArray(profile.openToWork.roles) && profile.openToWork.roles.length > 0 && (
+                          <span className={`text-[11px] font-normal ${theme.textSecondary}`}>
+                            • {profile.openToWork.roles.join(', ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-                {/* Location & Country */}
-                {(profile.location || profile.country) && (
-                  <p
-                    onClick={() => canEdit && onOpenEdit?.()}
-                    className={`text-xs sm:text-sm ${theme.textMuted} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
-                    title={canEdit ? 'Click to edit location' : undefined}
-                  >
-                    {[profile.location, profile.country].filter(Boolean).join(', ')}
-                  </p>
-                )}
-
-                {/* Short Bio */}
-                {sharing.bio !== false && getShortBio(profile) && (
-                  <div
-                    onClick={() => canEdit && onOpenEdit?.()}
-                    className={`${canEdit ? 'cursor-pointer group/bio rounded-2xl p-2 -ml-2 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04] transition-all' : ''
-                      }`}
-                  >
-                    <p className={`text-xs sm:text-sm md:text-base ${theme.textSecondary} leading-relaxed max-w-2xl break-words`}>
-                      {getShortBio(profile)}
+                  {/* Headline (distinct from title & bio) */}
+                  {profile.headline && (
+                    <p
+                      onClick={() => canEdit && onOpenEdit?.()}
+                      className={`text-sm sm:text-base font-semibold ${theme.textPrimary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      title={canEdit ? 'Click to edit headline' : undefined}
+                    >
+                      {profile.headline}
                     </p>
-                  </div>
-                )}
+                  )}
 
-                {/* Profile Introduction Media (Voice, Video, or External Link) */}
-                <ProfileIntroductionMediaSection
-                  profile={profile}
-                  isEditing={isEditing}
-                  canEdit={canEdit}
-                  theme={theme}
-                  onUpdateField={onUpdateField}
-                  onSavePartial={onSavePartial}
-                  onOpenEdit={onOpenEdit}
-                />
+                  {(sharing as any).title !== false && (
+                    <p
+                      onClick={() => canEdit && onOpenEdit?.()}
+                      className={`text-sm sm:text-base font-medium ${theme.textSecondary} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      title={canEdit ? 'Click to edit title' : undefined}
+                    >
+                      {[
+                        getTitle(profile) || profile.profileName || (isCompany ? 'Organization' : 'Professional'),
+                        !isCompany && profile.department,
+                        profile.industry
+                      ].filter(Boolean).join(' • ')}
+                    </p>
+                  )}
 
-                {/* Direct Social Icon Bar above primary actions so Section Nav sits directly under Action Buttons */}
-                {!isEditing && sharing.socialLinks !== false && (
-                  <div
-                    onClick={(e) => {
-                      if (canEdit && onSelectSection && (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('edit-socials-trigger'))) {
-                        onSelectSection('socials');
-                      }
-                    }}
-                    className={`flex items-center gap-2 pt-1.5 text-zinc-700 dark:text-zinc-300 flex-wrap relative ${canEdit ? 'group/socials rounded-xl py-1 transition-all' : ''}`}
-                    title={canEdit ? 'Click to edit Socials & Links' : undefined}
-                  >
-                    {profile.whatsapp && sharing.phone !== false && !socials.some((s) => s.platform === 'whatsapp') && (
+                  {/* Custom CTA Button */}
+                  {profile.customCta?.active !== false && profile.customCta?.url && profile.customCta?.label && (
+                    <div className="pt-1">
                       <a
-                        href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`}
+                        href={profile.customCta.url.startsWith('http') ? profile.customCta.url : `https://${profile.customCta.url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
-                        title="WhatsApp"
-                        aria-label="WhatsApp"
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-xs hover:opacity-90 transition-all ${theme.btnPrimary}`}
                       >
-                        <WhatsAppIcon className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                        <span>{profile.customCta.label}</span>
                       </a>
-                    )}
+                    </div>
+                  )}
 
-                    {profile.email && sharing.email !== false && !socials.some((s) => s.platform === 'email') && (
-                      <a
-                        href={`mailto:${profile.email}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
-                        title="Email"
-                        aria-label="Email"
-                      >
-                        <Mail className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
-                      </a>
-                    )}
-
-                    {socials.map((s, idx) => {
-                      const url = s.url?.trim() || '';
-                      if (!url) return null;
-                      const formattedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tel:')
-                        ? url
-                        : `https://${url}`;
-
-                      return (
-                        <a
-                          key={`${s.platform}-${idx}-${url}`}
-                          href={formattedUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
-                          title={s.label || s.platform}
-                          aria-label={s.label || s.platform}
+                  {/* Corporate Metadata Strip */}
+                  {isCompany && (
+                    <div className="flex items-center gap-2 pt-1 flex-wrap text-xs">
+                      {profile.companyInfo?.industry && (
+                        <span
+                          onClick={() => canEdit && onOpenEdit?.()}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                          title={canEdit ? 'Click to edit company details' : undefined}
                         >
-                          {renderSocialIcon(s.platform)}
-                        </a>
-                      );
-                    })}
-
-                    {canEdit && (
+                          {profile.companyInfo.industry}
+                        </span>
+                      )}
+                      {profile.companyInfo?.employeeCount && (
+                        <span
+                          onClick={() => canEdit && onOpenEdit?.()}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                          title={canEdit ? 'Click to edit company details' : undefined}
+                        >
+                          {profile.companyInfo.employeeCount}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onSelectSection?.('socials');
+                          onSelectSection ? onSelectSection('teamMembers') : null;
                         }}
-                        className="edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1 cursor-pointer"
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md ${theme.btnSecondary} font-bold transition-colors cursor-pointer`}
+                        title="View organization team"
                       >
-                        <Pencil className="w-2.5 h-2.5" />
-                        <span>Edit Links</span>
+                        <Users className={`w-3.5 h-3.5 ${theme.accentText}`} />
+                        <span>{activeMemberCount} {activeMemberCount === 1 ? 'Team Member' : 'Team Members'}</span>
                       </button>
-                    )}
-                  </div>
-                )}
-              </>
+                    </div>
+                  )}
+
+                  {/* Tagline */}
+                  {profile.tagline && (
+                    <p
+                      onClick={() => canEdit && onOpenEdit?.()}
+                      className={`text-xs sm:text-sm font-medium ${theme.textSecondary} italic pt-0.5 break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      title={canEdit ? 'Click to edit tagline' : undefined}
+                    >
+                      &ldquo;{profile.tagline}&rdquo;
+                    </p>
+                  )}
+
+                  {/* Location & Country */}
+                  {(profile.location || profile.country) && (
+                    <p
+                      onClick={() => canEdit && onOpenEdit?.()}
+                      className={`text-xs sm:text-sm ${theme.textMuted} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      title={canEdit ? 'Click to edit location' : undefined}
+                    >
+                      {[profile.location, profile.country].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+
+                  {/* Short Bio */}
+                  {sharing.bio !== false && getShortBio(profile) && (
+                    <div
+                      onClick={() => canEdit && onOpenEdit?.()}
+                      className={`${canEdit ? 'cursor-pointer group/bio rounded-2xl p-2 -ml-2 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04] transition-all' : ''
+                        }`}
+                    >
+                      <p className={`text-xs sm:text-sm md:text-base ${theme.textSecondary} leading-relaxed max-w-2xl break-words`}>
+                        {getShortBio(profile)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Profile Introduction Media (Voice, Video, or External Link) */}
+                  <ProfileIntroductionMediaSection
+                    profile={profile}
+                    isEditing={isEditing}
+                    canEdit={canEdit}
+                    theme={theme}
+                    onUpdateField={onUpdateField}
+                    onSavePartial={onSavePartial}
+                    onOpenEdit={onOpenEdit}
+                  />
+
+                  {/* Direct Social Icon Bar above primary actions so Section Nav sits directly under Action Buttons */}
+                  {!isEditing && sharing.socialLinks !== false && (
+                    <div
+                      onClick={(e) => {
+                        if (canEdit && onSelectSection && (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('edit-socials-trigger'))) {
+                          onSelectSection('socials');
+                        }
+                      }}
+                      className={`flex items-center gap-2 pt-1.5 ${theme.textSecondary} flex-wrap relative ${canEdit ? 'group/socials rounded-xl py-1 transition-all' : ''}`}
+                      title={canEdit ? 'Click to edit Socials & Links' : undefined}
+                    >
+                      {profile.whatsapp && sharing.phone !== false && !socials.some((s) => s.platform === 'whatsapp') && (
+                        <a
+                          href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} hover:opacity-85 flex items-center justify-center transition-all`}
+                          title="WhatsApp"
+                          aria-label="WhatsApp"
+                        >
+                          <WhatsAppIcon className={`w-4 h-4 ${theme.textPrimary}`} />
+                        </a>
+                      )}
+
+                      {profile.email && sharing.email !== false && !socials.some((s) => s.platform === 'email') && (
+                        <a
+                          href={`mailto:${profile.email}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} hover:opacity-85 flex items-center justify-center transition-all`}
+                          title="Email"
+                          aria-label="Email"
+                        >
+                          <Mail className={`w-4 h-4 ${theme.textPrimary}`} />
+                        </a>
+                      )}
+
+                      {socials.map((s, idx) => {
+                        const url = s.url?.trim() || '';
+                        if (!url) return null;
+                        const formattedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tel:')
+                          ? url
+                          : `https://${url}`;
+
+                        return (
+                          <a
+                            key={`${s.platform}-${idx}-${url}`}
+                            href={formattedUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} hover:opacity-85 flex items-center justify-center transition-all`}
+                            title={s.label || s.platform}
+                            aria-label={s.label || s.platform}
+                          >
+                            {renderSocialIcon(s.platform)}
+                          </a>
+                        );
+                      })}
+
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectSection?.('socials');
+                          }}
+                          className={`edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold ${theme.btnSecondary} flex items-center gap-1 cursor-pointer`}
+                        >
+                          <Pencil className="w-2.5 h-2.5" />
+                          <span>Edit Links</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons Below Avatar */}
+          <div className="flex items-center gap-2 pt-2 max-w-md w-full min-w-0 flex-wrap sm:flex-nowrap">
+            {canEdit ? (
+              isEditing ? null : isCompany ? (
+                /* Company Owner / Editor Actions */
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onOpenEdit?.()}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    title="Edit Company Details"
+                  >
+                    <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Edit Company</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onSelectSection ? onSelectSection('teamMembers') : onOpenEdit?.()}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    title="Manage Team Members"
+                  >
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Manage Team</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onOpenShare}
+                    className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
+                    title="Share Company Profile"
+                  >
+                    <Share2 className="w-4 h-4 shrink-0" />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+                </>
+              ) : (
+                /* Individual Owner Actions */
+                <>
+                  <button
+                    type="button"
+                    onClick={() => onOpenEdit?.()}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    title="Edit Profile"
+                  >
+                    <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Edit Profile</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onOpenShare}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                  >
+                    <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Share Profile</span>
+                  </button>
+                </>
+              )
+            ) : (
+              isCompany ? (
+                /* Public Company Visitor Actions */
+                <>
+                  <button
+                    type="button"
+                    onClick={onOpenConnect}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                  >
+                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Contact</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById('company-team-section') || document.querySelector('[data-section="teamMembers"]') || document.querySelector('#team-members-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      else onSelectSection?.('teamMembers');
+                    }}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                  >
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Team ({activeMemberCount})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onOpenShare}
+                    className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
+                    title="Share Company Profile"
+                  >
+                    <Share2 className="w-4 h-4 shrink-0" />
+                  </button>
+                </>
+              ) : (
+                /* Individual Public Visitor Actions */
+                <>
+                  <button
+                    type="button"
+                    onClick={onOpenConnect}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                  >
+                    <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Connect</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onOpenShare}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                  >
+                    <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">Share</span>
+                  </button>
+                </>
+              )
             )}
           </div>
-        )}
-
-        {/* Action Buttons Below Avatar */}
-        <div className="flex items-center gap-2 pt-2 max-w-md w-full min-w-0 flex-wrap sm:flex-nowrap">
-          {canEdit ? (
-            isEditing ? null : isCompany ? (
-              /* Company Owner / Editor Actions */
-              <>
-                <button
-                  type="button"
-                  onClick={() => onOpenEdit?.()}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                  title="Edit Company Details"
-                >
-                  <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Edit Company</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => onSelectSection ? onSelectSection('teamMembers') : onOpenEdit?.()}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                  title="Manage Team Members"
-                >
-                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Manage Team</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onOpenShare}
-                  className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
-                  title="Share Company Profile"
-                >
-                  <Share2 className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline">Share</span>
-                </button>
-              </>
-            ) : (
-              /* Individual Owner Actions */
-              <>
-                <button
-                  type="button"
-                  onClick={() => onOpenEdit?.()}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                  title="Edit Profile"
-                >
-                  <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Edit Profile</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onOpenShare}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                >
-                  <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Share Profile</span>
-                </button>
-              </>
-            )
-          ) : (
-            isCompany ? (
-              /* Public Company Visitor Actions */
-              <>
-                <button
-                  type="button"
-                  onClick={onOpenConnect}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                >
-                  <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Contact</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const el = document.getElementById('company-team-section') || document.querySelector('[data-section="teamMembers"]') || document.querySelector('#team-members-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    else onSelectSection?.('teamMembers');
-                  }}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                >
-                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Team ({activeMemberCount})</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onOpenShare}
-                  className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
-                  title="Share Company Profile"
-                >
-                  <Share2 className="w-4 h-4 shrink-0" />
-                </button>
-              </>
-            ) : (
-              /* Individual Public Visitor Actions */
-              <>
-                <button
-                  type="button"
-                  onClick={onOpenConnect}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                >
-                  <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Connect</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onOpenShare}
-                  className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
-                >
-                  <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span className="truncate">Share</span>
-                </button>
-              </>
-            )
-          )}
         </div>
       </div>
     </div>

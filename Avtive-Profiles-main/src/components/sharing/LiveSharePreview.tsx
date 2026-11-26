@@ -58,10 +58,10 @@ export function LiveSharePreview({ profile, selectedFields }: LiveSharePreviewPr
       {/* Simulated sanitized card */}
       <div className="p-3.5 space-y-3 text-left">
         {/* Optional Cover Bar */}
-        {(sharing as any).coverImage && previewProfile.coverImage && (
+        {(sharing as any).coverImage && (previewProfile.coverImage || (previewProfile as any).coverUrl) && (
           <div className="h-16 w-full rounded-xl overflow-hidden bg-slate-800 border border-slate-200 dark:border-white/10">
             <img
-              src={previewProfile.coverImage}
+              src={previewProfile.coverImage || (previewProfile as any).coverUrl}
               alt="Shared cover"
               className="w-full h-full object-cover"
             />
@@ -70,9 +70,9 @@ export function LiveSharePreview({ profile, selectedFields }: LiveSharePreviewPr
 
         {/* Header Row */}
         <div className="flex items-center gap-3">
-          {sharing.photo && previewProfile.avatar ? (
+          {sharing.photo && (previewProfile.avatar || (previewProfile as any).logoUrl) ? (
             <img
-              src={previewProfile.avatar}
+              src={previewProfile.avatar || (previewProfile as any).logoUrl}
               alt={previewProfile.name}
               className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-white/15 shadow-xs shrink-0"
             />

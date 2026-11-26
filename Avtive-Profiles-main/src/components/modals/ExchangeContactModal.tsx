@@ -89,16 +89,25 @@ export function ExchangeContactModal({
         {/* Header with Avatar */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className={`w-8 h-8 rounded-full overflow-hidden border ${theme.cardBorder} shrink-0`}>
-              <img 
-                src={profile.avatar} 
-                alt={profile.name} 
-                onError={(e) => {
-                  e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop';
-                }}
-                className="w-full h-full object-cover" 
-              />
-            </div>
+            {profile.sharingSettings?.photo !== false && (profile.avatar || (profile as any).logoUrl) ? (
+              <div className={`w-8 h-8 rounded-full overflow-hidden border ${theme.cardBorder} shrink-0`}>
+                <img
+                  src={profile.avatar || (profile as any).logoUrl}
+                  alt={profile.name}
+                  onError={(e) => {
+                    if (!e.currentTarget.dataset.fallbackApplied) {
+                      e.currentTarget.dataset.fallbackApplied = '1';
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop';
+                    }
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className={`w-8 h-8 rounded-full border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} flex items-center justify-center text-xs font-bold shrink-0`}>
+                {(profile.name || 'A').trim().charAt(0).toUpperCase()}
+              </div>
+            )}
             <div>
               <h3 className={`text-xs font-bold ${theme.textPrimary}`}>
                 Connect with {profile.name}

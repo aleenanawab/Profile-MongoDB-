@@ -755,17 +755,21 @@ async function runTests() {
       assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0);
       assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 0);
 
-      // Phase 4: Verify section nav sits INSIDE card below Hero action buttons (no duplicate top-level nav) and uses icon-only tabs
+      // Preview uses single natural-scrolling layout with strictly one ProfileSectionTabBar and no duplicate mobile phone frame
       const desktopPanelEl = container.querySelector('#profile-scroll-panel');
       const mobilePanelEl = container.querySelector('#mobile-profile-scroll-panel');
       const desktopNav = desktopPanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
-      const mobileNav = mobilePanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
-      assert.ok(desktopNav && mobileNav, 'Section navigation must render inside both desktop and mobile profile panels');
+      assert.ok(desktopPanelEl && desktopNav, 'Section navigation must render inside primary profile panel');
+      assert.strictEqual(mobilePanelEl, null, 'Preview must not render a duplicate mobile phone panel');
       assert.strictEqual(
         container.querySelectorAll('[data-testid="profile-section-tabbar"]').length,
-        2,
-        'Must render strictly one ProfileSectionTabBar per preview layout without top-level duplicate navs'
+        1,
+        'Must render strictly one ProfileSectionTabBar in preview layout without duplicate navs'
       );
+      const previewRootEl = container.firstElementChild as HTMLElement | null;
+      assert.ok(previewRootEl?.className.includes('min-h-[100dvh]'), 'Preview uses natural document min-height scrolling');
+      assert.ok(!previewRootEl?.className.includes('max-h-[100dvh] overflow-hidden'), 'Preview avoids vertical scroll trap');
+
       const desktopHeroEl = desktopPanelEl?.querySelector('#section-hero');
       const desktopAboutEl = desktopPanelEl?.querySelector('#section-personalDetails');
       assert.ok(desktopHeroEl && desktopAboutEl && desktopNav, 'Hero, TabBar, and Content Sections exist in DOM');
@@ -790,6 +794,79 @@ async function runTests() {
         aboutIconTab!.click();
       });
       assert.strictEqual(aboutIconTab!.getAttribute('aria-current'), 'page', 'Clicking section icon updates active state');
+
+      // Decorative background wallpaper renders BEHIND centered card without changing profile appearance theme
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ThemeProvider,
+              null,
+              React.createElement(PublicProfileClient, {
+                key: 'aurora-wallpaper',
+                initialProfile: {
+                  ...clone(SAMPLE_PROFILE),
+                  theme: 'editorial',
+                  backgroundType: 'occasion',
+                  activeBackgroundThemeId: 'aurora-borealis',
+                },
+                session: OWNER_USER,
+                isOwner: true,
+                initialIsEditing: false,
+                initialIsSharing: false,
+                userProfiles: [clone(SAMPLE_PROFILE)],
+              })
+            )
+          )
+        );
+      });
+      const occasionLayerEl = container.querySelector('[data-background-mode="occasion"]') as HTMLElement | null;
+      const cardShellEl = container.querySelector('[data-testid="profile-card-shell"]') as HTMLElement | null;
+      const scrollPanelWithBgEl = container.querySelector('#profile-scroll-panel') as HTMLElement | null;
+      assert.ok(occasionLayerEl && cardShellEl && scrollPanelWithBgEl, 'Wallpaper layer and centered profile card shell render');
+      assert.strictEqual(occasionLayerEl?.getAttribute('data-contained'), 'true', 'Wallpaper renders contained at outer page root');
+      assert.strictEqual(cardShellEl?.contains(occasionLayerEl), false, 'Wallpaper sits behind card shell, not inside profile sections');
+      assert.ok(scrollPanelWithBgEl?.className.includes('px-2.5'), 'Mobile viewport preserves outer spacing so wallpaper shows behind card');
+      assert.ok(cardShellEl?.className.includes('bg-white'), 'Editorial white profile card keeps original white appearance over dark wallpaper');
+      assert.ok(
+        container.querySelector('#section-personalDetails section')?.className.includes('bg-white'),
+        'Inner profile section surfaces retain editorial theme instead of becoming transparent'
+      );
+
+      // Dark profile appearance remains unchanged with image wallpaper
+      await React.act(async () => {
+        root.render(
+          React.createElement(
+            AppRouterContext.Provider,
+            { value: mockAppRouter },
+            React.createElement(
+              ThemeProvider,
+              null,
+              React.createElement(PublicProfileClient, {
+                key: 'dark-image-wallpaper',
+                initialProfile: {
+                  ...clone(SAMPLE_PROFILE),
+                  theme: 'dark',
+                  backgroundType: 'image',
+                  customBackgroundImage: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=80',
+                },
+                session: OWNER_USER,
+                isOwner: true,
+                initialIsEditing: false,
+                initialIsSharing: false,
+                userProfiles: [clone(SAMPLE_PROFILE)],
+              })
+            )
+          )
+        );
+      });
+      assert.ok(container.querySelector('[data-background-mode="image"]'), 'Image wallpaper renders behind dark card');
+      assert.ok(
+        container.querySelector('[data-testid="profile-card-shell"]')?.className.includes('bg-[#121216]'),
+        'Dark executive profile card preserves its original dark appearance'
+      );
 
       // Company profile layout follows the same Hero -> Actions -> Section Nav -> Sections hierarchy
       await React.act(async () => {

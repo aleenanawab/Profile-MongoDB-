@@ -8,11 +8,15 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import {
   BACKGROUND_THEMES,
   BACKGROUND_THEME_CATEGORIES,
   getBackgroundTheme
 } from '../src/data/backgroundThemes';
+import { ProfileBackgroundLayer, resolveBackgroundMode } from '../src/components/editor/BackgroundRenderer';
+import { getThemeConfig } from '../src/components/ui/themeStyles';
 import { parseExternalVideoUrl } from '../src/components/profile-sections/ProfileIntroductionMedia';
 import { diffProfile, isProfileDirty } from '../src/lib/profileDiff';
 import { sanitizeProfileForPublic, mapDocToProfileData } from '../src/lib/db/profiles';
@@ -309,5 +313,66 @@ describe('Sanitization & Backward Compatibility', () => {
     assert.deepStrictEqual(mapped.savedBackgroundThemeIds, ['aurora-borealis', 'royal-amethyst']);
     assert.ok(mapped.introductionMedia);
     assert.strictEqual(mapped.introductionMedia?.type, 'external');
+  });
+
+  it('ProfileBackgroundLayer renders decorative wallpaper cleanly across default, occasion, image, and video without mutating profile theme', () => {
+    const editorialTheme = getThemeConfig('editorial');
+    const darkTheme = getThemeConfig('dark');
+    assert.ok(editorialTheme.cardBg.includes('bg-white'), 'Editorial appearance stays white');
+    assert.ok(darkTheme.cardBg.includes('bg-[#121216]'), 'Dark appearance stays dark');
+
+    const defaultHtml = renderToStaticMarkup(
+      React.createElement(ProfileBackgroundLayer, {
+        profile: { id: 'p-bg', name: 'Tester', slug: 'tester', backgroundType: 'default' },
+        contained: true
+      })
+    );
+    assert.strictEqual(defaultHtml, '', 'Default mode renders no extra wallpaper overlay');
+
+    const occasionProfile: Partial<ProfileData> = {
+      id: 'p-bg',
+      name: 'Tester',
+      slug: 'tester',
+      backgroundType: 'occasion',
+      activeBackgroundThemeId: 'aurora-borealis'
+    };
+    assert.strictEqual(resolveBackgroundMode(occasionProfile), 'occasion');
+    const occasionHtml = renderToStaticMarkup(
+      React.createElement(ProfileBackgroundLayer, { profile: occasionProfile, contained: true })
+    );
+    assert.ok(occasionHtml.includes('data-contained="true"'));
+    assert.ok(occasionHtml.includes('data-background-mode="occasion"'));
+    assert.ok(occasionHtml.includes('background-attachment:scroll'), 'Contained wallpaper overrides fixed attachment for mobile');
+    assert.ok(occasionHtml.includes('sticky top-0'), 'Contained wallpaper stays visible during vertical page scroll');
+
+    const imageHtml = renderToStaticMarkup(
+      React.createElement(ProfileBackgroundLayer, {
+        profile: {
+          id: 'p-bg',
+          name: 'Tester',
+          slug: 'tester',
+          backgroundType: 'image',
+          customBackgroundImage: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1400&q=80'
+        },
+        contained: true
+      })
+    );
+    assert.ok(imageHtml.includes('data-background-mode="image"'));
+    assert.ok(imageHtml.includes('sticky top-0'));
+
+    const videoHtml = renderToStaticMarkup(
+      React.createElement(ProfileBackgroundLayer, {
+        profile: {
+          id: 'p-bg',
+          name: 'Tester',
+          slug: 'tester',
+          backgroundType: 'video',
+          customBackgroundVideo: 'preset:waves'
+        },
+        contained: true
+      })
+    );
+    assert.ok(videoHtml.includes('data-background-mode="video"'));
+    assert.ok(videoHtml.includes('sticky top-0'));
   });
 });

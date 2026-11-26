@@ -166,11 +166,14 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
   return (
     <div
       data-theme={activeThemeKey}
-      className={`min-h-[100dvh] w-full ${hasCustomBg ? 'bg-transparent' : themeConfig.pageBg} ${themeConfig.textPrimary} font-sans relative`}
+      className={`min-h-[100dvh] w-full flex flex-col relative overflow-x-clip ${
+        hasCustomBg ? 'bg-transparent' : themeConfig.pageBg
+      } ${themeConfig.textPrimary} font-sans`}
     >
-      <ProfileBackgroundLayer profile={profile} />
-      {/* Minimalist Visitor Action Strip */}
-      <header className={`sticky top-0 z-30 backdrop-blur-md ${themeConfig.headerBg} border-b ${themeConfig.divider}`}>
+      <ProfileBackgroundLayer profile={profile} contained={true} />
+      <div className="relative z-10 w-full flex-1 flex flex-col">
+        {/* Minimalist Visitor Action Strip */}
+        <header className={`sticky top-0 z-30 backdrop-blur-md ${themeConfig.headerBg} border-b ${themeConfig.divider}`}>
         <div className="max-w-3xl mx-auto px-3 sm:px-5 py-2 flex items-center justify-between gap-2 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/images/avtive-symbol.png" alt="Avtive" className="h-6 w-auto shrink-0" />
@@ -301,13 +304,13 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
       </header>
 
       {/* Main Sanitized Profile Preview */}
-      <main className="py-0 sm:py-6 px-0 sm:px-4">
+      <main className={`w-full flex-1 ${hasCustomBg ? 'py-3 sm:py-6 px-2.5 sm:px-4' : 'py-0 sm:py-6 px-0 sm:px-4'}`}>
         {/* Desktop Card View (Always used cleanly on mobile viewports < md) */}
         <div
           data-testid="shared-desktop-view"
-          className={`${previewDevice === 'mobile' ? 'block md:hidden' : 'block'} w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${themeConfig.cardBorder} ${themeConfig.cardBg} ${
-            hasCustomBg ? 'backdrop-blur-md shadow-2xl' : 'shadow-none sm:shadow-xl'
-          } overflow-hidden`}
+          className={`${previewDevice === 'mobile' ? 'block md:hidden' : 'block'} w-full max-w-3xl mx-auto ${
+            hasCustomBg ? 'rounded-2xl sm:rounded-3xl border shadow-xl' : 'rounded-none sm:rounded-3xl border-0 sm:border shadow-none sm:shadow-xl'
+          } ${themeConfig.cardBorder} ${themeConfig.cardBg} overflow-hidden`}
         >
           <AvtiveDigitalCard
             profile={profile}
@@ -351,6 +354,7 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
           </div>
         )}
       </main>
+      </div>
 
       {isConnectOpen && (
         <ExchangeContactModal

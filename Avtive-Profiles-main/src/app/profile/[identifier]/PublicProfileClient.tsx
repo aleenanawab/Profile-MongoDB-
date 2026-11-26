@@ -21,12 +21,11 @@ import { ProjectDetailModal } from '@/components/modals/ProjectDetailModal';
 import { ProfileEditorProvider, useProfileEditor } from '@/context/ProfileEditorContext';
 import { downloadVCard } from '@/lib/vcard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DesktopProfileSidebar, DESKTOP_SIDEBAR_SECTIONS } from '@/components/profiles/DesktopProfileSidebar';
-import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
+import { DesktopProfileSidebar } from '@/components/profiles/DesktopProfileSidebar';
 import { usePortfolioTheme } from '@/context/ThemeContext';
 import { uploadImageToStorage } from '@/lib/imageCompression';
 import { isProfileDirty, diffProfile } from '@/lib/profileDiff';
-import { getBackgroundTheme, BackgroundTheme } from '@/data/backgroundThemes';
+import { BackgroundTheme } from '@/data/backgroundThemes';
 import { ProfileEditorView } from '@/components/editor/ProfileEditorView';
 import { ProfileBackgroundLayer, resolveBackgroundMode } from '@/components/editor/BackgroundRenderer';
 import {
@@ -145,39 +144,6 @@ function PublicProfileClientInner({
   }, [profile]);
 
   const activeThemeConfig = getThemeConfig(activeTheme);
-  const activeBgThemeId = (isEditing ? liveProfile.activeBackgroundThemeId : profile.activeBackgroundThemeId) || profile.activeBackgroundThemeId;
-  const activeBackgroundTheme = previewBackgroundTheme || getBackgroundTheme(activeBgThemeId);
-
-  const isCompany = profileType === 'team' || profile.type === 'team';
-  const mobileNavSections = React.useMemo(() => {
-    return DESKTOP_SIDEBAR_SECTIONS.filter(s => {
-      if (s.category !== 'core') return false;
-      if (!isCompany && (s.key === 'teamMembers' || s.key === 'companyInfo')) return false;
-      if (isCompany && (s.key === 'companyInfo' || s.key === 'personalDetails' || s.key === 'experience' || s.key === 'education' || s.key === 'certifications' || s.key === 'languages')) return false;
-      return true;
-    });
-  }, [isCompany]);
-
-  const getMobileShortLabel = (key: string, fullLabel: string) => {
-    switch (key) {
-      case 'profile': return 'Profile';
-      case 'companyInfo': return 'Company';
-      case 'teamMembers': return 'Team';
-      case 'personalDetails': return 'Bio';
-      case 'skills': return 'Skills';
-      case 'services': return 'Services';
-      case 'projects': return 'Projects';
-      case 'education': return 'Edu';
-      case 'contactInfo': return 'Contact';
-      case 'socialLinks': return 'Social';
-      case 'experience': return 'Exp';
-      case 'certifications': return 'Certs';
-      case 'languages': return 'Langs';
-      case 'customFields': return 'Custom';
-      case 'recommendations': return 'Reviews';
-      default: return fullLabel;
-    }
-  };
 
   const clearCloseTimer = () => {
     if (closeTimerRef.current) {
@@ -235,8 +201,10 @@ function PublicProfileClientInner({
 
   const [activeTabSection, setActiveTabSection] = useState<string>('profile');
 
-  // Track scroll position in the profile content panel to update active tab highlight
+  // Track scroll position in the profile page or panel to update active tab highlight
   useEffect(() => {
+    if (screenMode !== 'preview') return;
+
     const sectionIds = [
       'section-hero',
       'section-profile',
@@ -261,15 +229,14 @@ function PublicProfileClientInner({
       'virtual-card-section'
     ];
 
-    const createScrollHandler = (panel: HTMLElement) => () => {
-      const panelTop = panel.getBoundingClientRect().top;
+    const updateActiveFromRoot = (root: HTMLElement | Document, topOffset: number) => {
       let currentSection = 'profile';
 
       for (const id of sectionIds) {
-        const el = panel.querySelector<HTMLElement>(`#${id}`);
+        const el = root.querySelector<HTMLElement>(`#${id}`);
         if (el) {
           const rect = el.getBoundingClientRect();
-          if (rect.top - panelTop <= 160) {
+          if (rect.top - topOffset <= 160) {
             const rawKey = id.replace('section-', '');
             if (rawKey === 'hero') currentSection = 'profile';
             else if (rawKey === 'about') currentSection = 'personalDetails';
@@ -286,23 +253,19 @@ function PublicProfileClientInner({
       setActiveTabSection(currentSection);
     };
 
-    const desktopPanel = document.getElementById('profile-scroll-panel');
-    const mobilePanel = document.getElementById('mobile-profile-scroll-panel');
-    const cleanups: (() => void)[] = [];
+    const profilePanel = document.getElementById('profile-scroll-panel');
+    const handleWindowScroll = () => updateActiveFromRoot(profilePanel || document, 0);
+    const handlePanelScroll = () => {
+      if (!profilePanel) return;
+      updateActiveFromRoot(profilePanel, profilePanel.getBoundingClientRect().top);
+    };
 
-    if (desktopPanel) {
-      const handler = createScrollHandler(desktopPanel);
-      desktopPanel.addEventListener('scroll', handler, { passive: true });
-      cleanups.push(() => desktopPanel.removeEventListener('scroll', handler));
-    }
-    if (mobilePanel) {
-      const handler = createScrollHandler(mobilePanel);
-      mobilePanel.addEventListener('scroll', handler, { passive: true });
-      cleanups.push(() => mobilePanel.removeEventListener('scroll', handler));
-    }
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    profilePanel?.addEventListener('scroll', handlePanelScroll, { passive: true });
 
     return () => {
-      cleanups.forEach((fn) => fn());
+      window.removeEventListener('scroll', handleWindowScroll);
+      profilePanel?.removeEventListener('scroll', handlePanelScroll);
     };
   }, [screenMode]);
 
@@ -405,8 +368,15 @@ function PublicProfileClientInner({
       return rect.width > 0 && rect.height > 0;
     };
 
-    const scrollToSectionInPanel = (panel: HTMLElement) => {
-      if (!isElementVisible(panel)) return false;
+    const scrollPanelIfContainer = (panel: HTMLElement | null) => {
+      if (!panel || !isElementVisible(panel)) return false;
+
+      const overflowY = typeof window !== 'undefined' ? window.getComputedStyle(panel).overflowY : '';
+      const isScrollableContainer =
+        (overflowY === 'auto' || overflowY === 'scroll') &&
+        panel.scrollHeight > panel.clientHeight + 2;
+
+      if (!isScrollableContainer) return false;
 
       if (sectionKey === 'profile' || sectionKey === 'hero') {
         panel.scrollTo({ top: 0, behavior: 'smooth' });
@@ -431,24 +401,36 @@ function PublicProfileClientInner({
     };
 
     const desktopPanel = document.getElementById('profile-scroll-panel');
-    const mobilePanel = document.getElementById('mobile-profile-scroll-panel');
 
-    if (isFromMobile && mobilePanel) {
-      scrollToSectionInPanel(mobilePanel);
-    } else if (isFromDesktop && desktopPanel) {
-      scrollToSectionInPanel(desktopPanel);
-    } else {
-      let scrolledAny = false;
-      if (desktopPanel && isElementVisible(desktopPanel)) {
-        scrolledAny = scrollToSectionInPanel(desktopPanel) || scrolledAny;
-      }
-      if (mobilePanel && isElementVisible(mobilePanel)) {
-        scrolledAny = scrollToSectionInPanel(mobilePanel) || scrolledAny;
-      }
-      if (!scrolledAny) {
-        const fallbackEl = document.querySelector<HTMLElement>(selectors);
-        if (fallbackEl) {
-          fallbackEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!scrollPanelIfContainer(desktopPanel)) {
+      if (sectionKey === 'profile' || sectionKey === 'hero') {
+        if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        const searchRoot = desktopPanel || document;
+        const targetEl =
+          searchRoot.querySelector<HTMLElement>(selectors) ||
+          document.querySelector<HTMLElement>(selectors);
+
+        if (targetEl) {
+          if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+            const headerOffset = 76;
+            const targetTop = Math.max(
+              0,
+              targetEl.getBoundingClientRect().top + window.scrollY - headerOffset
+            );
+            window.scrollTo({ top: targetTop, behavior: 'smooth' });
+          } else if (typeof targetEl.scrollIntoView === 'function') {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+
+          if (isEditing) {
+            const inputEl = targetEl.querySelector('input, textarea, select') as HTMLElement | null;
+            if (inputEl) {
+              setTimeout(() => inputEl.focus(), 250);
+            }
+          }
         }
       }
     }
@@ -960,8 +942,9 @@ function PublicProfileClientInner({
     [effectiveIsOwner, userProfiles, profile]
   );
 
+  const isPreviewMode = screenMode === 'preview';
   const hasCustomBackground =
-    screenMode === 'preview' &&
+    isPreviewMode &&
     resolveBackgroundMode({
       ...cardProfile,
       ...(previewBackgroundTheme
@@ -969,180 +952,217 @@ function PublicProfileClientInner({
         : {}),
     }) !== 'default';
 
-  const desktopView = (
-    <div className="w-full h-full max-h-full flex-1 flex flex-col min-h-0 overflow-hidden relative">
-      {/* Clean Public & Owner Header - Firmly Docked at Top */}
-      <div className="shrink-0 z-40 w-full">
-        <HeaderNav
-          currentProfile={{ ...profile, theme: activeTheme }}
-          profileType={profileType}
-          onSelectProfileType={(type) => setProfileType(type)}
-          onOpenMyCard={() => setProfileType('individual')}
-          canEdit={effectiveIsOwner}
-          isEditing={isEditing}
-          isSharing={isSharing}
-          showEditActionsInHeader={false}
-          onCancelEdit={handleCancelEdit}
-          onSaveEdits={handleSaveAndExit}
-          isSaving={isSaving}
-          onOpenEdit={handleOpenEditMode}
-          onOpenShare={handleOpenShareMode}
-          isDark={isDark}
-          onToggleTheme={handleToggleTheme}
-          session={currentUser}
-          onLogout={handleLogout}
-          theme={activeThemeConfig}
-          onToggleSections={handleTriggerClick}
-          onSectionsMouseEnter={handleTriggerMouseEnter}
-          onSectionsMouseLeave={handleTriggerMouseLeave}
-        />
-      </div>
-
-      {/* Central In-Page Mode Area: Edit | Share | Preview */}
-      {screenMode === 'edit' && effectiveIsOwner && (
-        <ProfileEditorView
+  return (
+    <div
+      data-theme={activeTheme}
+      className={
+        isPreviewMode
+          ? `min-h-[100dvh] w-full flex flex-col relative overflow-x-clip ${
+              hasCustomBackground ? 'bg-transparent' : activeThemeConfig.pageBg
+            } ${activeThemeConfig.textPrimary} transition-colors duration-300 font-sans`
+          : `h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${activeThemeConfig.pageBg} ${activeThemeConfig.textPrimary} transition-colors duration-300 font-sans relative`
+      }
+    >
+      {/* Decorative Background Wallpaper Layer (sits behind the profile card, never merges with profile theme) */}
+      {isPreviewMode && (
+        <ProfileBackgroundLayer
           profile={cardProfile}
-          theme={activeThemeConfig}
-          isUploadingAvatar={isUploadingAvatar}
-          isUploadingCover={isUploadingCover}
-          onCancelClose={handleCancelEdit}
-          onDoneClose={(savedProfile) => {
-            setProfile(savedProfile);
-            setCurrentDraft(savedProfile);
-            navigateScreenMode(
-              'preview',
-              savedProfile.slug || savedProfile.id || initialProfile.slug || initialProfile.id
-            );
-            showToast('Profile saved successfully!');
-          }}
-          onSavePartial={handleSavePartial}
-          onPreviewBackgroundTheme={setPreviewBackgroundTheme}
-          onShowToast={showToast}
+          overrideOccasionThemeId={previewBackgroundTheme?.id}
+          contained={true}
         />
       )}
 
-      {screenMode === 'share' && (
-        effectiveIsOwner ? (
-          <UnifiedShareWorkspace
-            isOpen={true}
-            onClose={handleCloseShareMode}
-            profile={profile}
-            userProfiles={ownerProfiles}
-            selectedProfileId={shareTargetProfileId}
-            onSelectProfileId={setShareTargetProfileId}
-            draftSelectionsByProfile={shareDraftSelections}
-            onUpdateDraftSelection={(pid, fields) =>
-              setShareDraftSelections((prev) => ({ ...prev, [pid]: fields }))
-            }
-            draftPresetByProfile={shareDraftPresets}
-            onUpdateDraftPreset={(pid, preset) =>
-              setShareDraftPresets((prev) => ({ ...prev, [pid]: preset }))
-            }
-            isDark={isDark}
-            onAuthRequired={() => setCurrentUser(null)}
-            onSwitchToPublicShare={() => {
-              if (currentOwnerKey) setInvalidatedOwnerKey(currentOwnerKey);
-              setCurrentUser(null);
-            }}
-            onCopySuccess={() => showToast('Secure link copied!')}
-            onUpdateProfile={(updated) => {
-              if (updated.id === profile.id) {
-                setProfile(updated);
-                setCurrentDraft(updated);
-                updateProfilePartial(updated);
-              }
-            }}
-          />
-        ) : (
-          <VisitorPublicShareView
-            profile={profile}
-            onClose={handleCloseShareMode}
-            onCopySuccess={() => showToast('Public profile link copied!')}
-          />
-        )
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div className="fixed top-4 right-4 z-[60] px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-semibold shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in slide-in-from-top-2">
+          {toastMessage}
+        </div>
       )}
 
-      {screenMode === 'preview' && (
-        <>
-          {/* Section Navigation Drawer on Desktop (>= lg) */}
-          <AnimatePresence>
-            {desktopOpen && (
-              <div className="hidden lg:block">
-                <motion.div
-                  key="desktop-sidebar-backdrop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  onClick={handleCloseDesktop}
-                  className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
-                />
-                <motion.div
-                  key="desktop-sidebar-drawer"
-                  initial={{ y: '100%', opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: '100%', opacity: 0 }}
-                  transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-                  onMouseEnter={handlePanelMouseEnter}
-                  onMouseLeave={handlePanelMouseLeave}
-                  className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
-                >
-                  <DesktopProfileSidebar
-                    onClose={handleCloseDesktop}
-                    onSelectSection={handleDesktopSectionSelect}
-                    isPublicView={true}
-                  />
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
+      <div
+        className={
+          isPreviewMode
+            ? 'relative z-10 w-full flex-1 flex flex-col'
+            : 'flex-1 flex flex-col min-h-0 overflow-hidden relative w-full'
+        }
+      >
+        {/* Top Platform Header */}
+        <div className={isPreviewMode ? 'sticky top-0 z-40 w-full' : 'shrink-0 z-40 w-full'}>
+          <HeaderNav
+            currentProfile={{ ...profile, theme: activeTheme }}
+            profileType={profileType}
+            onSelectProfileType={(type) => setProfileType(type)}
+            onOpenMyCard={() => setProfileType('individual')}
+            canEdit={effectiveIsOwner}
+            isEditing={isEditing}
+            isSharing={isSharing}
+            showEditActionsInHeader={false}
+            onCancelEdit={handleCancelEdit}
+            onSaveEdits={handleSaveAndExit}
+            isSaving={isSaving}
+            onOpenEdit={handleOpenEditMode}
+            onOpenShare={handleOpenShareMode}
+            isDark={isDark}
+            onToggleTheme={handleToggleTheme}
+            session={currentUser}
+            onLogout={handleLogout}
+            theme={activeThemeConfig}
+            onToggleSections={handleTriggerClick}
+            onSectionsMouseEnter={handleTriggerMouseEnter}
+            onSectionsMouseLeave={handleTriggerMouseLeave}
+          />
+        </div>
 
-          {/* Section Navigation Drawer on Mobile (< lg) */}
-          <AnimatePresence>
-            {mobileOpen && (
-              <div className="lg:hidden">
-                <motion.div
-                  key="mobile-viewport-sidebar-backdrop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  onClick={handleCloseMobile}
-                  className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
-                />
-                <motion.div
-                  key="mobile-viewport-sidebar-drawer"
-                  initial={{ y: '100%', opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: '100%', opacity: 0 }}
-                  transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-                  className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
-                >
-                  <DesktopProfileSidebar
-                    onClose={handleCloseMobile}
-                    onSelectSection={handleMobileSectionSelect}
-                    isPublicView={true}
-                  />
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
+        {/* Central In-Page Mode Area: Edit | Share | Preview */}
+        {screenMode === 'edit' && effectiveIsOwner && (
+          <ProfileEditorView
+            profile={cardProfile}
+            theme={activeThemeConfig}
+            isUploadingAvatar={isUploadingAvatar}
+            isUploadingCover={isUploadingCover}
+            onCancelClose={handleCancelEdit}
+            onDoneClose={(savedProfile) => {
+              setProfile(savedProfile);
+              setCurrentDraft(savedProfile);
+              navigateScreenMode(
+                'preview',
+                savedProfile.slug || savedProfile.id || initialProfile.slug || initialProfile.id
+              );
+              showToast('Profile saved successfully!');
+            }}
+            onSavePartial={handleSavePartial}
+            onPreviewBackgroundTheme={setPreviewBackgroundTheme}
+            onShowToast={showToast}
+          />
+        )}
 
-          {/* Main Responsive Profile Preview Container */}
-          <div className="flex-1 min-h-0 w-full flex flex-row overflow-hidden relative">
-            <div
+        {screenMode === 'share' && (
+          effectiveIsOwner ? (
+            <UnifiedShareWorkspace
+              isOpen={true}
+              onClose={handleCloseShareMode}
+              profile={profile}
+              userProfiles={ownerProfiles}
+              selectedProfileId={shareTargetProfileId}
+              onSelectProfileId={setShareTargetProfileId}
+              draftSelectionsByProfile={shareDraftSelections}
+              onUpdateDraftSelection={(pid, fields) =>
+                setShareDraftSelections((prev) => ({ ...prev, [pid]: fields }))
+              }
+              draftPresetByProfile={shareDraftPresets}
+              onUpdateDraftPreset={(pid, preset) =>
+                setShareDraftPresets((prev) => ({ ...prev, [pid]: preset }))
+              }
+              isDark={isDark}
+              onAuthRequired={() => setCurrentUser(null)}
+              onSwitchToPublicShare={() => {
+                if (currentOwnerKey) setInvalidatedOwnerKey(currentOwnerKey);
+                setCurrentUser(null);
+              }}
+              onCopySuccess={() => showToast('Secure link copied!')}
+              onUpdateProfile={(updated) => {
+                if (updated.id === profile.id) {
+                  setProfile(updated);
+                  setCurrentDraft(updated);
+                  updateProfilePartial(updated);
+                }
+              }}
+            />
+          ) : (
+            <VisitorPublicShareView
+              profile={profile}
+              onClose={handleCloseShareMode}
+              onCopySuccess={() => showToast('Public profile link copied!')}
+            />
+          )
+        )}
+
+        {isPreviewMode && (
+          <>
+            {/* Section Navigation Drawer on Desktop (>= lg) */}
+            <AnimatePresence>
+              {desktopOpen && (
+                <div className="hidden lg:block">
+                  <motion.div
+                    key="desktop-sidebar-backdrop"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    onClick={handleCloseDesktop}
+                    className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
+                  />
+                  <motion.div
+                    key="desktop-sidebar-drawer"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+                    onMouseEnter={handlePanelMouseEnter}
+                    onMouseLeave={handlePanelMouseLeave}
+                    className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
+                  >
+                    <DesktopProfileSidebar
+                      onClose={handleCloseDesktop}
+                      onSelectSection={handleDesktopSectionSelect}
+                      isPublicView={true}
+                    />
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* Section Navigation Drawer on Mobile (< lg) */}
+            <AnimatePresence>
+              {mobileOpen && (
+                <div className="lg:hidden">
+                  <motion.div
+                    key="mobile-viewport-sidebar-backdrop"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    onClick={handleCloseMobile}
+                    className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
+                  />
+                  <motion.div
+                    key="mobile-viewport-sidebar-drawer"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+                    className="fixed inset-x-0 bottom-0 z-50 w-full max-w-md mx-auto max-h-[82dvh] rounded-t-3xl shadow-2xl overflow-hidden"
+                  >
+                    <DesktopProfileSidebar
+                      onClose={handleCloseMobile}
+                      onSelectSection={handleMobileSectionSelect}
+                      isPublicView={true}
+                    />
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* Centered Profile Card Layer over Outer Decorative Background Wallpaper */}
+            <main
               id="profile-scroll-panel"
               onClick={() => {
                 if (desktopOpen) handleCloseDesktop();
                 if (mobileOpen) handleCloseMobile();
                 if (isSidebarOpen) handleCloseSidebar();
               }}
-              className="h-full min-h-0 overflow-y-auto overscroll-contain px-0 sm:px-4 lg:px-6 py-0 sm:py-4 box-border scrollbar-thin transition-all duration-300 w-full flex-1 smooth-scroll-container"
+              className={`w-full flex-1 transition-all duration-300 ${
+                hasCustomBackground ? 'px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6' : 'px-0 sm:px-6 lg:px-8 py-0 sm:py-6'
+              }`}
             >
-              <div className={`w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} ${hasCustomBackground
-                ? 'backdrop-blur-md shadow-2xl'
-                : 'shadow-none sm:shadow-xl'
-                } overflow-hidden relative`}>
+              <div
+                data-testid="profile-card-shell"
+                className={`w-full max-w-3xl mx-auto ${
+                  hasCustomBackground
+                    ? 'rounded-2xl sm:rounded-3xl border shadow-xl'
+                    : 'rounded-none sm:rounded-3xl border-0 sm:border shadow-none sm:shadow-xl'
+                } ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} overflow-hidden relative`}
+              >
                 {effectiveIsOwner && cardProfile.profileVisibility === 'private' && (
                   <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                     Private profile — Visitors see your name only
@@ -1189,211 +1209,10 @@ function PublicProfileClientInner({
                   isDesktopSectionsOpen={desktopOpen}
                 />
               </div>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-
-  const mobileView = (
-    <div className="w-full h-full flex-1 flex flex-col min-h-0 relative overflow-hidden">
-      {/* Clean Public & Owner Header - Firmly Docked at Top (Row 1) */}
-      <div className="shrink-0 z-40 w-full">
-        <HeaderNav
-          currentProfile={{ ...profile, theme: activeTheme }}
-          profileType={profileType}
-          onSelectProfileType={(type) => setProfileType(type)}
-          onOpenMyCard={() => setProfileType('individual')}
-          canEdit={effectiveIsOwner}
-          isEditing={false}
-          onCancelEdit={handleCancelEdit}
-          onSaveEdits={handleSaveAndExit}
-          isSaving={isSaving}
-          onOpenEdit={handleOpenEditMode}
-          onOpenShare={handleOpenShareMode}
-          isDark={isDark}
-          onToggleTheme={handleToggleTheme}
-          session={currentUser}
-          onLogout={handleLogout}
-          theme={activeThemeConfig}
-          onToggleSections={handleTriggerClick}
-          onSectionsMouseEnter={handleTriggerMouseEnter}
-          onSectionsMouseLeave={handleTriggerMouseLeave}
-        />
+            </main>
+          </>
+        )}
       </div>
-
-      <div className="flex-1 w-full min-h-0 flex flex-row overflow-hidden relative">
-        <div
-          id="mobile-profile-scroll-panel"
-          onClick={() => {
-            if (mobileOpen) handleCloseMobile();
-            if (isSidebarOpen) handleCloseSidebar();
-          }}
-          className="h-full min-h-0 overflow-y-auto overscroll-contain transition-all duration-300 w-full flex-1 smooth-scroll-container"
-        >
-          {effectiveIsOwner && cardProfile.profileVisibility === 'private' && (
-            <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[10px] font-semibold text-zinc-700 dark:text-zinc-300">
-              Private profile — Visitors see your name only
-            </div>
-          )}
-          <AvtiveDigitalCard
-            profile={cardProfile}
-            userProfiles={ownerProfiles}
-            canEdit={effectiveIsOwner}
-            isEditing={false}
-            onPreviewBackgroundTheme={setPreviewBackgroundTheme}
-            isConnected={false}
-            onDraftChange={handleDraftChange}
-            onOpenEdit={handleOpenEditMode}
-            onCancelEdit={handleCancelEdit}
-            onSaveEdits={handleSaveEdits}
-            onSavePartial={handleSavePartial}
-            onSaveContact={handleSaveContact}
-            onOpenShare={handleOpenShareMode}
-            onOpenConnect={() => setIsConnectModalOpen(true)}
-            onOpenQRModal={() => setIsQRModalOpen(true)}
-            onOpenResumeModal={() => setIsResumeModalOpen(true)}
-            onSelectProject={(project) => setSelectedProject(project)}
-            onSelectTeamMember={(member) => {
-              const slug = member.profileId === 'individual' ? 'syedmesumraza' : member.profileId === 'team-member' ? 'hamza-malik' : member.id;
-              router.push(`/profile/${slug}`);
-            }}
-            onViewCompany={() => {
-              if (profile.companyId) {
-                router.push(`/profile/${profile.companyId}`);
-              }
-            }}
-            isDark={isDark}
-            viewMode="standard"
-            activeSection={activeTabSection}
-            onSelectSection={(sec) => handleSectionSelect(sec, true)}
-            onToggleSections={handleTriggerClick}
-            onSectionsMouseEnter={handleTriggerMouseEnter}
-            onSectionsMouseLeave={handleTriggerMouseLeave}
-            isSidebarOpen={isSidebarOpen}
-            onToggleMobileSections={handleToggleMobile}
-            isMobileSectionsOpen={mobileOpen}
-          />
-        </div>
-
-        {/* Mobile Section Navigation Drawer - Floating Overlay (Public View) */}
-        <AnimatePresence>
-          {!isEditing && isSidebarOpen && (
-            <>
-              <motion.div
-                key="mobile-drawer-backdrop"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                onClick={handleCloseSidebar}
-                className="absolute inset-0 bg-black/40 z-30 cursor-pointer"
-              />
-              <motion.div
-                key="mobile-drawer-panel"
-                initial={{ y: '100%', opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: '100%', opacity: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 250 }}
-                className="absolute inset-x-0 bottom-0 z-40 w-full max-h-[65%] rounded-t-2xl border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl overflow-y-auto overscroll-contain scrollbar-none py-3 px-2"
-              >
-                <div className="w-full grid grid-cols-4 gap-1.5 pb-2">
-                  {mobileNavSections.map((section) => {
-                    const IconComponent = section.icon;
-                    const isActive = activeTabSection === section.key;
-                    return (
-                      <button
-                        key={`chassis-panel-${section.key}`}
-                        type="button"
-                        onClick={() => {
-                          handleSectionSelect(section.key);
-                          handleCloseSidebar();
-                        }}
-                        className={`min-h-[42px] h-[44px] w-full rounded-xl flex flex-col items-center justify-center p-1 transition-all cursor-pointer select-none active:scale-95 ${isActive
-                          ? 'bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white font-bold shadow-xs'
-                          : 'text-zinc-700 dark:text-zinc-200 hover:text-black dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900'
-                          }`}
-                        title={section.label}
-                        aria-label={section.label}
-                      >
-                        <IconComponent className="w-4 h-4 shrink-0" />
-                        <span className="text-[9px] font-medium leading-none tracking-tight truncate max-w-full mt-0.5">
-                          {getMobileShortLabel(section.key, section.label)}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Bottom-Up Section Drawer on Mobile Phone Chassis */}
-        <AnimatePresence>
-          {isEditing && mobileOpen && (
-            <>
-              <motion.div
-                key="mobile-chassis-sidebar-backdrop"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                onClick={handleCloseMobile}
-                className="absolute inset-0 bg-black/40 z-40 cursor-pointer"
-              />
-              <motion.div
-                key="mobile-chassis-sidebar-drawer"
-                initial={{ y: '100%', opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: '100%', opacity: 0 }}
-                transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-                className="absolute inset-x-0 bottom-0 z-50 w-full max-h-[82%] rounded-t-3xl shadow-2xl overflow-hidden"
-              >
-                <DesktopProfileSidebar
-                  onClose={handleCloseMobile}
-                  onSelectSection={handleMobileSectionSelect}
-                  isPublicView={false}
-                />
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-
-  return (
-    <div
-      data-theme={activeTheme}
-      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden ${hasCustomBackground ? 'bg-transparent' : activeThemeConfig.pageBg
-        } ${activeThemeConfig.textPrimary} transition-all duration-300 font-sans relative`}
-    >
-      {/* Visual Background Layer (Preview mode only) */}
-      {screenMode === 'preview' && (
-        <ProfileBackgroundLayer
-          profile={cardProfile}
-          overrideOccasionThemeId={previewBackgroundTheme?.id}
-        />
-      )}
-
-      {/* Toast Notification Banner */}
-      {toastMessage && (
-        <div className="fixed top-4 right-4 z-[60] px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-semibold shadow-xl border border-white/10 dark:border-black/10 animate-in fade-in slide-in-from-top-2">
-          {toastMessage}
-        </div>
-      )}
-
-      <DualScreenWorkspace
-        workflowTitle="Digital Pass Identity"
-        workflowSubtitle="Verified Public Profile"
-        currentUrlPath={buildProfileUrlForMode(profile.slug || profile.id, screenMode)}
-        showWindowHeader={false}
-        hideMobilePreview={screenMode !== 'preview'}
-        desktopContent={desktopView}
-        mobileContent={mobileView}
-      />
 
       {/* Connect / Exchange Contact Modal */}
       {isConnectModalOpen && (

@@ -340,7 +340,7 @@ export function ExperienceSection({
                       {exp.skills.map((skill, sIdx) => (
                         <span
                           key={sIdx}
-                          className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText}`}
+                          className={`text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 ${theme.textPrimary} border border-neutral-200 dark:border-neutral-700`}
                         >
                           {skill}
                         </span>

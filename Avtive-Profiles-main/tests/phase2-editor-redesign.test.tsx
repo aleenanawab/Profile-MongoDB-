@@ -755,22 +755,17 @@ async function runTests() {
       assert.strictEqual(container.querySelectorAll('[data-testid="profile-editor-view"]').length, 0);
       assert.strictEqual(container.querySelectorAll('[data-testid="unified-share-workspace"]').length, 0);
 
-      // Unified single-canvas preview: strictly one ProfileSectionTabBar below Hero action area, no duplicate mobile phone panel, natural vertical scroll
+      // Phase 4: Verify section nav sits INSIDE card below Hero action buttons (no duplicate top-level nav) and uses icon-only tabs
       const desktopPanelEl = container.querySelector('#profile-scroll-panel');
       const mobilePanelEl = container.querySelector('#mobile-profile-scroll-panel');
       const desktopNav = desktopPanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
-      assert.ok(desktopPanelEl && desktopNav, 'Section navigation must render inside primary profile panel');
-      assert.strictEqual(mobilePanelEl, null, 'Preview must not render a duplicate mobile phone panel');
+      const mobileNav = mobilePanelEl?.querySelector('[data-testid="profile-section-tabbar"]');
+      assert.ok(desktopNav && mobileNav, 'Section navigation must render inside both desktop and mobile profile panels');
       assert.strictEqual(
         container.querySelectorAll('[data-testid="profile-section-tabbar"]').length,
-        1,
-        'Must render strictly one ProfileSectionTabBar in unified preview layout without duplicated navs'
+        2,
+        'Must render strictly one ProfileSectionTabBar per preview layout without top-level duplicate navs'
       );
-      const previewRootEl = container.firstElementChild as HTMLElement | null;
-      assert.ok(previewRootEl?.className.includes('min-h-[100dvh]'), 'Preview uses natural document min-height scrolling');
-      assert.ok(!previewRootEl?.className.includes('max-h-[100dvh] overflow-hidden'), 'Preview avoids vertical scroll trap');
-      assert.strictEqual(desktopPanelEl?.querySelector('.rounded-3xl'), null, 'AvtiveDigitalCard is not wrapped inside an outer rounded-3xl box');
-
       const desktopHeroEl = desktopPanelEl?.querySelector('#section-hero');
       const desktopAboutEl = desktopPanelEl?.querySelector('#section-personalDetails');
       assert.ok(desktopHeroEl && desktopAboutEl && desktopNav, 'Hero, TabBar, and Content Sections exist in DOM');
@@ -795,41 +790,6 @@ async function runTests() {
         aboutIconTab!.click();
       });
       assert.strictEqual(aboutIconTab!.getAttribute('aria-current'), 'page', 'Clicking section icon updates active state');
-
-      // Custom occasion background renders inside unified canvas with translucent glass & scroll attachment
-      await React.act(async () => {
-        root.render(
-          React.createElement(
-            AppRouterContext.Provider,
-            { value: mockAppRouter },
-            React.createElement(
-              ThemeProvider,
-              null,
-              React.createElement(PublicProfileClient, {
-                key: 'aurora-preview',
-                initialProfile: {
-                  ...clone(SAMPLE_PROFILE),
-                  theme: 'editorial',
-                  backgroundType: 'occasion',
-                  activeBackgroundThemeId: 'aurora-borealis',
-                },
-                session: OWNER_USER,
-                isOwner: true,
-                initialIsEditing: false,
-                initialIsSharing: false,
-                userProfiles: [clone(SAMPLE_PROFILE)],
-              })
-            )
-          )
-        );
-      });
-      const bgLayerEl = container.querySelector('[data-background-mode="occasion"]') as HTMLElement | null;
-      assert.ok(bgLayerEl, 'Occasion background layer renders directly in profile preview');
-      assert.strictEqual(bgLayerEl?.getAttribute('data-contained'), 'true', 'Profile background layer is contained inside single canvas');
-      assert.ok(
-        container.querySelector('#section-personalDetails .backdrop-blur-md'),
-        'Profile sections use translucent glass surface instead of opaque card'
-      );
 
       // Company profile layout follows the same Hero -> Actions -> Section Nav -> Sections hierarchy
       await React.act(async () => {

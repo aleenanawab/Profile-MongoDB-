@@ -398,12 +398,12 @@ export function HeroSection({
   const renderSocialIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'github':
-        return <GithubIcon className={`w-4 h-4 ${theme.textPrimary}`} />;
+        return <GithubIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
       case 'linkedin':
-        return <LinkedInIcon className={`w-4 h-4 ${theme.textPrimary}`} />;
+        return <LinkedInIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
       case 'twitter':
       case 'x':
-        return <TwitterXIcon className={`w-4 h-4 ${theme.textPrimary}`} />;
+        return <TwitterXIcon className="w-4 h-4 text-zinc-900 dark:text-white" />;
       case 'whatsapp':
         return <WhatsAppIcon className="w-4 h-4 text-emerald-500" />;
       case 'email':
@@ -418,7 +418,7 @@ export function HeroSection({
   };
 
   return (
-    <div className="relative w-full max-w-full overflow-x-clip text-left font-sans">
+    <div className="relative w-full text-left font-sans">
       {/* Hidden File Inputs for Cover and Avatar */}
       <input
         ref={coverInputRef}
@@ -625,8 +625,7 @@ export function HeroSection({
       </div>
 
       {/* 2. Identity Header */}
-      <div className={`px-4 sm:px-6 md:px-8 pb-6 ${theme.cardBg} transition-colors`}>
-        <div className={`${allowPhotoDisplay ? '-mt-10 sm:-mt-14 md:-mt-18' : 'pt-5 sm:pt-6'} relative z-10 space-y-4`}>
+      <div className={`px-4 sm:px-6 md:px-8 pb-6 ${allowPhotoDisplay ? '-mt-10 sm:-mt-14 md:-mt-18' : 'pt-5 sm:pt-6'} relative z-10 space-y-4`}>
           {/* Profile Photo / Company Logo */}
           {allowPhotoDisplay && avatarUrl && (
             isCompany ? (
@@ -734,12 +733,12 @@ export function HeroSection({
             <div className="space-y-2 pt-1">
               <div className="flex items-center gap-2">
                 {isCompany ? (
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold ${theme.badgeBg} ${theme.badgeText}`}>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800">
                     <Building2 className="w-3.5 h-3.5" />
                     <span>Company · Organization</span>
                   </div>
                 ) : (
-                  <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${theme.badgeBg} ${theme.badgeText}`}>
+                  <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-black/5 dark:bg-white/10 text-slate-700 dark:text-zinc-300 border border-black/5 dark:border-white/10">
                     {typeBadgeLabel}
                   </div>
                 )}
@@ -1069,7 +1068,7 @@ export function HeroSection({
                       {profile.companyInfo?.industry && (
                         <span
                           onClick={() => canEdit && onOpenEdit?.()}
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                           title={canEdit ? 'Click to edit company details' : undefined}
                         >
                           {profile.companyInfo.industry}
@@ -1078,7 +1077,7 @@ export function HeroSection({
                       {profile.companyInfo?.employeeCount && (
                         <span
                           onClick={() => canEdit && onOpenEdit?.()}
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-medium ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                           title={canEdit ? 'Click to edit company details' : undefined}
                         >
                           {profile.companyInfo.employeeCount}
@@ -1090,10 +1089,10 @@ export function HeroSection({
                           e.stopPropagation();
                           onSelectSection ? onSelectSection('teamMembers') : null;
                         }}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md ${theme.btnSecondary} font-bold transition-colors cursor-pointer`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-bold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                         title="View organization team"
                       >
-                        <Users className={`w-3.5 h-3.5 ${theme.accentText}`} />
+                        <Users className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
                         <span>{activeMemberCount} {activeMemberCount === 1 ? 'Team Member' : 'Team Members'}</span>
                       </button>
                     </div>
@@ -1153,7 +1152,7 @@ export function HeroSection({
                           onSelectSection('socials');
                         }
                       }}
-                      className={`flex items-center gap-2 pt-1.5 ${theme.textSecondary} flex-wrap relative ${canEdit ? 'group/socials rounded-xl py-1 transition-all' : ''}`}
+                      className={`flex items-center gap-2 pt-1.5 text-zinc-700 dark:text-zinc-300 flex-wrap relative ${canEdit ? 'group/socials rounded-xl py-1 transition-all' : ''}`}
                       title={canEdit ? 'Click to edit Socials & Links' : undefined}
                     >
                       {profile.whatsapp && sharing.phone !== false && !socials.some((s) => s.platform === 'whatsapp') && (
@@ -1161,11 +1160,11 @@ export function HeroSection({
                           href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} hover:opacity-85 flex items-center justify-center transition-all`}
+                          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
                           title="WhatsApp"
                           aria-label="WhatsApp"
                         >
-                          <WhatsAppIcon className={`w-4 h-4 ${theme.textPrimary}`} />
+                          <WhatsAppIcon className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
                         </a>
                       )}
 
@@ -1174,11 +1173,11 @@ export function HeroSection({
                           href={`mailto:${profile.email}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} hover:opacity-85 flex items-center justify-center transition-all`}
+                          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
                           title="Email"
                           aria-label="Email"
                         >
-                          <Mail className={`w-4 h-4 ${theme.textPrimary}`} />
+                          <Mail className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
                         </a>
                       )}
 
@@ -1195,7 +1194,7 @@ export function HeroSection({
                             href={formattedUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border ${theme.cardBorder} ${theme.subCardBg} ${theme.textPrimary} hover:opacity-85 flex items-center justify-center transition-all`}
+                            className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center transition-colors"
                             title={s.label || s.platform}
                             aria-label={s.label || s.platform}
                           >
@@ -1211,7 +1210,7 @@ export function HeroSection({
                             e.stopPropagation();
                             onSelectSection?.('socials');
                           }}
-                          className={`edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold ${theme.btnSecondary} flex items-center gap-1 cursor-pointer`}
+                          className="edit-socials-trigger opacity-0 group-hover/socials:opacity-100 transition-opacity px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-800 flex items-center gap-1 cursor-pointer"
                         >
                           <Pencil className="w-2.5 h-2.5" />
                           <span>Edit Links</span>
@@ -1344,6 +1343,5 @@ export function HeroSection({
           </div>
         </div>
       </div>
-    </div>
   );
 }

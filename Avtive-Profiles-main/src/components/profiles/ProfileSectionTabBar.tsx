@@ -221,7 +221,7 @@ export function ProfileSectionTabBar({
             onClick={handleScrollLeft}
             aria-label="Scroll sections left"
             title="Scroll sections left"
-            className={`flex absolute left-1.5 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full ${theme.subCardBg} backdrop-blur-md shadow-sm border ${theme.cardBorder} items-center justify-center ${theme.textPrimary} hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white transition-all cursor-pointer`}
+            className="flex absolute left-1.5 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/95 dark:bg-zinc-950/95 shadow-sm border border-zinc-200 dark:border-zinc-800 items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -251,13 +251,14 @@ export function ProfileSectionTabBar({
                   className={`group shrink-0 w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer active:scale-95 box-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white focus-visible:ring-offset-1 ${
                     active
                       ? `${theme.btnPrimary} shadow-xs`
-                      : `${theme.textSecondary} hover:opacity-100 border border-transparent ${theme.hoverBorder}`
+                      : `${theme.textSecondary} hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/80 border border-transparent hover:border-zinc-200/80 dark:hover:border-zinc-700/80`
                   }`}
                 >
                   <Icon
                     aria-hidden="true"
-                    className={`w-[18px] h-[18px] shrink-0 transition-transform group-hover:scale-105 ${active ? 'opacity-100' : 'opacity-75 group-hover:opacity-100'
-                      }`}
+                    className={`w-[18px] h-[18px] shrink-0 transition-transform group-hover:scale-105 ${
+                      active ? 'opacity-100' : 'opacity-75 group-hover:opacity-100'
+                    }`}
                   />
                 </button>
               );
@@ -272,7 +273,7 @@ export function ProfileSectionTabBar({
             onClick={handleScrollRight}
             aria-label="Scroll sections right"
             title="Scroll sections right"
-            className={`flex absolute right-1.5 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full ${theme.subCardBg} backdrop-blur-md shadow-sm border ${theme.cardBorder} items-center justify-center ${theme.textPrimary} hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white transition-all cursor-pointer`}
+            className="flex absolute right-1.5 z-20 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/95 dark:bg-zinc-950/95 shadow-sm border border-zinc-200 dark:border-zinc-800 items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:focus-visible:ring-white transition-all cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

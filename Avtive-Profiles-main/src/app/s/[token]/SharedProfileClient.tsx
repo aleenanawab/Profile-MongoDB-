@@ -22,8 +22,8 @@ import type { ResolveShareLinkResult } from '@/lib/db/shareLinks';
 import type { ProjectItem } from '@/types/profile';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
 import { PhonePreview } from '@/components/card/PhonePreview';
-import { ProfileBackgroundLayer, resolveBackgroundAppearance } from '@/components/editor/BackgroundRenderer';
-import { getSurfaceThemeConfig } from '@/components/ui/themeStyles';
+import { ProfileBackgroundLayer, resolveBackgroundMode } from '@/components/editor/BackgroundRenderer';
+import { getThemeConfig } from '@/components/ui/themeStyles';
 import { downloadVCard } from '@/lib/vcard';
 import { generateCardPdf } from '@/lib/cardPdfGenerator';
 import { ExchangeContactModal } from '@/components/modals/ExchangeContactModal';
@@ -113,8 +113,7 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
 
   const { profile, shareMeta } = result;
   const activeThemeKey = profile.theme && profile.theme !== 'default' ? profile.theme : 'editorial';
-  const { hasCustomBg } = resolveBackgroundAppearance(profile);
-  const themeConfig = getSurfaceThemeConfig(activeThemeKey, profile);
+  const themeConfig = getThemeConfig(activeThemeKey);
   const canDownloadResume = profile.sharingSettings?.resume === true;
 
   const handleCopyCurrentLink = async () => {
@@ -161,17 +160,17 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
     }
   };
 
+  const bgMode = resolveBackgroundMode(profile);
+  const hasCustomBg = bgMode !== 'default';
+
   return (
     <div
       data-theme={activeThemeKey}
-      className={`min-h-[100dvh] w-full flex flex-col relative overflow-x-clip ${
-        hasCustomBg ? 'bg-transparent' : themeConfig.pageBg
-      } ${themeConfig.textPrimary} font-sans`}
+      className={`min-h-[100dvh] w-full ${hasCustomBg ? 'bg-transparent' : themeConfig.pageBg} ${themeConfig.textPrimary} font-sans relative`}
     >
-      <ProfileBackgroundLayer profile={profile} contained={true} />
-      <div className="relative z-10 w-full flex-1 flex flex-col">
-        {/* Minimalist Visitor Action Strip */}
-        <header className={`sticky top-0 z-30 backdrop-blur-md ${themeConfig.headerBg} border-b ${themeConfig.divider}`}>
+      <ProfileBackgroundLayer profile={profile} />
+      {/* Minimalist Visitor Action Strip */}
+      <header className={`sticky top-0 z-30 backdrop-blur-md ${themeConfig.headerBg} border-b ${themeConfig.divider}`}>
         <div className="max-w-3xl mx-auto px-3 sm:px-5 py-2 flex items-center justify-between gap-2 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/images/avtive-symbol.png" alt="Avtive" className="h-6 w-auto shrink-0" />
@@ -275,7 +274,7 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
             <button
               type="button"
               onClick={handleCopyCurrentLink}
-              className={`group relative h-9 w-9 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.btnSecondary} flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90`}
+              className={`group relative h-9 w-9 rounded-xl border ${themeConfig.cardBorder} ${themeConfig.cardBg} flex items-center justify-center cursor-pointer transition-opacity hover:opacity-90`}
               title="Copy Share Link"
               aria-label="Copy Share Link"
             >
@@ -302,11 +301,13 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
       </header>
 
       {/* Main Sanitized Profile Preview */}
-      <main className="w-full flex-1">
+      <main className="py-0 sm:py-6 px-0 sm:px-4">
         {/* Desktop Card View (Always used cleanly on mobile viewports < md) */}
         <div
           data-testid="shared-desktop-view"
-          className={`${previewDevice === 'mobile' ? 'block md:hidden' : 'block'} w-full max-w-3xl mx-auto`}
+          className={`${previewDevice === 'mobile' ? 'block md:hidden' : 'block'} w-full max-w-3xl mx-auto rounded-none sm:rounded-3xl border-0 sm:border ${themeConfig.cardBorder} ${themeConfig.cardBg} ${
+            hasCustomBg ? 'backdrop-blur-md shadow-2xl' : 'shadow-none sm:shadow-xl'
+          } overflow-hidden`}
         >
           <AvtiveDigitalCard
             profile={profile}
@@ -330,7 +331,7 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
 
         {/* Desktop Mobile-Preview Chassis (Shown on desktop >= md when toggled to Mobile) */}
         {previewDevice === 'mobile' && (
-          <div data-testid="shared-mobile-preview" className="hidden md:flex justify-center py-6 px-4">
+          <div data-testid="shared-mobile-preview" className="hidden md:flex justify-center py-2">
             <PhonePreview
               profile={profile}
               isDark={false}
@@ -350,7 +351,6 @@ export function SharedProfileClient({ result, isBotPreview = false }: SharedProf
           </div>
         )}
       </main>
-      </div>
 
       {isConnectOpen && (
         <ExchangeContactModal

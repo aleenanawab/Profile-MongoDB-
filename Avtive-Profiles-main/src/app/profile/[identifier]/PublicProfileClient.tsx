@@ -1005,7 +1005,7 @@ function PublicProfileClientInner({
             isDark={isDark}
             onToggleTheme={handleToggleTheme}
             viewMode={previewViewMode}
-            onToggleViewMode={effectiveIsOwner ? setPreviewViewMode : undefined}
+            onToggleViewMode={setPreviewViewMode}
             session={currentUser}
             onLogout={handleLogout}
             theme={activeThemeConfig}
@@ -1153,13 +1153,12 @@ function PublicProfileClientInner({
                 if (mobileOpen) handleCloseMobile();
                 if (isSidebarOpen) handleCloseSidebar();
               }}
-              className={`w-full flex-1 touch-pan-y transition-all duration-300 ${
-                previewViewMode === 'mobile'
-                  ? 'px-3 sm:px-6 py-4 sm:py-8'
-                  : hasCustomBackground
-                    ? 'px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6'
-                    : 'px-0 sm:px-6 lg:px-8 py-0 sm:py-6'
-              }`}
+              className={`w-full flex-1 touch-pan-y transition-all duration-300 ${previewViewMode === 'mobile'
+                ? 'px-3 sm:px-6 py-4 sm:py-8'
+                : hasCustomBackground
+                  ? 'px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6'
+                  : 'px-0 sm:px-6 lg:px-8 py-0 sm:py-6'
+                }`}
             >
               <div
                 data-testid="profile-card-shell"
@@ -1172,7 +1171,7 @@ function PublicProfileClientInner({
                           ? 'rounded-2xl sm:rounded-3xl border shadow-xl'
                           : 'rounded-none sm:rounded-3xl border-0 sm:border shadow-none sm:shadow-xl'
                       }`
-                } ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} overflow-hidden relative`}
+                } ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} overflow-clip relative`}
               >
                 {effectiveIsOwner && cardProfile.profileVisibility === 'private' && (
                   <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">

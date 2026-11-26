@@ -114,7 +114,7 @@ export function CertificationsSection({
   return (
     <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('certifications')}
-      className={`px-4 sm:px-6 md:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
         }`}
     >
       <div className="flex items-center justify-between">
@@ -151,7 +151,7 @@ export function CertificationsSection({
                 /* Editable Certification Card */
                 <div className="space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="flex-1 grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                       <div>
                         <FormLabel required>Certification Title / Name</FormLabel>
                         <FormInput
@@ -179,7 +179,7 @@ export function CertificationsSection({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <div className="grid grid-cols-1 @md:grid-cols-2 @2xl:grid-cols-4 gap-2.5">
                     <div>
                       <FormLabel>Issued Date</FormLabel>
                       <FormInput
@@ -243,8 +243,8 @@ export function CertificationsSection({
                   </div>
 
                   <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className={`text-xs sm:text-sm font-bold ${theme.textPrimary}`}>
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <h3 className={`text-xs @md:text-sm font-bold break-words ${theme.textPrimary}`}>
                         {cert.name || (cert as any).title}
                       </h3>
                       {cert.url && (

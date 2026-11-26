@@ -161,7 +161,7 @@ export function ExperienceSection({
                 /* Editable Experience Card */
                 <div className="space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="flex-1 grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                       <div>
                         <FormLabel required>Role / Title</FormLabel>
                         <FormInput
@@ -189,13 +189,13 @@ export function ExperienceSection({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                     <div>
                       <FormLabel>Employment Type</FormLabel>
                       <select
                         value={exp.employmentType || ''}
                         onChange={(e) => handleUpdateItem(exp.id, { employmentType: e.target.value })}
-                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
+                        className="w-full min-h-[44px] h-11 px-3.5 text-base @md:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
                       >
                         <option value="">Select type...</option>
                         <option value="Full-time">Full-time</option>
@@ -212,7 +212,7 @@ export function ExperienceSection({
                       <select
                         value={exp.locationType || ''}
                         onChange={(e) => handleUpdateItem(exp.id, { locationType: e.target.value as any })}
-                        className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
+                        className="w-full min-h-[44px] h-11 px-3.5 text-base @md:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
                       >
                         <option value="">Select location type...</option>
                         <option value="On-site">On-site</option>
@@ -222,7 +222,7 @@ export function ExperienceSection({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-1 @md:grid-cols-3 gap-2.5">
                     <div>
                       <FormLabel>Start Date</FormLabel>
                       <FormInput
@@ -304,13 +304,13 @@ export function ExperienceSection({
               ) : (
                 /* View Experience Card */
                 <>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className={`text-sm font-bold ${theme.textPrimary}`}>
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <h3 className={`text-sm font-bold break-words ${theme.textPrimary}`}>
                         {exp.company}
                       </h3>
                       {exp.role && (
-                        <p className={`text-xs font-semibold ${theme.accentText} mt-0.5`}>
+                        <p className={`text-xs font-semibold break-words ${theme.accentText} mt-0.5`}>
                           {exp.role} {exp.employmentType ? `• ${exp.employmentType}` : ''}
                         </p>
                       )}

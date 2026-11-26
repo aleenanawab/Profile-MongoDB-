@@ -471,7 +471,7 @@ export function HeroSection({
 
         {/* Stitch-style Sections Slider Buttons - STRICTLY EDIT MODE ONLY */}
         {isEditing && (
-          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 flex items-center">
+          <div className="absolute top-3 left-3 @md:top-4 @md:left-4 z-30 flex items-center">
             {/* If dedicated mobile view (e.g. mobile phone chassis): mobile button is ALWAYS visible */}
             {onToggleMobileSections && !onToggleDesktopSections && (
               <button
@@ -565,7 +565,7 @@ export function HeroSection({
 
         {/* Cover Edit Overlay Badge (rendered inside edit mode so it never collides with cover header controls) */}
         {isEditing && (
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 transition-opacity opacity-95 hover:opacity-100">
+          <div className="absolute top-3 right-3 @md:top-4 @md:right-4 z-20 flex flex-wrap items-center gap-1.5 @md:gap-2 transition-opacity opacity-95 hover:opacity-100">
             <button
               type="button"
               disabled={isUploadingCover}
@@ -653,20 +653,20 @@ export function HeroSection({
                       e.currentTarget.src = DEFAULT_AVATAR;
                     }
                   }}
-                  className="w-full h-full object-contain rounded-xl sm:rounded-2xl"
+                  className="w-full h-full object-contain rounded-xl @md:rounded-2xl"
                 />
                 {(canEdit || isEditing) && (
-                  <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded-2xl sm:rounded-3xl transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
+                  <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded-2xl @md:rounded-3xl transition-opacity ${isEditing ? 'opacity-85 hover:opacity-100' : 'opacity-0 group-hover/avatar:opacity-100'
                     }`}>
                     {isUploadingAvatar ? (
                       <>
-                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
-                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
+                        <Loader2 className="w-4 h-4 @md:w-5 @md:h-5 drop-shadow-md text-white animate-spin" />
+                        <span className="text-[9px] @md:text-[10px] font-bold mt-0.5">Uploading...</span>
                       </>
                     ) : (
                       <>
-                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
-                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Logo' : 'Edit Logo'}</span>
+                        <Camera className="w-4 h-4 @md:w-5 @md:h-5 drop-shadow-md text-white" />
+                        <span className="text-[9px] @md:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Logo' : 'Edit Logo'}</span>
                       </>
                     )}
                   </div>
@@ -702,13 +702,13 @@ export function HeroSection({
                     }`}>
                     {isUploadingAvatar ? (
                       <>
-                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white animate-spin" />
-                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">Uploading...</span>
+                        <Loader2 className="w-4 h-4 @md:w-5 @md:h-5 drop-shadow-md text-white animate-spin" />
+                        <span className="text-[9px] @md:text-[10px] font-bold mt-0.5">Uploading...</span>
                       </>
                     ) : (
                       <>
-                        <Camera className="w-4 h-4 sm:w-5 sm:h-5 drop-shadow-md text-white" />
-                        <span className="text-[9px] sm:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Photo' : 'Edit Photo'}</span>
+                        <Camera className="w-4 h-4 @md:w-5 @md:h-5 drop-shadow-md text-white" />
+                        <span className="text-[9px] @md:text-[10px] font-bold mt-0.5">{isEditing ? 'Change Photo' : 'Edit Photo'}</span>
                       </>
                     )}
                   </div>
@@ -1104,7 +1104,7 @@ export function HeroSection({
                   {profile.tagline && (
                     <p
                       onClick={() => canEdit && onOpenEdit?.()}
-                      className={`text-xs sm:text-sm font-medium ${theme.textSecondary} italic pt-0.5 break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      className={`${isMobilePreview ? 'text-xs' : 'text-xs @md:text-sm'} font-medium ${theme.textSecondary} italic pt-0.5 break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                       title={canEdit ? 'Click to edit tagline' : undefined}
                     >
                       &ldquo;{profile.tagline}&rdquo;
@@ -1115,7 +1115,7 @@ export function HeroSection({
                   {(profile.location || profile.country) && (
                     <p
                       onClick={() => canEdit && onOpenEdit?.()}
-                      className={`text-xs sm:text-sm ${theme.textMuted} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
+                      className={`${isMobilePreview ? 'text-xs' : 'text-xs @md:text-sm'} ${theme.textMuted} break-words ${canEdit ? 'cursor-pointer hover:opacity-85 transition-opacity' : ''}`}
                       title={canEdit ? 'Click to edit location' : undefined}
                     >
                       {[profile.location, profile.country].filter(Boolean).join(', ')}
@@ -1129,7 +1129,7 @@ export function HeroSection({
                       className={`${canEdit ? 'cursor-pointer group/bio rounded-2xl p-2 -ml-2 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04] transition-all' : ''
                         }`}
                     >
-                      <p className={`text-xs sm:text-sm md:text-base ${theme.textSecondary} leading-relaxed max-w-2xl break-words`}>
+                      <p className={`${isMobilePreview ? 'text-xs' : 'text-xs @md:text-sm @lg:text-base'} ${theme.textSecondary} leading-relaxed max-w-2xl break-words`}>
                         {getShortBio(profile)}
                       </p>
                     </div>
@@ -1234,31 +1234,31 @@ export function HeroSection({
                   <button
                     type="button"
                     onClick={() => onOpenEdit?.()}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs gap-1.5' : 'px-3 @md:px-4 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnPrimary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                     title="Edit Company Details"
                   >
-                    <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Pencil className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Edit Company</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onSelectSection ? onSelectSection('teamMembers') : onOpenEdit?.()}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs gap-1.5' : 'px-3 @md:px-4 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                     title="Manage Team Members"
                   >
-                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Users className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Manage Team</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={onOpenShare}
-                    className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
+                    className={`min-h-[44px] min-w-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs' : 'px-3 @md:px-3.5 text-xs @md:text-sm'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
                     title="Share Company Profile"
                   >
                     <Share2 className="w-4 h-4 shrink-0" />
-                    <span className="hidden sm:inline">Share</span>
+                    <span className={isMobilePreview ? 'hidden' : 'hidden @md:inline'}>Share</span>
                   </button>
                 </>
               ) : (
@@ -1267,19 +1267,19 @@ export function HeroSection({
                   <button
                     type="button"
                     onClick={() => onOpenEdit?.()}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3.5 text-xs gap-1.5' : 'px-3.5 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-full ${theme.btnPrimary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                     title="Edit Profile"
                   >
-                    <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Pencil className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Edit Profile</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={onOpenShare}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-full ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3.5 text-xs gap-1.5' : 'px-3.5 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-full ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                   >
-                    <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Share2 className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Share Profile</span>
                   </button>
                 </>
@@ -1291,9 +1291,9 @@ export function HeroSection({
                   <button
                     type="button"
                     onClick={onOpenConnect}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs gap-1.5' : 'px-3 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnPrimary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                   >
-                    <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Building2 className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Contact</span>
                   </button>
 
@@ -1304,16 +1304,16 @@ export function HeroSection({
                       if (el) el.scrollIntoView({ behavior: 'smooth' });
                       else onSelectSection?.('teamMembers');
                     }}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs gap-1.5' : 'px-3 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                   >
-                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Users className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Team ({activeMemberCount})</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={onOpenShare}
-                    className={`min-h-[44px] min-w-[44px] py-2.5 px-3 sm:px-3.5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
+                    className={`min-h-[44px] min-w-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs' : 'px-3 @md:px-3.5 text-xs @md:text-sm'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 shrink-0 select-none`}
                     title="Share Company Profile"
                   >
                     <Share2 className="w-4 h-4 shrink-0" />
@@ -1325,18 +1325,18 @@ export function HeroSection({
                   <button
                     type="button"
                     onClick={onOpenConnect}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnPrimary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3.5 text-xs gap-1.5' : 'px-3.5 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnPrimary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                   >
-                    <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <UserPlus className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Connect</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={onOpenShare}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 px-3.5 sm:px-5 rounded-xl ${theme.btnSecondary} font-bold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3.5 text-xs gap-1.5' : 'px-3.5 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                   >
-                    <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    <Share2 className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
                     <span className="truncate">Share</span>
                   </button>
                 </>

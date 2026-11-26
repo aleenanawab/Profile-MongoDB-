@@ -95,13 +95,12 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
       id={sectionKey ? `section-${sectionKey}` : undefined}
       data-section={sectionKey}
       onClick={() => canEdit && !isEditing && sectionKey && onSelectSection?.(sectionKey)}
-      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-        canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
-      }`}
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing ? 'cursor-pointer hover:bg-accent/5 transition-all' : ''
+        }`}
     >
       {/* Header Row */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
           <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
             {title}
           </h2>

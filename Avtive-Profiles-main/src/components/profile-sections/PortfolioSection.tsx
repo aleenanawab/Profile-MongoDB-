@@ -17,9 +17,9 @@ interface PortfolioSectionProps {
   onSelectSection?: (sectionKey: string, fieldKey?: string) => void;
 }
 
-export function PortfolioSection({ 
-  profile, 
-  onSelectProject, 
+export function PortfolioSection({
+  profile,
+  onSelectProject,
   theme = getThemeConfig(profile.theme || 'editorial'),
   canEdit = false,
   isEditing = false,
@@ -115,11 +115,10 @@ export function PortfolioSection({
   };
 
   return (
-    <section className={`relative group/port px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-      canEdit && !isEditing && onSelectSection ? 'hover:bg-accent/5 transition-all' : ''
-    }`}>
+    <section className={`relative group/port px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'hover:bg-accent/5 transition-all' : ''
+      }`}>
       <div className="flex items-center justify-between">
-        <div 
+        <div
           className={`flex items-center gap-2 ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer' : ''}`}
           onClick={() => canEdit && !isEditing && onSelectSection?.('projects')}
         >
@@ -143,7 +142,7 @@ export function PortfolioSection({
             <span>Add Project</span>
           </button>
         ) : hasProjects ? (
-          <span 
+          <span
             onClick={(e) => {
               if (canEdit && onSelectSection) {
                 e.stopPropagation();
@@ -168,15 +167,14 @@ export function PortfolioSection({
                   onSelectProject(project);
                 }
               }}
-              className={`group/card relative rounded-2xl overflow-hidden ${theme.cardBg} border ${theme.cardBorder} ${
-                isEditing ? '' : 'cursor-pointer ' + theme.hoverBorder
-              } transition-all shadow-2xs hover:shadow-md`}
+              className={`group/card relative rounded-2xl overflow-hidden ${theme.cardBg} border ${theme.cardBorder} ${isEditing ? '' : 'cursor-pointer ' + theme.hoverBorder
+                } transition-all shadow-2xs hover:shadow-md`}
             >
               {isEditing ? (
                 /* Editable Project Item */
-                <div className="p-4 sm:p-5 space-y-3" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4 @md:p-5 space-y-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="flex-1 grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                       <div>
                         <FormLabel required>Project Title</FormLabel>
                         <FormInput
@@ -214,7 +212,7 @@ export function PortfolioSection({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                     <div>
                       <FormLabel>Live URL / Repository</FormLabel>
                       <FormInput
@@ -234,7 +232,7 @@ export function PortfolioSection({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                     <div>
                       <FormLabel>Start Date</FormLabel>
                       <FormInput
@@ -275,7 +273,7 @@ export function PortfolioSection({
                         alt={project.title}
                         className={`w-full h-full object-cover ${project.imagePosition || 'object-center'} group-hover:scale-[1.02] transition-transform duration-300`}
                       />
-                      
+
                       {project.category && (
                         <div className="absolute top-3 left-3">
                           <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${theme.btnPrimary} backdrop-blur-md shadow-xs`}>
@@ -286,7 +284,7 @@ export function PortfolioSection({
                     </div>
                   )}
 
-                  <div className="p-4 sm:p-5 space-y-2.5">
+                  <div className="p-4 @md:p-5 space-y-2.5 min-w-0">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1">
                         {!project.image && !project.coverImage && project.category && (

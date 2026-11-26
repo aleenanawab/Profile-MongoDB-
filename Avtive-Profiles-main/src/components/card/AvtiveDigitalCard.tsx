@@ -210,7 +210,7 @@ export function AvtiveDigitalCard({
       <div className="relative w-full text-center">
         <div
           data-theme={activeThemeKey}
-          className={`w-full overflow-hidden transition-colors duration-200 px-6 py-16 sm:py-24 ${theme.cardBg}`}
+          className={`w-full overflow-x-clip transition-colors duration-200 px-4 @md:px-6 py-16 @md:py-24 ${theme.cardBg}`}
         >
           <div className="max-w-sm mx-auto space-y-4">
             <div className="w-12 h-12 mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
@@ -246,7 +246,7 @@ export function AvtiveDigitalCard({
       {/* Main Profile Container Card with dynamic theme styling */}
       <div
         data-theme={activeThemeKey}
-        className="w-full overflow-hidden transition-colors duration-200"
+        className="w-full overflow-x-clip transition-colors duration-200"
       >
 
         {/* Error banner if save fails */}
@@ -708,7 +708,7 @@ export function AvtiveDigitalCard({
               case 'virtual-card':
                 if (!isSectionVisible('virtualCard') && !isSectionVisible('virtual-card')) return null;
                 return (
-                  <div key="virtual-card" id="virtual-card-section" className={`${isMobilePreview ? 'px-4' : 'px-4 @md:px-6 @2xl:px-8'} py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
+                  <div key="virtual-card" id="virtual-card-section" className={`scroll-mt-16 ${isMobilePreview ? 'px-4' : 'px-4 @md:px-6 @2xl:px-8'} py-5 ${theme.cardBg} border-t ${theme.divider} transition-colors`}>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
                         Virtual Card Preview
@@ -812,7 +812,7 @@ export function AvtiveDigitalCard({
                             Custom Field
                           </span>
                         </div>
-                        <div className={`text-xs sm:text-sm ${theme.textSecondary} whitespace-pre-line leading-relaxed`}>
+                        <div className={`text-xs @md:text-sm ${theme.textSecondary} whitespace-pre-line break-words leading-relaxed`}>
                           {isLink ? (
                             <a
                               href={val.startsWith('http://') || val.startsWith('https://') ? val : `https://${val}`}
@@ -936,7 +936,7 @@ export function AvtiveDigitalCard({
           };
 
           return (
-            <div className={`flex flex-col border-t ${theme.divider} divide-y ${theme.divider}`}>
+            <div className={`flex flex-col min-w-0 border-t ${theme.divider} divide-y ${theme.divider}`}>
               {effectiveOrder.map(renderSection)}
             </div>
           );

@@ -61,8 +61,8 @@ export function PublicationsSection({
           </div>
 
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className={`text-xs sm:text-sm font-bold ${theme.textPrimary}`}>
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <h3 className={`text-xs @md:text-sm font-bold break-words ${theme.textPrimary}`}>
                 {item.title}
               </h3>
               {item.date && (
@@ -89,10 +89,10 @@ export function PublicationsSection({
                 href={item.url.startsWith('http') ? item.url : `https://${item.url}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center gap-1 text-[11px] font-medium ${theme.accentText} hover:underline pt-1`}
+                className={`inline-flex items-center gap-1 text-[11px] font-medium break-all ${theme.accentText} hover:underline pt-1`}
               >
                 <span>View publication</span>
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3 h-3 shrink-0" />
               </a>
             )}
           </div>
@@ -100,7 +100,7 @@ export function PublicationsSection({
       )}
       renderItemEdit={(item, _index, updateItem) => (
         <div className="space-y-2.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel required>Publication Title</FormLabel>
               <FormInput
@@ -119,7 +119,7 @@ export function PublicationsSection({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel>Publication Date</FormLabel>
               <FormInput

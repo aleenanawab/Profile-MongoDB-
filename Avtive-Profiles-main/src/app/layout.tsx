@@ -25,7 +25,7 @@ export default function RootLayout({
       lang="en"
       data-theme="editorial"
       suppressHydrationWarning
-      className="h-full antialiased font-sans"
+      className="min-h-full antialiased font-sans"
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />

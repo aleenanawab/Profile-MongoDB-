@@ -157,9 +157,15 @@ export function ProfileSectionTabBar({
     if (!el) return;
     el.addEventListener('scroll', checkScrollOverflow, { passive: true });
     window.addEventListener('resize', checkScrollOverflow);
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => checkScrollOverflow());
+      ro.observe(el);
+    }
     return () => {
       el.removeEventListener('scroll', checkScrollOverflow);
       window.removeEventListener('resize', checkScrollOverflow);
+      ro?.disconnect();
     };
   }, [sections]);
 
@@ -233,7 +239,7 @@ export function ProfileSectionTabBar({
           className="w-full min-w-0 flex-1 overflow-x-auto scrollbar-none py-2.5 px-1 scroll-smooth box-border"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          <div className="w-max min-w-full flex items-center justify-center gap-1.5 sm:gap-2">
+          <div className="w-max min-w-full flex items-center justify-center gap-1.5 @md:gap-2">
             {sections.map((item) => {
               const Icon = item.icon;
               const active = isCurrentActive(item.key);

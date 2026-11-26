@@ -86,8 +86,8 @@ export function VolunteerSection({
           </div>
 
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className={`text-xs sm:text-sm font-bold ${theme.textPrimary}`}>
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <h3 className={`text-xs @md:text-sm font-bold break-words ${theme.textPrimary}`}>
                 {vol.role}
               </h3>
               {(vol.period || vol.startDate || vol.endDate) && (
@@ -117,7 +117,7 @@ export function VolunteerSection({
       )}
       renderItemEdit={(vol, _index, updateItem) => (
         <div className="space-y-2.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel required>Role / Title</FormLabel>
               <FormInput
@@ -136,7 +136,7 @@ export function VolunteerSection({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-3 gap-2.5">
             <div>
               <FormLabel>Cause / Category</FormLabel>
               <FormInput

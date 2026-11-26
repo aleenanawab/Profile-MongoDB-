@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { 
-  ExternalLink, 
-  Mail, 
-  Phone, 
-  FileText, 
-  Calendar, 
-  Hash, 
-  Globe, 
+import {
+  ExternalLink,
+  Mail,
+  Phone,
+  FileText,
+  Calendar,
+  Hash,
+  Globe,
   Sparkles,
   Pencil,
   Plus,
@@ -195,12 +195,12 @@ export function CustomFieldsSection({
   };
 
   return (
-    <div className={`p-4 sm:p-5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} transition-colors space-y-3.5 shadow-2xs`}>
-      <div 
+    <div className={`px-4 @md:px-6 @2xl:px-8 py-5 ${theme.cardBg} border-b ${theme.divider} transition-colors`}>
+      <div className={`p-4 @md:p-5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} transition-colors space-y-3.5 shadow-2xs`}>
+      <div
         onClick={() => !isEditing && canEdit && onSelectSection?.('customFields')}
-        className={`flex items-center justify-between pb-1 border-b border-black/5 dark:border-white/5 ${
-          canEdit && !isEditing ? 'cursor-pointer group/cfheader' : ''
-        }`}
+        className={`flex items-center justify-between pb-1 border-b border-black/5 dark:border-white/5 ${canEdit && !isEditing ? 'cursor-pointer group/cfheader' : ''
+          }`}
         title={canEdit && !isEditing ? 'Click to edit Custom Fields in Studio' : undefined}
       >
         <div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ export function CustomFieldsSection({
               key={field.id}
               className={`p-3.5 rounded-xl border border-black/10 dark:border-white/10 ${theme.subCardBg} space-y-2.5`}
             >
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="flex flex-col @md:flex-row items-stretch @md:items-center gap-2">
                 <div className="flex-1">
                   <FormInput
                     value={field.label || (field as any).title || ''}
@@ -250,7 +250,7 @@ export function CustomFieldsSection({
                   <select
                     value={field.type || 'text'}
                     onChange={(e) => handleUpdateFieldItem(field.id, { type: e.target.value as any })}
-                    className={`h-11 min-h-[44px] text-xs px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 ${theme.textPrimary} bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer flex-1 sm:flex-none`}
+                    className={`h-11 min-h-[44px] text-xs px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 ${theme.textPrimary} bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer flex-1 @md:flex-none`}
                   >
                     <option value="text">Text</option>
                     <option value="link">Link</option>
@@ -316,7 +316,7 @@ export function CustomFieldsSection({
           />
         </div>
       ) : visibleFields.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+        <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5 pt-1">
           {visibleFields.map((field) => {
             const val = field.value || (field as any).content || '';
             const isMultiLine = field.type === 'markdown' || val.includes('\n') || val.length > 55;
@@ -326,14 +326,14 @@ export function CustomFieldsSection({
               <div
                 key={field.id}
                 onClick={() => canEdit && onSelectSection?.('customFields', field.id)}
-                className={`p-3 rounded-xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-start gap-2.5 transition-all hover:border-black/10 dark:hover:border-white/20 ${
-                  isMultiLine ? 'sm:col-span-2' : ''
+                className={`min-w-0 p-3 rounded-xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-start gap-2.5 transition-all hover:border-black/10 dark:hover:border-white/20 ${
+                  isMultiLine ? '@md:col-span-2' : ''
                 } ${
                   canEdit ? 'cursor-pointer group/cfitem hover:ring-2 hover:ring-zinc-900/20 dark:hover:ring-white/25 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
                 }`}
                 title={canEdit ? `Click to edit "${title}" in Studio` : undefined}
               >
-                <div 
+                <div
                   className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${theme.badgeBg} ${theme.accentText}`}
                 >
                   {renderFieldIcon(field)}
@@ -364,6 +364,7 @@ export function CustomFieldsSection({
           No custom fields added yet.
         </p>
       )}
+      </div>
     </div>
   );
 }

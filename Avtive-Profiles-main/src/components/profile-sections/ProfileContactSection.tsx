@@ -181,9 +181,8 @@ export function ProfileContactSection({
   }
 
   return (
-    <section className={`relative group/contact px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-colors ${
-      canEdit && !isEditing && onSelectSection ? 'hover:bg-accent/5' : ''
-    }`}>
+    <section className={`relative group/contact px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-colors ${canEdit && !isEditing && onSelectSection ? 'hover:bg-accent/5' : ''
+      }`}>
       {/* Interactive edit badge */}
       {canEdit && !isEditing && onSelectSection && (
         <button
@@ -216,7 +215,7 @@ export function ProfileContactSection({
 
       {isEditing ? (
         <div className="space-y-3 pt-1" onClick={(e) => e.stopPropagation()}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel>Email Address</FormLabel>
               <FormInput
@@ -400,7 +399,7 @@ export function ProfileContactSection({
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                   Email
                 </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
                   {profile.email}
                 </span>
               </div>
@@ -419,7 +418,7 @@ export function ProfileContactSection({
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                   Phone {profile.phoneType ? `(${profile.phoneType})` : ''}
                 </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
                   {profile.phone}
                 </span>
               </div>
@@ -440,7 +439,7 @@ export function ProfileContactSection({
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                   WhatsApp
                 </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
                   {profile.whatsapp}
                 </span>
               </div>
@@ -461,12 +460,12 @@ export function ProfileContactSection({
                     href={profile.googleMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`block text-xs font-semibold ${theme.textPrimary} hover:underline truncate`}
+                    className={`block text-xs font-semibold ${theme.textPrimary} hover:underline break-words`}
                   >
                     {[profile.location, profile.country].filter(Boolean).join(', ')}
                   </a>
                 ) : (
-                  <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                  <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
                     {[profile.location, profile.country].filter(Boolean).join(', ')}
                   </span>
                 )}
@@ -483,7 +482,7 @@ export function ProfileContactSection({
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                   Office Address
                 </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
                   {profile.officeAddress}
                 </span>
               </div>
@@ -507,7 +506,7 @@ export function ProfileContactSection({
                   <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                     {ws.label || 'Website'}
                   </span>
-                  <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                  <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
                     {ws.url.replace(/^https?:\/\//, '')}
                   </span>
                 </div>
@@ -527,7 +526,7 @@ export function ProfileContactSection({
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                   Website
                 </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
                   {profile.website.replace(/^https?:\/\//, '')}
                 </span>
               </div>
@@ -543,7 +542,7 @@ export function ProfileContactSection({
                 <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
                   Birthday
                 </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} truncate`}>
+                <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
                   {profile.birthday}
                 </span>
               </div>

@@ -150,12 +150,12 @@ export function HeaderNav({
 
         {/* Right Controls: Viewport Switcher, Edit/Share (Preview), Theme Toggle, and Logout */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0 min-w-0">
-          {/* Desktop / Mobile View Switcher (Available in Desktop Header for Owner Preview) */}
-          {canEdit && !isEditing && !isSharing && onToggleViewMode && (
+          {/* Desktop / Mobile View Switcher (Available in Desktop Header for All Public Profile Viewers) */}
+          {!isEditing && !isSharing && onToggleViewMode && (
             <div
               role="group"
               aria-label="Profile preview viewport"
-              className={`hidden md:inline-flex items-center p-0.5 rounded-xl border ${theme.cardBorder} ${theme.cardBg} shadow-2xs shrink-0`}
+              className={`hidden sm:inline-flex items-center p-0.5 rounded-xl border ${theme.cardBorder} ${theme.cardBg} shadow-2xs shrink-0`}
             >
               <button
                 type="button"
@@ -164,13 +164,13 @@ export function HeaderNav({
                 aria-pressed={viewMode === 'desktop'}
                 title="Desktop View"
                 data-testid="desktop-view-toggle"
-                className={`h-9 min-h-[36px] px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${viewMode === 'desktop'
+                className={`h-9 min-h-[36px] px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer shrink-0 ${viewMode === 'desktop'
                     ? `${theme.btnPrimary} shadow-xs`
                     : `${theme.textSecondary} hover:opacity-90`
                   }`}
               >
                 <Tv className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden lg:inline">Desktop</span>
+                <span className="hidden md:inline whitespace-nowrap">Desktop</span>
               </button>
               <button
                 type="button"
@@ -179,13 +179,13 @@ export function HeaderNav({
                 aria-pressed={viewMode === 'mobile'}
                 title="Mobile View"
                 data-testid="mobile-view-toggle"
-                className={`h-9 min-h-[36px] px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer ${viewMode === 'mobile'
+                className={`h-9 min-h-[36px] px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all cursor-pointer shrink-0 ${viewMode === 'mobile'
                     ? `${theme.btnPrimary} shadow-xs`
                     : `${theme.textSecondary} hover:opacity-90`
                   }`}
               >
                 <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden lg:inline">Mobile</span>
+                <span className="hidden md:inline whitespace-nowrap">Mobile</span>
               </button>
             </div>
           )}
@@ -200,7 +200,7 @@ export function HeaderNav({
               aria-label="Edit Profile"
             >
               <Edit3 className={`w-4 h-4 ${theme.accentText}`} />
-              <span className="hidden sm:inline">Edit Profile</span>
+              <span className="hidden lg:inline">Edit Profile</span>
             </button>
           )}
 
@@ -284,7 +284,5 @@ export function HeaderNav({
         </div>
       </div>
     </header>
-  );
-}
   );
 }

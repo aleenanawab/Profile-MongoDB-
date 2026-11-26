@@ -59,8 +59,8 @@ export function CoursesSection({
           </div>
 
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className={`text-xs sm:text-sm font-bold ${theme.textPrimary}`}>
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <h3 className={`text-xs @md:text-sm font-bold break-words ${theme.textPrimary}`}>
                 {item.name}
               </h3>
               {item.number && (
@@ -80,7 +80,7 @@ export function CoursesSection({
       )}
       renderItemEdit={(item, _index, updateItem) => (
         <div className="space-y-2.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel required>Course Name</FormLabel>
               <FormInput

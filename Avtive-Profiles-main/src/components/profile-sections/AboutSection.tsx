@@ -100,9 +100,8 @@ export function AboutSection({
   return (
     <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('about', 'about')}
-      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
-        canEdit && !isEditing ? 'cursor-pointer group/about hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
-      }`}
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${canEdit && !isEditing ? 'cursor-pointer group/about hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
+        }`}
       title={canEdit && !isEditing ? 'Click to edit Story & Bio' : undefined}
     >
       <div className="flex items-center justify-between">
@@ -156,14 +155,14 @@ export function AboutSection({
           />
         </div>
       ) : hasBio ? (
-        <div className="space-y-2">
+        <div className="space-y-2 min-w-0">
           {profile.tagline && (
-            <p className={`text-xs sm:text-sm font-medium italic ${theme.accentText}`}>
+            <p className={`text-xs @md:text-sm font-medium italic break-words ${theme.accentText}`}>
               &ldquo;{profile.tagline}&rdquo;
             </p>
           )}
           {getAbout(profile) && (
-            <p className={`text-xs sm:text-sm ${theme.textSecondary} leading-relaxed font-normal whitespace-pre-line`}>
+            <p className={`text-xs @md:text-sm ${theme.textSecondary} leading-relaxed font-normal whitespace-pre-line break-words`}>
               {getAbout(profile)}
             </p>
           )}

@@ -55,9 +55,9 @@ export function FeaturedSection({
         visible: true
       })}
       renderItemView={(item) => (
-        <div className="flex flex-col sm:flex-row gap-3.5 items-start">
+        <div className="flex flex-col @md:flex-row gap-3.5 items-start">
           {item.image && (
-            <div className="w-full sm:w-28 h-20 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-700 bg-neutral-100 dark:bg-neutral-800">
+            <div className="w-full @md:w-28 h-20 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-zinc-700 bg-neutral-100 dark:bg-neutral-800">
               <img
                 src={item.image}
                 alt={item.title}
@@ -67,8 +67,8 @@ export function FeaturedSection({
           )}
 
           <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className={`text-xs sm:text-sm font-bold ${theme.textPrimary}`}>
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <h3 className={`text-xs @md:text-sm font-bold break-words ${theme.textPrimary}`}>
                 {item.title}
               </h3>
               {item.type && (
@@ -79,7 +79,7 @@ export function FeaturedSection({
             </div>
 
             {item.description && (
-              <p className={`text-xs ${theme.textSecondary} leading-relaxed pt-0.5`}>
+              <p className={`text-xs ${theme.textSecondary} leading-relaxed pt-0.5 break-words`}>
                 {item.description}
               </p>
             )}
@@ -89,10 +89,10 @@ export function FeaturedSection({
                 href={item.url.startsWith('http') ? item.url : `https://${item.url}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center gap-1 text-[11px] font-medium ${theme.accentText} hover:underline pt-1`}
+                className={`inline-flex items-center gap-1 text-[11px] font-medium break-all ${theme.accentText} hover:underline pt-1`}
               >
                 <span>View item</span>
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3 h-3 shrink-0" />
               </a>
             )}
           </div>
@@ -100,7 +100,7 @@ export function FeaturedSection({
       )}
       renderItemEdit={(item, _index, updateItem) => (
         <div className="space-y-2.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel required>Title</FormLabel>
               <FormInput
@@ -114,7 +114,7 @@ export function FeaturedSection({
               <select
                 value={item.type || 'link'}
                 onChange={(e) => updateItem({ type: e.target.value as any })}
-                className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
+                className="w-full min-h-[44px] h-11 px-3.5 text-base @md:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
               >
                 <option value="link">Link</option>
                 <option value="post">Post</option>
@@ -123,7 +123,7 @@ export function FeaturedSection({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel>URL</FormLabel>
               <FormInput

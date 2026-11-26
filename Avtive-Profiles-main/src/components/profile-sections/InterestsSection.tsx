@@ -59,7 +59,7 @@ export function InterestsSection({
               <Compass className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h3 className={`text-xs sm:text-sm font-semibold truncate ${theme.textPrimary}`}>
+              <h3 className={`text-xs @md:text-sm font-semibold truncate ${theme.textPrimary}`}>
                 {item.name}
               </h3>
               {item.type && (
@@ -85,7 +85,7 @@ export function InterestsSection({
       )}
       renderItemEdit={(item, _index, updateItem) => (
         <div className="space-y-2.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel required>Interest Name</FormLabel>
               <FormInput
@@ -99,7 +99,7 @@ export function InterestsSection({
               <select
                 value={item.type || 'topic'}
                 onChange={(e) => updateItem({ type: e.target.value as any })}
-                className="w-full min-h-[44px] h-11 px-3.5 text-base sm:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
+                className="w-full min-h-[44px] h-11 px-3.5 text-base @md:text-sm font-normal rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900/15 cursor-pointer"
               >
                 <option value="topic">Topic</option>
                 <option value="company">Company</option>

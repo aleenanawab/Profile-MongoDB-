@@ -1067,10 +1067,24 @@ async function runTests() {
           )
         );
       });
+      const visitorDesktopToggle = container.querySelector('[data-testid="desktop-view-toggle"]') as HTMLButtonElement | null;
+      const visitorMobileToggle = container.querySelector('[data-testid="mobile-view-toggle"]') as HTMLButtonElement | null;
+      assert.ok(
+        visitorDesktopToggle && visitorMobileToggle,
+        'Unauthenticated public visitors also see Desktop and Mobile preview toggles without login'
+      );
+      await React.act(async () => {
+        visitorMobileToggle!.click();
+      });
+      const visitorMobileShell = container.querySelector('[data-testid="profile-card-shell"]') as HTMLElement | null;
+      assert.strictEqual(visitorMobileShell?.getAttribute('data-view-mode'), 'mobile');
+      assert.ok(visitorMobileShell?.className.includes('max-w-[390px]'), 'Visitor mobile preview constrains width to 390px');
+      await React.act(async () => {
+        visitorDesktopToggle!.click();
+      });
       assert.strictEqual(
-        container.querySelectorAll('[data-testid="mobile-view-toggle"]').length,
-        0,
-        'Non-owner visitors do not see the owner Desktop/Mobile switcher'
+        container.querySelector('[data-testid="profile-card-shell"]')?.getAttribute('data-view-mode'),
+        'desktop'
       );
       const visitorShareBtn = container.querySelector('button[aria-label="Share Profile"]') as HTMLButtonElement | null;
       assert.ok(visitorShareBtn, 'Visitor Share button renders in preview');

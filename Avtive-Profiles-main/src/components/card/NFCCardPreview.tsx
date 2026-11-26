@@ -89,7 +89,7 @@ export function NFCCardPreview({
           {/* ========================================================================= */}
           {/* FRONT: Avtive Logo + Founder PFP + Identity + Company Name (No Chip)       */}
           {/* ========================================================================= */}
-          <div className={`absolute inset-0 w-full h-full rounded-[20px] sm:rounded-[24px] ${theme.cardBg} ${theme.textPrimary} p-3.5 sm:p-5 flex flex-col justify-between backface-hidden shadow-xl border ${theme.cardBorder} overflow-hidden transition-colors`}>
+          <div className={`absolute inset-0 w-full h-full rounded-[20px] @md:rounded-[24px] ${theme.cardBg} ${theme.textPrimary} p-3.5 @md:p-5 flex flex-col justify-between backface-hidden shadow-xl border ${theme.cardBorder} overflow-hidden transition-colors`}>
             {/* Subtle premium accent rim */}
             <div className={`absolute top-0 left-0 right-0 h-1 ${theme.accentRim}`} />
 
@@ -100,28 +100,28 @@ export function NFCCardPreview({
                   e.stopPropagation();
                   if (onViewCompany) onViewCompany(companyId);
                 }}
-                className="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:opacity-85 transition-opacity"
+                className="flex items-center gap-1.5 @md:gap-2 cursor-pointer hover:opacity-85 transition-opacity"
                 title={`Go to ${companyName} Profile`}
               >
                 <img
                   src="/images/avtive-symbol.png"
                   alt="Avtive Logo"
-                  className="h-5 sm:h-6 w-auto object-contain"
+                  className="h-5 @md:h-6 w-auto object-contain"
                 />
-                <span className={`text-[11px] sm:text-xs font-bold tracking-wider uppercase ${theme.accentText} font-mono`}>
+                <span className={`text-[11px] @md:text-xs font-bold tracking-wider uppercase ${theme.accentText} font-mono`}>
                   AVTIVE
                 </span>
               </div>
 
-              <div className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full ${theme.cardBg} border ${theme.cardBorder}`}>
-                <Wifi className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${theme.accentText} rotate-90`} />
-                <span className={`text-[7px] sm:text-[8px] font-mono ${theme.textMuted} uppercase tracking-wider font-bold`}>SAAS PASS</span>
+              <div className={`flex items-center gap-1 px-1.5 @md:px-2 py-0.5 rounded-full ${theme.cardBg} border ${theme.cardBorder}`}>
+                <Wifi className={`w-2.5 h-2.5 @md:w-3 @md:h-3 ${theme.accentText} rotate-90`} />
+                <span className={`text-[7px] @md:text-[8px] font-mono ${theme.textMuted} uppercase tracking-wider font-bold`}>SAAS PASS</span>
               </div>
             </div>
 
             {/* Middle: Founder PFP (Replaces the chip) + Designation */}
             <div className="flex items-center justify-between z-10 my-auto">
-              <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl overflow-hidden shadow-md border-2 ${theme.cardBorder} ${theme.cardBg} shrink-0`}>
+              <div className={`w-11 h-11 @md:w-14 @md:h-14 rounded-xl @md:rounded-2xl overflow-hidden shadow-md border-2 ${theme.cardBorder} ${theme.cardBg} shrink-0`}>
                 <img
                   src={profile.avatar}
                   alt={profile.name}
@@ -130,8 +130,8 @@ export function NFCCardPreview({
               </div>
 
               <div className="text-right">
-                <span className={`text-[8px] sm:text-[9px] font-mono ${theme.textMuted} uppercase tracking-widest block font-bold`}>SAAS IDENTITY</span>
-                <span className={`text-[9px] sm:text-[11px] font-mono font-bold ${theme.accentText}`}>
+                <span className={`text-[8px] @md:text-[9px] font-mono ${theme.textMuted} uppercase tracking-widest block font-bold`}>SAAS IDENTITY</span>
+                <span className={`text-[9px] @md:text-[11px] font-mono font-bold ${theme.accentText}`}>
                   {profile.nfcCard?.cardNumber || 'AVTIVE • SAAS VERIFIED'}
                 </span>
               </div>
@@ -140,27 +140,27 @@ export function NFCCardPreview({
             {/* Bottom: Cardholder Name, Company Name with Distinct Brand Color, Location */}
             <div className="flex items-end justify-between z-10">
               <div className="min-w-0 pr-2">
-                <p className={`text-xs sm:text-sm font-bold ${theme.textPrimary} tracking-tight truncate`}>
+                <p className={`text-xs @md:text-sm font-bold ${theme.textPrimary} tracking-tight truncate`}>
                   {profile.name}
                 </p>
-                <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5">
+                <div className="flex items-center gap-1 @md:gap-1.5 mt-0.5">
                   <span
                     onClick={(e) => {
                       e.stopPropagation();
                       if (onViewCompany) onViewCompany(companyId);
                     }}
-                    className={`text-[10px] sm:text-xs font-bold ${theme.accentText} hover:underline cursor-pointer truncate max-w-[120px] sm:max-w-none`}
+                    className={`text-[10px] @md:text-xs font-bold ${theme.accentText} hover:underline cursor-pointer truncate max-w-[120px] @md:max-w-none`}
                   >
                     {companyName}
                   </span>
-                  <span className={`text-[9px] sm:text-[10px] ${theme.textMuted}`}>•</span>
-                  <span className={`text-[9px] sm:text-[10px] ${theme.textSecondary} truncate`}>
+                  <span className={`text-[9px] @md:text-[10px] ${theme.textMuted}`}>•</span>
+                  <span className={`text-[9px] @md:text-[10px] ${theme.textSecondary} truncate`}>
                     {profile.location}
                   </span>
                 </div>
               </div>
 
-              <div className={`text-[8px] sm:text-[9px] font-mono font-bold ${theme.textMuted} shrink-0`}>
+              <div className={`text-[8px] @md:text-[9px] font-mono font-bold ${theme.textMuted} shrink-0`}>
                 <span>Avtive.app</span>
               </div>
             </div>
@@ -169,35 +169,35 @@ export function NFCCardPreview({
           {/* ========================================================================= */}
           {/* BACK: QR Code with "Scan to view profile" instruction                      */}
           {/* ========================================================================= */}
-          <div className={`absolute inset-0 w-full h-full rounded-[20px] sm:rounded-[24px] ${theme.cardBg} ${theme.textPrimary} p-3.5 sm:p-5 flex flex-col items-center justify-between backface-hidden rotate-y-180 shadow-xl border ${theme.cardBorder} overflow-hidden transition-colors text-center`}>
+          <div className={`absolute inset-0 w-full h-full rounded-[20px] @md:rounded-[24px] ${theme.cardBg} ${theme.textPrimary} p-3.5 @md:p-5 flex flex-col items-center justify-between backface-hidden rotate-y-180 shadow-xl border ${theme.cardBorder} overflow-hidden transition-colors text-center`}>
             {/* Top brand header */}
-            <div className={`w-full flex items-center justify-between text-[9px] sm:text-[10px] ${theme.textMuted} font-mono`}>
+            <div className={`w-full flex items-center justify-between text-[9px] @md:text-[10px] ${theme.textMuted} font-mono`}>
               <span className={`font-bold tracking-wider ${theme.accentText}`}>AVTIVE SAAS CARD</span>
               <span className="truncate max-w-[100px]">{companyName}</span>
             </div>
 
             {/* Center: Real QR Code */}
-            <div className="flex flex-col items-center my-auto space-y-1 sm:space-y-2">
-              <div className={`p-1.5 sm:p-2 rounded-xl sm:rounded-2xl ${theme.cardBg} shadow-md border ${theme.cardBorder} inline-block`}>
+            <div className="flex flex-col items-center my-auto space-y-1 @md:space-y-2">
+              <div className={`p-1.5 @md:p-2 rounded-xl @md:rounded-2xl ${theme.cardBg} shadow-md border ${theme.cardBorder} inline-block`}>
                 {qrDataUrl ? (
                   <img
                     src={qrDataUrl}
                     alt="Profile QR Code"
-                    className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-lg object-contain"
+                    className="w-16 h-16 @md:w-24 @md:h-24 @2xl:w-28 @2xl:h-28 rounded-lg object-contain"
                   />
                 ) : (
-                  <div className="w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center">
-                    <QrCode className="w-6 h-6 sm:w-8 sm:h-8 text-[#94A3B8] animate-pulse" />
+                  <div className="w-16 h-16 @md:w-24 @md:h-24 flex items-center justify-center">
+                    <QrCode className="w-6 h-6 @md:w-8 @md:h-8 text-[#94A3B8] animate-pulse" />
                   </div>
                 )}
               </div>
-              <p className={`text-[10px] sm:text-[11px] font-bold ${theme.textPrimary} tracking-wide`}>
+              <p className={`text-[10px] @md:text-[11px] font-bold ${theme.textPrimary} tracking-wide`}>
                 Scan to view profile
               </p>
             </div>
 
             {/* Bottom info */}
-            <div className={`w-full flex items-center justify-between text-[8px] sm:text-[9px] font-mono ${theme.textMuted}`}>
+            <div className={`w-full flex items-center justify-between text-[8px] @md:text-[9px] font-mono ${theme.textMuted}`}>
               <span className="truncate max-w-[120px]">{profile.name}</span>
               <span>www.avtive.app</span>
             </div>
@@ -207,7 +207,7 @@ export function NFCCardPreview({
 
       {/* Card Action Controls: Download Virtual Card (PDF) + Share Card + Flip */}
       <div className="flex flex-col gap-2 w-full max-w-[360px]">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+        <div className="grid grid-cols-1 @md:grid-cols-2 gap-2 w-full">
           {/* Download Virtual Card as PDF */}
           <button
             onClick={handleDownload}

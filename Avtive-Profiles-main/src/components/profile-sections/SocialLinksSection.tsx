@@ -162,9 +162,8 @@ export function SocialLinksSection({
   return (
     <section
       onClick={() => canEdit && !isEditing && onSelectSection?.('socialLinks')}
-      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${
-        canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
-      }`}
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-3.5 text-left ${theme.cardBg} border-b ${theme.divider} transition-colors ${canEdit && !isEditing && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
+        }`}
     >
       <div className="flex items-center justify-between">
         <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
@@ -261,11 +260,11 @@ export function SocialLinksSection({
                 rel="noopener noreferrer"
                 className={`min-w-0 overflow-hidden flex items-center justify-between p-3.5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} transition-colors group shadow-2xs`}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={`w-8 h-8 rounded-xl ${theme.badgeBg} flex items-center justify-center shrink-0 border ${theme.cardBorder} shadow-2xs`}>
                     {getPlatformIcon(item.platform)}
                   </div>
-                  <div className="min-w-0 text-left">
+                  <div className="min-w-0 flex-1 text-left">
                     <p className={`text-xs font-bold ${theme.textPrimary}`}>
                       {item.label || item.platform}
                     </p>

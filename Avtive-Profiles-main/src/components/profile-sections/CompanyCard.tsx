@@ -106,7 +106,7 @@ export function CompanyCard({
           canEdit && onSelectSection ? 'cursor-pointer hover:bg-accent/5' : ''
         }`}
       >
-        <div className={`p-3.5 sm:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-left`}>
+        <div className={`p-3.5 @md:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-left`}>
           <div className="flex items-center gap-3.5">
             <div className={`w-12 h-12 rounded-xl ${theme.badgeBg} flex items-center justify-center shrink-0 border ${theme.cardBorder} shadow-xs`}>
               <Building2 className={`w-6 h-6 ${theme.textMuted}`} />
@@ -147,7 +147,7 @@ export function CompanyCard({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
             <div>
               <FormLabel required>Company Name</FormLabel>
               <FormInput
@@ -181,7 +181,7 @@ export function CompanyCard({
                 placeholder="e.g. https://company.com"
               />
             </div>
-            <div className="sm:col-span-2">
+            <div className="@md:col-span-2">
               <FormLabel>Headquarters / Location</FormLabel>
               <FormInput
                 value={companyDraft.location || ''}
@@ -211,9 +211,9 @@ export function CompanyCard({
               onViewCompany();
             }
           }}
-          className={`cursor-pointer group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} transition-all shadow-xs hover:shadow-sm text-left`}
+          className={`cursor-pointer group flex items-center justify-between gap-2 p-3.5 @md:p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} transition-all shadow-xs hover:shadow-sm text-left`}
         >
-          <div className="flex items-center gap-3.5 min-w-0">
+          <div className="flex items-center gap-3.5 min-w-0 flex-1">
             <div className={`w-12 h-12 rounded-xl ${theme.cardBg} p-2 flex items-center justify-center shrink-0 border ${theme.cardBorder} shadow-2xs`}>
               <img
                 src={companyInfo?.logo || '/images/avtive-symbol.png'}
@@ -222,9 +222,9 @@ export function CompanyCard({
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className={`text-sm font-bold ${theme.accentText} group-hover:underline transition-colors truncate`}>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className={`text-sm font-bold ${theme.accentText} group-hover:underline transition-colors break-words`}>
                   {companyInfo?.name}
                 </h3>
                 {companyInfo?.industry && (

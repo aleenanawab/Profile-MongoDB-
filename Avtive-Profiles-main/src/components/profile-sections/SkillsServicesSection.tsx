@@ -180,9 +180,8 @@ export function SkillsSection({
       id="section-skills"
       data-section="skills"
       onClick={() => canEdit && !isEditing && onSelectSection?.('skills', 'skills')}
-      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
-        canEdit && !isEditing ? 'cursor-pointer group/skills hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
-      }`}
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${canEdit && !isEditing ? 'cursor-pointer group/skills hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
+        }`}
       title={canEdit && !isEditing ? 'Click to edit Skills in Studio' : undefined}
     >
       <div className="flex items-center justify-between">
@@ -229,9 +228,9 @@ export function SkillsSection({
             <div
               key={skill.id || `skill-${idx}`}
               className={`p-3 rounded-xl border ${skill.pinned ? 'border-primary/40 bg-primary/5' : 'border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/40'
-                } flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs`}
+                } flex flex-col @md:flex-row items-start @md:items-center justify-between gap-2.5 text-xs`}
             >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0 flex-1 w-full">
                 <span className="font-mono text-[10px] text-neutral-400 font-semibold w-4 shrink-0">
                   #{idx + 1}
                 </span>
@@ -246,7 +245,7 @@ export function SkillsSection({
                 )}
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="flex flex-wrap @md:flex-nowrap items-center gap-2 w-full @md:w-auto justify-end">
                 <select
                   value={skill.category || 'Industry Knowledge'}
                   onChange={(e) => handleUpdateSkill(idx, { category: e.target.value })}
@@ -317,7 +316,7 @@ export function SkillsSection({
           {sortedSkillsForView.map((skill, idx) => (
             <span
               key={skill.id || `view-skill-${idx}`}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold shadow-xs transition-all ${skill.pinned
+              className={`inline-flex items-center gap-1.5 max-w-full break-words px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold shadow-xs transition-all ${skill.pinned
                 ? 'bg-amber-500/15 border-amber-500/35 text-amber-500 dark:text-amber-300 ring-1 ring-amber-500/20'
                 : `${theme.badgeBg} ${theme.badgeText}`
                 }`}
@@ -453,9 +452,8 @@ export function ServicesSection({
       id="section-services"
       data-section="services"
       onClick={() => canEdit && !isEditing && onSelectSection?.('services', 'services')}
-      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${
-        canEdit && !isEditing ? 'cursor-pointer group/services hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
-      }`}
+      className={`px-4 @md:px-6 @2xl:px-8 py-5 space-y-4 text-left border-b ${theme.divider} ${theme.cardBg} transition-all relative ${canEdit && !isEditing ? 'cursor-pointer group/services hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
+        }`}
       title={canEdit && !isEditing ? 'Click to edit Services in Studio' : undefined}
     >
       <div className="flex items-center justify-between">
@@ -492,7 +490,7 @@ export function ServicesSection({
         {servicesDraft.map((service) => (
           <div
             key={service.id}
-            className={`p-4 rounded-xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} space-y-2 shadow-xs transition-all`}
+            className={`min-w-0 p-4 rounded-xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} space-y-2 shadow-xs transition-all`}
           >
             {isEditing ? (
               <div className="space-y-2.5">
@@ -563,7 +561,7 @@ export function ServicesSection({
         ))}
 
         {!hasServices && (canEdit || isEditing) && (
-          <div className={`col-span-1 sm:col-span-2 p-5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center`}>
+          <div className={`col-span-1 @md:col-span-2 p-5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center`}>
             <p className={`text-xs ${theme.textMuted}`}>No services listed yet.</p>
           </div>
         )}

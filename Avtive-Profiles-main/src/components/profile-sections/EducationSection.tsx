@@ -149,7 +149,7 @@ export function EducationSection({
                 /* Editable Education Card */
                 <div className="space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="flex-1 grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                       <div>
                         <FormLabel required>School / University</FormLabel>
                         <FormInput
@@ -177,7 +177,7 @@ export function EducationSection({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                     <div>
                       <FormLabel>Field of Study</FormLabel>
                       <FormInput
@@ -196,7 +196,7 @@ export function EducationSection({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
                     <div>
                       <FormLabel>Start Year</FormLabel>
                       <FormInput
@@ -247,12 +247,12 @@ export function EducationSection({
               ) : (
                 /* View Education Card */
                 <>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className={`text-sm font-bold ${theme.textPrimary}`}>
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <h3 className={`text-sm font-bold break-words ${theme.textPrimary}`}>
                         {edu.institution || (edu as any).school}
                       </h3>
-                      <p className={`text-xs font-semibold ${theme.accentText} mt-0.5`}>
+                      <p className={`text-xs font-semibold break-words ${theme.accentText} mt-0.5`}>
                         {[edu.degree, edu.fieldOfStudy].filter(Boolean).join(', ')}
                       </p>
                     </div>

@@ -139,7 +139,7 @@ export function TeamLanyardRail({
     <section 
       aria-label="Meet the Team Interactive Rail"
       className={cn(
-        'w-full py-6 px-3 sm:px-6 relative overflow-hidden select-none',
+        'w-full py-6 px-3 @md:px-6 relative overflow-hidden select-none',
         className
       )}
       onMouseEnter={() => setIsPaused(true)}
@@ -150,13 +150,13 @@ export function TeamLanyardRail({
       onBlur={() => setIsPaused(false)}
     >
       {/* Header bar */}
-      <div className="flex items-center justify-between mb-6 px-1">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-6 px-1">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-slate-900/5 dark:bg-white/10 flex items-center justify-center border border-black/5 dark:border-white/10">
             <Users className="w-4 h-4 text-slate-900 dark:text-white" />
           </div>
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+            <h3 className="text-sm @md:text-base font-bold text-slate-900 dark:text-white tracking-tight">
               Meet the Team
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -290,7 +290,7 @@ export function TeamLanyardRail({
                             src={member.avatar || '/images/default-avatar.png'}
                             alt={member.name}
                             onError={(e) => { e.currentTarget.src = '/images/default-avatar.png'; }}
-                            className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-slate-200 dark:border-white/10 shadow-xs bg-slate-100 dark:bg-zinc-800"
+                            className="w-18 h-18 @md:w-20 @md:h-20 rounded-2xl object-cover border-2 border-slate-200 dark:border-white/10 shadow-xs bg-slate-100 dark:bg-zinc-800"
                           />
                           <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900" title="Active Member" />
                         </div>

@@ -723,7 +723,7 @@ export interface EditableSectionCardProps {
   onUpdateField: (field: keyof ProfileData, value: any) => void;
   onSavePartial?: (partial: Partial<ProfileData>, clearFields?: string[]) => Promise<ProfileData>;
   onDeleteDynamicSection?: (sectionKeyOrId: string) => void;
-  onToggleContactFieldVisibility?: (field: 'phone' | 'email') => void;
+  onToggleContactFieldVisibility?: (field: 'phone' | 'email' | 'website' | 'location') => void;
   onShowToast?: (message: string) => void;
 }
 
@@ -861,7 +861,7 @@ export function EditableSectionCard({
     id: string;
     label: string;
     value?: string;
-    toggleField?: 'phone' | 'email';
+    toggleField?: 'phone' | 'email' | 'website' | 'location';
     visible: boolean;
   }> =
     canonical === 'contactInfo'
@@ -884,19 +884,22 @@ export function EditableSectionCard({
             id: 'whatsapp',
             label: 'WhatsApp',
             value: profile.whatsapp,
+            toggleField: 'phone' as const,
             visible: profile.sharingSettings?.phone !== false,
           },
           {
             id: 'location',
             label: 'Location',
             value: [profile.location, profile.country].filter(Boolean).join(', '),
-            visible: true,
+            toggleField: 'location' as const,
+            visible: profile.sharingSettings?.location !== false,
           },
           {
             id: 'website',
             label: 'Website',
             value: profile.website,
-            visible: true,
+            toggleField: 'website' as const,
+            visible: profile.sharingSettings?.website !== false,
           },
         ].filter((c) => Boolean(c.value && c.value.trim()))
       : [];

@@ -10,6 +10,7 @@ import {
   ProfileType
 } from '@/types/profile';
 import { HeaderNav } from '@/components/layout/HeaderNav';
+import { OwnerBottomNav } from '@/components/layout/OwnerBottomNav';
 import { AvtiveDigitalCard } from '@/components/card/AvtiveDigitalCard';
 import { getThemeConfig } from '@/components/ui/themeStyles';
 import { UnifiedShareWorkspace } from '@/components/sharing/UnifiedShareWorkspace';
@@ -34,11 +35,14 @@ import {
   buildProfileUrlForMode,
 } from '@/lib/profileScreenMode';
 import { SharePresetKey } from '@/types/sharing';
+import { sanitizeProfileForAudience, ProfileAudience } from '@/lib/privacy/audience';
+import { Eye, Globe, Users } from 'lucide-react';
 
 export interface PublicProfileClientProps {
   initialProfile: ProfileData;
   session: UserSession | null;
   isOwner: boolean;
+  isConnected?: boolean;
   initialIsEditing?: boolean;
   initialIsSharing?: boolean;
   userProfiles?: ProfileData[];
@@ -48,6 +52,7 @@ export function PublicProfileClient({
   initialProfile,
   session,
   isOwner,
+  isConnected = false,
   initialIsEditing = false,
   initialIsSharing = false,
   userProfiles = []
@@ -58,6 +63,7 @@ export function PublicProfileClient({
         initialProfile={initialProfile}
         session={session}
         isOwner={isOwner}
+        isConnected={isConnected}
         initialIsEditing={initialIsEditing}
         initialIsSharing={initialIsSharing}
         userProfiles={userProfiles}
@@ -70,6 +76,7 @@ function PublicProfileClientInner({
   initialProfile,
   session,
   isOwner,
+  isConnected = false,
   initialIsEditing = false,
   initialIsSharing = false,
   userProfiles = []
@@ -98,6 +105,7 @@ function PublicProfileClientInner({
   const isEditing = screenMode === 'edit' && effectiveIsOwner;
   const isSharing = screenMode === 'share';
   const [previewViewMode, setPreviewViewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [previewAudience, setPreviewAudience] = useState<ProfileAudience>('owner');
   // Two independent sliders for Preview Sections Navigation:
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(false);
@@ -928,6 +936,8 @@ function PublicProfileClientInner({
       ...base,
       sectionVisibility: liveProfile.sectionVisibility || base.sectionVisibility,
       sharingSettings: liveProfile.sharingSettings || base.sharingSettings,
+      connectionSettings: liveProfile.connectionSettings ?? base.connectionSettings,
+      fieldPrivacy: liveProfile.fieldPrivacy ?? base.fieldPrivacy,
       sectionOrder: liveProfile.sectionOrder || base.sectionOrder,
       savedBackgroundThemeIds: liveProfile.savedBackgroundThemeIds ?? base.savedBackgroundThemeIds,
       backgroundType: previewBackgroundTheme ? 'occasion' : (liveProfile.backgroundType ?? base.backgroundType),
@@ -937,6 +947,13 @@ function PublicProfileClientInner({
       theme: activeTheme
     };
   }, [profile, isEditing, liveProfile, profileType, activeTheme, previewBackgroundTheme]);
+
+  const renderedCardProfile = useMemo(() => {
+    if (!effectiveIsOwner) return cardProfile;
+    return sanitizeProfileForAudience(cardProfile, previewAudience);
+  }, [effectiveIsOwner, cardProfile, previewAudience]);
+
+  const isPreviewOwnerView = effectiveIsOwner && previewAudience === 'owner';
 
   const ownerProfiles = React.useMemo(
     () => (effectiveIsOwner ? (userProfiles && userProfiles.length > 0 ? userProfiles : [profile]) : []),
@@ -1153,7 +1170,7 @@ function PublicProfileClientInner({
                 if (mobileOpen) handleCloseMobile();
                 if (isSidebarOpen) handleCloseSidebar();
               }}
-              className={`w-full flex-1 touch-pan-y transition-all duration-300 ${previewViewMode === 'mobile'
+              className={`w-full flex-1 touch-pan-y transition-all duration-300 pb-24 ${previewViewMode === 'mobile'
                 ? 'px-3 sm:px-6 py-4 sm:py-8'
                 : hasCustomBackground
                   ? 'px-2.5 sm:px-6 lg:px-8 py-3 sm:py-6'
@@ -1173,18 +1190,83 @@ function PublicProfileClientInner({
                       }`
                 } ${activeThemeConfig.cardBorder} ${activeThemeConfig.cardBg} overflow-clip relative`}
               >
+                {effectiveIsOwner && (
+                  <div
+                    data-testid="audience-preview-switcher"
+                    className="px-3 sm:px-5 py-2.5 bg-[#FAF7F2]/95 dark:bg-zinc-900/95 border-b border-stone-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 min-w-0">
+                      <Eye className="w-3.5 h-3.5 text-[#7A1C33] dark:text-amber-300 shrink-0" />
+                      <span className="truncate">
+                        {previewAudience === 'owner'
+                          ? 'My Profile (Owner View)'
+                          : previewAudience === 'public'
+                            ? 'How Others See It — Public Visitor'
+                            : 'How Others See It — Accepted Connection'}
+                      </span>
+                    </div>
+
+                    <div
+                      role="group"
+                      aria-label="How others see your profile"
+                      className="inline-flex items-center p-0.5 rounded-xl bg-stone-200/80 dark:bg-zinc-800 border border-stone-300/70 dark:border-zinc-700 shrink-0"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setPreviewAudience('owner')}
+                        aria-pressed={previewAudience === 'owner'}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer inline-flex items-center gap-1 ${
+                          previewAudience === 'owner'
+                            ? 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white shadow-2xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
+                        }`}
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>My Profile</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewAudience('public')}
+                        aria-pressed={previewAudience === 'public'}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer inline-flex items-center gap-1 ${
+                          previewAudience === 'public'
+                            ? 'bg-[#7A1C33] text-white shadow-2xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
+                        }`}
+                      >
+                        <Globe className="w-3 h-3" />
+                        <span>Public</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewAudience('connection')}
+                        aria-pressed={previewAudience === 'connection'}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer inline-flex items-center gap-1 ${
+                          previewAudience === 'connection'
+                            ? 'bg-[#7A1C33] text-white shadow-2xs'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
+                        }`}
+                      >
+                        <Users className="w-3 h-3" />
+                        <span>Connection</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {effectiveIsOwner && cardProfile.profileVisibility === 'private' && (
                   <div className="px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-center text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
-                    Private profile — Visitors see your name only
+                    Private profile — {previewAudience === 'owner' ? 'Visitors see your name only' : 'Showing exact visitor preview (name only)'}
                   </div>
                 )}
                 <AvtiveDigitalCard
-                  profile={cardProfile}
+                  key={`${cardProfile.id}-${previewAudience}`}
+                  profile={renderedCardProfile}
                   userProfiles={ownerProfiles}
-                  canEdit={effectiveIsOwner}
+                  canEdit={isPreviewOwnerView}
                   isEditing={false}
                   onPreviewBackgroundTheme={setPreviewBackgroundTheme}
-                  isConnected={false}
+                  isConnected={effectiveIsOwner ? previewAudience === 'connection' : Boolean(isConnected)}
                   onDraftChange={handleDraftChange}
                   onOpenEdit={handleOpenEditMode}
                   onCancelEdit={handleCancelEdit}
@@ -1241,6 +1323,7 @@ function PublicProfileClientInner({
           isOpen={isQRModalOpen}
           onClose={() => setIsQRModalOpen(false)}
           profile={profile}
+          isOwner={effectiveIsOwner}
         />
       )}
 
@@ -1260,6 +1343,11 @@ function PublicProfileClientInner({
           onClose={() => setSelectedProject(null)}
           project={selectedProject}
           profile={profile}
+        />
+      )}
+      {!isEditing && Boolean(effectiveIsOwner || currentUser) && (
+        <OwnerBottomNav
+          profileHref={`/profile/${profile.slug || profile.id}`}
         />
       )}
     </div>

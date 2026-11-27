@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { getShareLinkDetailsForOwner } from '@/lib/db';
+import { getShareLinkDetailsForOwner, recordShareEventSafe } from '@/lib/db';
 import { isEmailServiceConfigured, sendShareLinkEmail } from '@/lib/email';
 import { checkRateLimit } from '@/lib/sharing/rateLimit';
 import { isValidEmail } from '@/lib/validation';
@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const sent: string[] = [];
+    const sentNames: string[] = [];
     const failed: Array<{ email: string; error: string }> = [];
 
     for (const r of rawRecipients.slice(0, 10)) {
@@ -59,8 +60,14 @@ export async function POST(request: NextRequest) {
         shareTitle: linkResult.link.title,
         eventLabel: linkResult.link.eventLabel
       });
-      if (res.success) sent.push(email);
-      else failed.push({ email, error: res.error || 'Failed to send' });
+      if (res.success) {
+        sent.push(email);
+        if (r?.name && String(r.name).trim()) {
+          sentNames.push(String(r.name).trim());
+        }
+      } else {
+        failed.push({ email, error: res.error || 'Failed to send' });
+      }
     }
 
     if (sent.length === 0) {
@@ -70,7 +77,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, sent, failed }, { status: 200 });
+    const eventResult = await recordShareEventSafe({
+      shareLinkId: linkResult.link.id,
+      ownerUserId: session.id,
+      profileId: linkResult.link.profileId,
+      eventType: 'email_sent',
+      actorType: 'owner',
+      targetType: 'share_link',
+      channel: 'email',
+      selectedFields: linkResult.link.selectedFields,
+      selectedFieldsCount: linkResult.link.selectedFields.length,
+      recipientNames: sentNames.length > 0 ? sentNames : undefined,
+      profileName: linkResult.link.profileName,
+      profileSlug: linkResult.link.profileSlug,
+      metadata: { sentCount: sent.length, failedCount: failed.length }
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        sent,
+        failed,
+        historyRecorded: eventResult.recorded,
+        ...(eventResult.error ? { historyError: eventResult.error } : {})
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Share Email POST Error:', error);
     return NextResponse.json({ error: 'Internal server error sending share email.' }, { status: 500 });

@@ -5,6 +5,7 @@ import { Languages, Plus, X } from 'lucide-react';
 import { ProfileData, LanguageItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 import { SearchableCombobox } from '@/components/forms/SearchableCombobox';
 import { WORLD_LANGUAGES, LANGUAGE_PROFICIENCY_LEVELS } from '@/data/languagesDataset';
 
@@ -80,7 +81,29 @@ export function LanguagesSection({
     setErrorMessage(undefined);
   };
 
-  const hasLanguages = languagesDraft.length > 0;
+  const visibleLanguages = (isEditing || canEdit)
+    ? languagesDraft
+    : languagesDraft.filter((l) => l.visible !== false);
+  const hasLanguages = visibleLanguages.length > 0;
+
+  const handleToggleLanguageVisibility = async (idx: number) => {
+    const target = visibleLanguages[idx];
+    const next = languagesDraft.map((l) =>
+      l === target || (l.language && target?.language && l.language === target.language)
+        ? { ...l, visible: l.visible === false ? true : false }
+        : l
+    );
+    setLanguagesDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('languages', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ languages: next });
+      } catch (err) {
+        console.error('Failed to persist language visibility:', err);
+      }
+    }
+  };
 
   if (!hasLanguages && !canEdit && !isEditing) {
     return null;
@@ -147,7 +170,8 @@ export function LanguagesSection({
 
       {hasLanguages ? (
         <div className="grid grid-cols-1 @md:grid-cols-2 gap-2.5">
-          {languagesDraft.map((lang, idx) => {
+          {visibleLanguages.map((lang, idx) => {
+            const isLangVisible = lang.visible !== false;
             const otherSelected = new Set(
               languagesDraft
                 .filter((_, i) => i !== idx && Boolean(_.language))
@@ -160,7 +184,11 @@ export function LanguagesSection({
             return (
               <div
                 key={idx}
-                className={`p-3.5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} shadow-2xs`}
+                className={`p-3.5 rounded-2xl border shadow-2xs ${
+                  !isLangVisible
+                    ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                    : `${theme.cardBg} ${theme.cardBorder}`
+                }`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {isEditing ? (
@@ -206,12 +234,12 @@ export function LanguagesSection({
                 ) : (
                   /* View Language Item */
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div className={`w-7 h-7 rounded-lg ${theme.badgeBg} ${theme.accentText} flex items-center justify-center shrink-0`}>
                         <Languages className="w-3.5 h-3.5" />
                       </div>
-                      <div>
-                        <h4 className={`text-xs font-bold ${theme.textPrimary}`}>
+                      <div className="min-w-0">
+                        <h4 className={`text-xs font-bold ${theme.textPrimary} truncate`}>
                           {lang.language}
                         </h4>
                         <p className={`text-[10px] ${theme.textSecondary}`}>
@@ -219,6 +247,13 @@ export function LanguagesSection({
                         </p>
                       </div>
                     </div>
+                    {canEdit && !isEditing && (
+                      <VisibilityEyeButton
+                        visible={isLangVisible}
+                        label={lang.language || 'language'}
+                        onToggle={() => handleToggleLanguageVisibility(idx)}
+                      />
+                    )}
                   </div>
                 )}
               </div>

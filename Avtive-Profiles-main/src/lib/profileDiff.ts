@@ -73,6 +73,7 @@ export const FIELD_CLASSIFICATIONS = {
   companyInfo: 'nested_object',
   nfcCard: 'nested_object',
   sharingSettings: 'nested_object',
+  connectionSettings: 'nested_object',
   fieldPrivacy: 'nested_object',
   sectionVisibility: 'nested_object',
   openToWork: 'nested_object',
@@ -154,6 +155,7 @@ export function normalizeSkills(skills: any): SkillItem[] {
         if (s.category && String(s.category).trim()) item.category = String(s.category).trim();
         if (s.level && String(s.level).trim()) item.level = String(s.level).trim();
         if (typeof s.pinned === 'boolean') item.pinned = s.pinned;
+        if (typeof s.visible === 'boolean') item.visible = s.visible;
         return item;
       }
       return null;

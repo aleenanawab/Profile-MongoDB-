@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { ProfileData } from '@/types/profile';
 import { ShareLinkClientView } from '@/types/sharing';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 type NfcState =
   | 'ready'
@@ -59,6 +60,8 @@ export function InPersonShareView({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [isLoadingLink, setIsLoadingLink] = useState(false);
   const [copied, setCopied] = useState(false);
+  const qrTrackedRef = React.useRef<string>('');
+  const [historyWarning, setHistoryWarning] = useState<string | null>(null);
 
   const resolvedUrl = currentLink
     ? currentLink.shareUrl ||
@@ -88,7 +91,26 @@ export function InPersonShareView({
           margin: 2,
           color: { dark: '#000000', light: '#FFFFFF' }
         });
-        if (active) setQrDataUrl(dataUrl);
+        if (active) {
+          setQrDataUrl(dataUrl);
+          if (qrTrackedRef.current !== target.id) {
+            qrTrackedRef.current = target.id;
+            const trackRes = await trackOwnerShareEvent({
+              profileId: profile.id,
+              shareLinkId: target.id,
+              eventType: 'qr_generated',
+              channel: 'qr',
+              targetType: 'share_link',
+              selectedFields: target.selectedFields,
+              selectedFieldsCount: target.selectedFields.length,
+              recipientNames: target.recipients.map((r) => r.name).filter(Boolean),
+              dedupToken: `inperson-qr:${target.id}`
+            });
+            if (!trackRes.recorded && active) {
+              setHistoryWarning(`QR ready, but Share History failed to record (${trackRes.error || 'error'}).`);
+            }
+          }
+        }
       } catch (err) {
         console.error('QR error:', err);
       }
@@ -138,6 +160,19 @@ export function InPersonShareView({
         records: [{ recordType: 'url', data: nfcUrl }]
       });
       setNfcState('completed');
+      const trackRes = await trackOwnerShareEvent({
+        profileId: profile.id,
+        shareLinkId: target.id,
+        eventType: 'nfc_shared',
+        channel: 'nfc',
+        targetType: 'share_link',
+        selectedFields: target.selectedFields,
+        selectedFieldsCount: target.selectedFields.length,
+        recipientNames: target.recipients.map((r) => r.name).filter(Boolean)
+      });
+      if (!trackRes.recorded) {
+        setHistoryWarning(`NFC tag written, but Share History failed to record (${trackRes.error || 'error'}).`);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'NFC write failed or permission was denied.';
       setNfcState('failed');
@@ -159,6 +194,19 @@ export function InPersonShareView({
         (typeof window !== 'undefined' ? `${window.location.origin}${target.sharePath}` : target.sharePath);
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      const trackRes = await trackOwnerShareEvent({
+        profileId: profile.id,
+        shareLinkId: target.id,
+        eventType: 'link_copied',
+        channel: 'link',
+        targetType: 'share_link',
+        selectedFields: target.selectedFields,
+        selectedFieldsCount: target.selectedFields.length,
+        recipientNames: target.recipients.map((r) => r.name).filter(Boolean)
+      });
+      if (!trackRes.recorded) {
+        setHistoryWarning(`Link copied, but Share History failed to record (${trackRes.error || 'error'}).`);
+      }
       setTimeout(() => setCopied(false), 2400);
     } finally {
       setIsLoadingLink(false);
@@ -226,6 +274,12 @@ export function InPersonShareView({
 
       {/* Body */}
       <div className="px-4 sm:px-5 py-4 space-y-4">
+        {historyWarning && (
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{historyWarning}</span>
+          </div>
+        )}
         {/* Tap Phones (Real Web NFC) */}
         {subTab === 'nfc' && (
           <div className="p-5 rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-center space-y-4 shadow-2xs">

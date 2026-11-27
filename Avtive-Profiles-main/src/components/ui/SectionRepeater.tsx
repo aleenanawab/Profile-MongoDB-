@@ -3,6 +3,7 @@
 import React from 'react';
 import { Plus, Trash2, ChevronUp, ChevronDown, Eye, EyeOff, Layers } from 'lucide-react';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 export interface SectionRepeaterProps<T extends { id?: string; visible?: boolean }> {
   title: string;
@@ -14,6 +15,7 @@ export interface SectionRepeaterProps<T extends { id?: string; visible?: boolean
   addButtonLabel: string;
   emptyPromptText?: string;
   onItemsChange: (items: T[]) => void;
+  onToggleItemVisibility?: (items: T[]) => void;
   createNewItem: () => T;
   renderItemView: (item: T, index: number) => React.ReactNode;
   renderItemEdit: (
@@ -37,6 +39,7 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
   addButtonLabel,
   emptyPromptText,
   onItemsChange,
+  onToggleItemVisibility,
   createNewItem,
   renderItemView,
   renderItemEdit,
@@ -87,7 +90,11 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
   const handleToggleVisible = (index: number) => {
     const current = items[index];
     const nextVal = current.visible === false ? true : false;
-    handleUpdateItem(index, { visible: nextVal } as unknown as Partial<T>);
+    const next = items.map((item, i) => (i === index ? { ...item, visible: nextVal } : item));
+    onItemsChange(next);
+    if (!isEditing) {
+      onToggleItemVisibility?.(next);
+    }
   };
 
   return (
@@ -212,11 +219,28 @@ export function SectionRepeater<T extends { id?: string; visible?: boolean }>({
               );
             }
 
+            const isItemVisible = item.visible !== false;
             return (
               <div
                 key={item.id || `view-${index}`}
-                className={`p-3.5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} space-y-2 shadow-2xs relative`}
+                onClick={(e) => {
+                  if (canEdit) e.stopPropagation();
+                }}
+                className={`p-3.5 rounded-2xl border space-y-2 shadow-2xs relative ${
+                  !isItemVisible
+                    ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                    : `${theme.cardBg} ${theme.cardBorder}`
+                }`}
               >
+                {canEdit && (
+                  <div className="flex justify-end mb-1">
+                    <VisibilityEyeButton
+                      visible={isItemVisible}
+                      label={`${title} item ${index + 1}`}
+                      onToggle={() => handleToggleVisible(index)}
+                    />
+                  </div>
+                )}
                 {renderItemView(item, index)}
               </div>
             );

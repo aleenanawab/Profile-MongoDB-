@@ -5,6 +5,7 @@ import { Plus, X, Pencil, Briefcase } from 'lucide-react';
 import { ProfileData, ExperienceItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface ExperienceSectionProps {
   profile: ProfileData;
@@ -86,7 +87,26 @@ export function ExperienceSection({
     setErrorMessage(undefined);
   };
 
-  const hasExperience = experiencesDraft.length > 0;
+  const visibleExperiences = (isEditing || canEdit)
+    ? experiencesDraft
+    : experiencesDraft.filter((exp) => exp.visible !== false);
+  const hasExperience = visibleExperiences.length > 0;
+
+  const handleToggleExperienceVisibility = async (id: string) => {
+    const next = experiencesDraft.map((item) =>
+      item.id === id ? { ...item, visible: item.visible === false ? true : false } : item
+    );
+    setExperiencesDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('experiences', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ experiences: next, experience: next });
+      } catch (err) {
+        console.error('Failed to persist experience visibility:', err);
+      }
+    }
+  };
 
   if (!hasExperience && !canEdit && !isEditing) {
     return null;
@@ -151,10 +171,16 @@ export function ExperienceSection({
 
       {hasExperience ? (
         <div className="space-y-3">
-          {experiencesDraft.map((exp) => (
+          {visibleExperiences.map((exp) => {
+            const isItemVisible = exp.visible !== false;
+            return (
             <div
               key={exp.id}
-              className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} space-y-2.5 shadow-2xs relative`}
+              className={`p-4 rounded-2xl border space-y-2.5 shadow-2xs relative ${
+                !isItemVisible
+                  ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                  : `${theme.cardBg} ${theme.cardBorder}`
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               {isEditing ? (
@@ -316,11 +342,20 @@ export function ExperienceSection({
                       )}
                     </div>
 
-                    {(exp.period || exp.startDate || exp.endDate) && (
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.cardBorder} shrink-0 font-mono`}>
-                        {exp.period || `${exp.startDate || ''} - ${exp.current ? 'Present' : (exp.endDate || '')}`}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {(exp.period || exp.startDate || exp.endDate) && (
+                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.cardBorder} shrink-0 font-mono`}>
+                          {exp.period || `${exp.startDate || ''} - ${exp.current ? 'Present' : (exp.endDate || '')}`}
+                        </span>
+                      )}
+                      {canEdit && !isEditing && (
+                        <VisibilityEyeButton
+                          visible={isItemVisible}
+                          label={exp.company || exp.role || 'experience'}
+                          onToggle={() => handleToggleExperienceVisibility(exp.id)}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {(exp.location || exp.locationType) && (
@@ -350,7 +385,8 @@ export function ExperienceSection({
                 </>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center space-y-2`}>

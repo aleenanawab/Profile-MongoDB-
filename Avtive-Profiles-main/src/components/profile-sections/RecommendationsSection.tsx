@@ -23,6 +23,7 @@ export function RecommendationsSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: RecommendationsSectionProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -289,6 +290,9 @@ export function RecommendationsSection({
         emptyPromptText="No recommendations added yet."
         onSelectSection={onSelectSection}
         onItemsChange={handleItemsChange}
+        onToggleItemVisibility={(items) => {
+          void onSavePartial?.({ recommendations: items });
+        }}
         createNewItem={() => ({
           id: `rec-${Date.now()}`,
           author: '',

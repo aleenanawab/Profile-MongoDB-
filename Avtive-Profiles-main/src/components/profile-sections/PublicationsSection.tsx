@@ -23,6 +23,7 @@ export function PublicationsSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: PublicationsSectionProps) {
   const publications: PublicationItem[] = Array.isArray(profile.publications)
@@ -45,6 +46,9 @@ export function PublicationsSection({
       emptyPromptText="No publications added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ publications: items });
+      }}
       createNewItem={() => ({
         id: `pub-${Date.now()}`,
         title: '',

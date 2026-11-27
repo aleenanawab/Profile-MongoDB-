@@ -33,13 +33,13 @@ export function VolunteerSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: VolunteerSectionProps) {
   const volunteerItems = getInitialVolunteer(profile);
 
-  const handleItemsChange = (items: VolunteerItem[]) => {
-    // Derive period for each item if startDate/endDate/current provided
-    const normalized = items.map((item) => {
+  const normalizeVolunteer = (items: VolunteerItem[]) =>
+    items.map((item) => {
       let derivedPeriod = item.period;
       if (item.startDate || item.endDate || item.current) {
         const start = item.startDate || '';
@@ -52,6 +52,8 @@ export function VolunteerSection({
       };
     });
 
+  const handleItemsChange = (items: VolunteerItem[]) => {
+    const normalized = normalizeVolunteer(items);
     onUpdateField?.('volunteerExperiences', normalized);
     onUpdateField?.('volunteer', normalized);
   };
@@ -68,6 +70,10 @@ export function VolunteerSection({
       emptyPromptText="No volunteer experience added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        const normalized = normalizeVolunteer(items);
+        void onSavePartial?.({ volunteerExperiences: normalized, volunteer: normalized });
+      }}
       createNewItem={() => ({
         id: `vol-${Date.now()}`,
         role: '',

@@ -254,6 +254,7 @@ export interface SkillItem {
   category?: string;
   level?: string;
   pinned?: boolean;
+  visible?: boolean;
 }
 
 export interface WebsiteItem {
@@ -349,6 +350,7 @@ export interface ServiceItem {
   title: string;
   description?: string;
   badge?: string;
+  visible?: boolean;
 }
 
 export interface ProjectItem {
@@ -371,6 +373,7 @@ export interface ProjectItem {
   endDate?: string;
   skills?: string[];
   contributors?: string[] | string;
+  visible?: boolean;
 }
 
 export interface EducationItem {
@@ -386,6 +389,7 @@ export interface EducationItem {
   activities?: string;
   startYear?: string;
   endYear?: string;
+  visible?: boolean;
 }
 
 export interface ExperienceItem {
@@ -401,6 +405,7 @@ export interface ExperienceItem {
   endDate?: string;
   current?: boolean;
   skills?: string[];
+  visible?: boolean;
 }
 
 export interface CertificationItem {
@@ -412,6 +417,7 @@ export interface CertificationItem {
   credentialId?: string;
   url?: string;
   noExpiry?: boolean;
+  visible?: boolean;
 }
 
 export interface VolunteerItem {
@@ -425,11 +431,13 @@ export interface VolunteerItem {
   endDate?: string;
   current?: boolean;
   description?: string;
+  visible?: boolean;
 }
 
 export interface LanguageItem {
   language: string;
   proficiency: string;
+  visible?: boolean;
 }
 
 export interface RecommendationItem {
@@ -496,6 +504,7 @@ export interface DirectContactItem {
   value: string;
   url?: string;
   active?: boolean;
+  visible?: boolean;
 }
 
 export interface CustomFieldItem {
@@ -660,6 +669,7 @@ export interface ProfileData {
 
   // Sharing Configuration, Field Privacy & Layout Order / Visibility
   sharingSettings?: SharingSettings;
+  connectionSettings?: SharingSettings;
   fieldPrivacy?: Record<string, PrivacyTier>;
   sectionOrder?: string[];
   sectionVisibility?: Record<string, boolean>;

@@ -6,6 +6,7 @@ import { ProfileData, SocialLink } from '@/types/profile';
 import { LinkedInIcon, TwitterXIcon, GithubIcon, InstagramIcon, FacebookIcon, BehanceIcon } from '@/components/ui/BrandIcons';
 import { getThemeConfig, ThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface SocialLinksSectionProps {
   profile: ProfileData;
@@ -147,10 +148,26 @@ export function SocialLinksSection({
     setSocialsDraft((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  const handleToggleLinkVisibility = async (index: number) => {
+    const next = socialsDraft.map((link, idx) =>
+      idx === index ? { ...link, visible: link.visible === false ? true : false } : link
+    );
+    setSocialsDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('socials', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ socials: next, socialLinks: next as any });
+      } catch (err) {
+        console.error('Failed to persist social link visibility:', err);
+      }
+    }
+  };
+
   const renderedLinks = isEditing
     ? socialsDraft
     : socialsDraft.filter((item) => {
-      if (item.visible === false) return false;
+      if (!canEdit && item.visible === false) return false;
       const u = (item.url || '').trim();
       return u !== '' && u !== 'https://' && u !== 'http://';
     });
@@ -252,15 +269,23 @@ export function SocialLinksSection({
               ? (item as any).handle
               : (item.url ? item.url.replace(/^https?:\/\//, '') : '');
 
+            const isVisible = item.visible !== false;
             return (
-              <a
+              <div
                 key={idx}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`min-w-0 overflow-hidden flex items-center justify-between p-3.5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} transition-colors group shadow-2xs`}
+                onClick={(e) => e.stopPropagation()}
+                className={`min-w-0 overflow-hidden flex items-center justify-between p-3.5 rounded-2xl border transition-colors group shadow-2xs ${
+                  !isVisible
+                    ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                    : `${theme.cardBg} ${theme.cardBorder} ${theme.hoverBorder}`
+                }`}
               >
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 min-w-0 flex-1"
+                >
                   <div className={`w-8 h-8 rounded-xl ${theme.badgeBg} flex items-center justify-center shrink-0 border ${theme.cardBorder} shadow-2xs`}>
                     {getPlatformIcon(item.platform)}
                   </div>
@@ -272,9 +297,18 @@ export function SocialLinksSection({
                       {handleText}
                     </p>
                   </div>
-                </div>
-                <ArrowUpRight className={`w-4 h-4 ${theme.textMuted} group-hover:${theme.accentText} group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 ml-2`} />
-              </a>
+                  <ArrowUpRight className={`w-4 h-4 ${theme.textMuted} group-hover:${theme.accentText} group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0`} />
+                </a>
+                {canEdit && (
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    <VisibilityEyeButton
+                      visible={isVisible}
+                      label={item.label || item.platform}
+                      onToggle={() => handleToggleLinkVisibility(idx)}
+                    />
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

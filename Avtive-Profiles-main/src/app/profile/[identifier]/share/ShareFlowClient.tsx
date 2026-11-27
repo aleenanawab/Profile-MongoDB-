@@ -34,6 +34,7 @@ import { ProfileData, SharingSettings } from '@/types/profile';
 import { GithubIcon, LinkedInIcon, TwitterXIcon } from '@/components/ui/BrandIcons';
 import { ALL_PROFILE_SECTIONS } from '@/components/profile-sections/DynamicSectionGroups';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 interface ShareFlowClientProps {
   initialProfile: ProfileData;
@@ -164,10 +165,18 @@ export function ShareFlowClient({ initialProfile }: ShareFlowClientProps) {
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      void trackOwnerShareEvent({
+        profileId: selectedProfile.id,
+        eventType: 'link_copied',
+        channel: 'link',
+        targetType: 'public_profile'
+      });
+      setTimeout(() => setCopied(false), 2500);
+    } catch {}
   };
 
   // ──────────────────────────────────────────────────────────────────────────

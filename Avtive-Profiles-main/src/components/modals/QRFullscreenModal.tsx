@@ -5,15 +5,18 @@ import QRCode from 'qrcode';
 import { X, Download, QrCode } from 'lucide-react';
 import { ProfileData } from '@/types/profile';
 import { getThemeConfig } from '@/components/ui/themeStyles';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 interface QRFullscreenModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile: ProfileData;
+  isOwner?: boolean;
 }
 
-export function QRFullscreenModal({ isOpen, onClose, profile }: QRFullscreenModalProps) {
+export function QRFullscreenModal({ isOpen, onClose, profile, isOwner = false }: QRFullscreenModalProps) {
   const [qrUrl, setQrUrl] = useState('');
+  const trackedRef = React.useRef<string>('');
   const theme = getThemeConfig(profile.theme || 'editorial');
   const identifier = profile.slug || profile.id;
   const canonicalPublicUrl = typeof window !== 'undefined' 
@@ -27,10 +30,22 @@ export function QRFullscreenModal({ isOpen, onClose, profile }: QRFullscreenModa
         margin: 2,
         color: { dark: '#000000', light: '#FFFFFF' }
       })
-        .then((url) => setQrUrl(url))
+        .then((url) => {
+          setQrUrl(url);
+          if (isOwner && trackedRef.current !== canonicalPublicUrl) {
+            trackedRef.current = canonicalPublicUrl;
+            void trackOwnerShareEvent({
+              profileId: profile.id,
+              eventType: 'qr_generated',
+              channel: 'qr',
+              targetType: 'public_profile',
+              dedupToken: `public-qr:${profile.id}:${Math.floor(Date.now() / 60000)}`
+            });
+          }
+        })
         .catch((err) => console.error(err));
     }
-  }, [isOpen, canonicalPublicUrl]);
+  }, [isOpen, canonicalPublicUrl, isOwner, profile.id]);
 
   if (!isOpen) return null;
 

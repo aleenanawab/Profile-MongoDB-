@@ -2,7 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getProfileByIdOrSlug, sanitizeProfileForPublic } from '@/lib/db';
+import { getProfileByIdOrSlug, sanitizeProfileForPublic, checkIsConnected } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { PublicProfileClient } from './PublicProfileClient';
 import { ProfileNotFoundFallback } from './ProfileNotFoundFallback';
@@ -81,9 +81,10 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   );
 
   // 3. ZERO TOLERANCE SERVER-SIDE FILTERING:
-  // If caller is NOT the owner, sanitize the profile data server-side
-  // so hidden contact info, experience, etc. are strictly omitted before sending to client
-  const servedProfile = sanitizeProfileForPublic(profile, isOwner);
+  // If caller is NOT the owner, check whether caller is an accepted connection
+  // and sanitize the profile data server-side using centralized audience rules
+  const isConnected = Boolean(!isOwner && session?.id && await checkIsConnected(session.id, profile.id));
+  const servedProfile = sanitizeProfileForPublic(profile, isOwner, { isConnected });
 
   // 4. Fetch all user profiles for the switcher if owner
   const { getProfilesByUserId } = await import('@/lib/db');
@@ -99,6 +100,7 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
       initialProfile={servedProfile}
       session={session}
       isOwner={isOwner}
+      isConnected={isConnected}
       initialIsEditing={shouldOpenInEdit}
       initialIsSharing={shouldOpenShare}
       userProfiles={userProfiles}

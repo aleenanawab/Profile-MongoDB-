@@ -23,6 +23,7 @@ export function PatentsSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: PatentsSectionProps) {
   const patents: PatentItem[] = Array.isArray(profile.patents)
@@ -45,6 +46,9 @@ export function PatentsSection({
       emptyPromptText="No patents added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ patents: items });
+      }}
       createNewItem={() => ({
         id: `patent-${Date.now()}`,
         title: '',

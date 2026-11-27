@@ -23,6 +23,7 @@ export function TestScoresSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: TestScoresSectionProps) {
   const testScores: TestScoreItem[] = Array.isArray(profile.testScores)
@@ -45,6 +46,9 @@ export function TestScoresSection({
       emptyPromptText="No test scores added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ testScores: items });
+      }}
       createNewItem={() => ({
         id: `test-${Date.now()}`,
         name: '',

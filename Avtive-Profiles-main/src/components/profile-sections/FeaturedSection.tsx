@@ -23,6 +23,7 @@ export function FeaturedSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: FeaturedSectionProps) {
   const featured: FeaturedItem[] = Array.isArray(profile.featured)
@@ -45,6 +46,9 @@ export function FeaturedSection({
       emptyPromptText="No featured items added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ featured: items });
+      }}
       createNewItem={() => ({
         id: `feat-${Date.now()}`,
         type: 'link',

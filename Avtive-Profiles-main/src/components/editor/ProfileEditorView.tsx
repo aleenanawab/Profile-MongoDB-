@@ -11,6 +11,7 @@ import { getCanonicalSectionOrder, normalizeSectionKey } from '@/lib/sections';
 import { BackgroundSelectorCard } from '@/components/editor/BackgroundSelectorCard';
 import { IdentityEditorCard } from '@/components/editor/IdentityEditorCard';
 import { ProfileVisibilityCard } from '@/components/editor/ProfileVisibilityCard';
+import { ConnectionPermissionsCard } from '@/components/editor/ConnectionPermissionsCard';
 import { EditableSectionCard, SECTION_CONFIG } from '@/components/editor/EditableSectionCard';
 
 export interface ProfileEditorViewProps {
@@ -267,6 +268,12 @@ export function ProfileEditorView({
         <ProfileVisibilityCard
           value={liveProfile.profileVisibility === 'private' ? 'private' : 'public'}
           onChange={(val) => updateField('profileVisibility', val)}
+        />
+
+        {/* 3b. Connection Audience Permissions */}
+        <ConnectionPermissionsCard
+          profile={liveProfile}
+          onChangeConnectionSettings={(next) => updateField('connectionSettings', next)}
         />
 
         {/* 4. Profile Sections */}

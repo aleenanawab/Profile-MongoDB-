@@ -340,6 +340,12 @@ export function isFieldShared(
   if (field === 'email') {
     return sharing.email !== false;
   }
+  if (field === 'website') {
+    return sharing.website !== false;
+  }
+  if (field === 'location' || field === 'officeAddress') {
+    return sharing.location !== false;
+  }
   if (field === 'birthday' || field === 'pronouns') {
     return sharing[field] === true;
   }

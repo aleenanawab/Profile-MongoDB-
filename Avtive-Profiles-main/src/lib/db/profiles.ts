@@ -14,6 +14,7 @@ import { lazyEnsureIndexes } from './indexes';
 import { slugify } from '../validation';
 import { deleteFromCloudinary } from '@/lib/storage';
 import { isCanonicalSectionVisible, isFieldShared } from '@/lib/sections';
+import { sanitizeProfileForAudience, ProfileAudience } from '@/lib/privacy/audience';
 
 function pickNonEmptyString(...candidates: unknown[]): string | undefined {
   for (const val of candidates) {
@@ -149,7 +150,8 @@ export function mapDocToProfileData(doc: any): ProfileData {
         name: s.name || '',
         category: s.category || 'Technical Skills',
         level: s.level || 'Intermediate',
-        pinned: !!s.pinned
+        pinned: !!s.pinned,
+        ...(typeof s.visible === 'boolean' ? { visible: s.visible } : {})
       };
     }
     return { name: String(s || ''), category: 'Technical Skills', level: 'Intermediate', pinned: false };
@@ -241,6 +243,7 @@ export function mapDocToProfileData(doc: any): ProfileData {
     volunteerExperiences: volunteer,
     volunteer,
     sharingSettings: doc.sharingSettings || { ...DEFAULT_SHARING_SETTINGS },
+    connectionSettings: (doc.connectionSettings && typeof doc.connectionSettings === 'object') ? doc.connectionSettings : {},
     fieldPrivacy: (doc.fieldPrivacy && typeof doc.fieldPrivacy === 'object') ? doc.fieldPrivacy : {},
     sectionVisibility: doc.sectionVisibility || { ...DEFAULT_SECTION_VISIBILITY },
     sectionOrder: doc.sectionOrder || [...DEFAULT_SECTION_ORDER],
@@ -263,274 +266,14 @@ export function setProfileResponseCookies(response: any, profile: ProfileData): 
   }
 }
 
-export function sanitizeProfileForPublic(profile: ProfileData, isOwner: boolean = false): ProfileData {
-  if (isOwner) {
-    return profile;
-  }
-
-  // Deep clone to ensure purity so caller's object is never mutated in-place
-  const sanitized: ProfileData = JSON.parse(JSON.stringify(profile));
-
-  // Enforce Private profile visibility: non-owners see ONLY basic display name
-  if (profile.profileVisibility === 'private') {
-    return {
-      id: sanitized.id,
-      _id: sanitized._id,
-      slug: sanitized.slug,
-      type: sanitized.type,
-      name: sanitized.name || 'Private Profile',
-      firstName: sanitized.firstName || undefined,
-      lastName: sanitized.lastName || undefined,
-      profileVisibility: 'private',
-      theme: sanitized.theme || 'editorial',
-      backgroundType: 'default',
-      activeBackgroundThemeId: '',
-      customBackgroundImage: '',
-      customBackgroundVideo: '',
-      savedBackgroundThemeIds: [],
-      avatar: '',
-      coverImage: undefined,
-      designation: '',
-      professionalTitle: '',
-      headline: '',
-      tagline: '',
-      company: '',
-      location: '',
-      country: '',
-      officeAddress: '',
-      bio: '',
-      about: '',
-      shortBio: '',
-      fullBio: '',
-      email: '',
-      phone: '',
-      whatsapp: '',
-      website: '',
-      websites: [],
-      customContacts: [],
-      skills: [],
-      services: [],
-      projects: [],
-      experiences: [],
-      experience: [],
-      education: [],
-      certifications: [],
-      recommendations: [],
-      languages: [],
-      customFields: [],
-      dynamicSections: [],
-      featured: [],
-      honorsAwards: [],
-      publications: [],
-      patents: [],
-      courses: [],
-      testScores: [],
-      organizations: [],
-      interests: [],
-      volunteerExperiences: [],
-      volunteer: [],
-      teamMembers: [],
-      socials: [],
-      socialLinks: [],
-      introductionMedia: null,
-      resumeUrl: '',
-      resumeFileName: '',
-      openToWork: undefined,
-      companyInfo: undefined,
-      fieldPrivacy: {},
-      sharingSettings: { ...DEFAULT_SHARING_SETTINGS },
-      sectionVisibility: { ...DEFAULT_SECTION_VISIBILITY },
-      sectionOrder: []
-    };
-  }
-
-  const settings = profile.sharingSettings || DEFAULT_SHARING_SETTINGS;
-  const visibility = profile.sectionVisibility || DEFAULT_SECTION_VISIBILITY;
-
-  const profileSectionHidden = !isCanonicalSectionVisible(visibility, settings, 'profile');
-  if (profileSectionHidden || settings.photo === false || visibility['photo'] === false) {
-    sanitized.avatar = '';
-    delete (sanitized as any).logoUrl;
-    sanitized.companyLogo = '';
-  }
-  if (profileSectionHidden || (settings as any).coverImage === false || visibility['coverImage'] === false) {
-    sanitized.coverImage = undefined;
-    delete (sanitized as any).coverUrl;
-  }
-
-  if (settings.nameAndTitle === false) {
-    sanitized.name = 'Professional';
-    sanitized.designation = '';
-    sanitized.tagline = '';
-  }
-
-  if (!isCanonicalSectionVisible(visibility, settings, 'personalDetails')) {
-    sanitized.bio = '';
-    sanitized.about = '';
-    sanitized.shortBio = '';
-    sanitized.fullBio = '';
-  }
-
-  // Pronouns and birthday default to private for non-owners unless explicitly opted in
-  if (settings.pronouns !== true) {
-    sanitized.pronouns = undefined;
-  }
-  if (settings.birthday !== true) {
-    sanitized.birthday = undefined;
-  }
-
-  const isContactVisible = isCanonicalSectionVisible(visibility, settings, 'contactInfo');
-  if (!isContactVisible || !isFieldShared(profile, 'phone')) {
-    sanitized.phone = '';
-    sanitized.whatsapp = '';
-    sanitized.phoneType = '';
-  }
-
-  if (!isContactVisible || !isFieldShared(profile, 'email')) {
-    sanitized.email = '';
-  }
-
-  if (!isContactVisible) {
-    sanitized.website = '';
-    sanitized.websites = [];
-    sanitized.officeAddress = '';
-    sanitized.googleMapsUrl = '';
-    sanitized.customContacts = [];
-  }
-
-  if (!isCanonicalSectionVisible(visibility, settings, 'socialLinks')) {
-    sanitized.socials = [];
-    sanitized.socialLinks = [];
-  } else {
-    if (Array.isArray(sanitized.socialLinks)) {
-      sanitized.socialLinks = sanitized.socialLinks.filter((s: any) => s && s.visible !== false);
-    }
-    if (Array.isArray(sanitized.socials)) {
-      sanitized.socials = sanitized.socials.filter((s: any) => s && s.visible !== false);
-    }
-  }
-
-  if (!isCanonicalSectionVisible(visibility, settings, 'skills')) sanitized.skills = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'experience')) {
-    sanitized.experiences = [];
-    sanitized.experience = [];
-  }
-  if (!isCanonicalSectionVisible(visibility, settings, 'education')) sanitized.education = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'certifications')) sanitized.certifications = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'projects')) sanitized.projects = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'services')) sanitized.services = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'recommendations')) {
-    sanitized.recommendations = [];
-    sanitized.testimonials = [];
-  } else if (Array.isArray(sanitized.recommendations)) {
-    sanitized.recommendations = sanitized.recommendations.filter((r: any) => r && r.visible !== false);
-  }
-  if (!isCanonicalSectionVisible(visibility, settings, 'languages')) sanitized.languages = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'volunteer')) {
-    sanitized.volunteerExperiences = [];
-    sanitized.volunteer = [];
-  }
-  if (!isCanonicalSectionVisible(visibility, settings, 'featured')) {
-    sanitized.featured = [];
-  } else if (Array.isArray(sanitized.featured)) {
-    sanitized.featured = sanitized.featured.filter((f: any) => f && f.visible !== false);
-  }
-  if (!isCanonicalSectionVisible(visibility, settings, 'honorsAwards')) sanitized.honorsAwards = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'publications')) sanitized.publications = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'patents')) sanitized.patents = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'courses')) sanitized.courses = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'testScores')) sanitized.testScores = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'organizations')) sanitized.organizations = [];
-  if (!isCanonicalSectionVisible(visibility, settings, 'interests')) sanitized.interests = [];
-
-  if (
-    settings.introductionMedia === false ||
-    visibility.introductionMedia === false ||
-    !isCanonicalSectionVisible(visibility, settings, 'personalDetails')
-  ) {
-    sanitized.introductionMedia = null;
-  }
-
-  if (!isCanonicalSectionVisible(visibility, settings, 'companyInfo')) {
-    sanitized.companyInfo = undefined;
-  }
-  if (!isCanonicalSectionVisible(visibility, settings, 'teamMembers')) {
-    sanitized.teamMembers = [];
-  }
-  if (!isCanonicalSectionVisible(visibility, settings, 'virtualCard')) sanitized.nfcCard = undefined;
-
-  if (!isCanonicalSectionVisible(visibility, settings, 'customFields')) {
-    sanitized.customFields = [];
-  } else if (Array.isArray(sanitized.customFields)) {
-    const neverShareCustomPattern = /\b(bank|iban|swift|bic|routing|account\s*(?:no|num|number)|sort\s*code|credit\s*card|debit\s*card|cvv|ssn|social\s*security|passport|national\s*id|cnic|aadhaar|tin|tax\s*id|driver.?s?\s*licen[cs]e|pin\s*code|secret\s*key|private\s*key|api\s*key|recovery\s*code|password|confidential|salary)\b/i;
-    sanitized.customFields = sanitized.customFields.filter((f) => {
-      if (!f || f.visible === false) return false;
-      const cfKey = `custom-field-${f.id}`;
-      const fp = profile.fieldPrivacy?.[cfKey];
-      if (f.privacy === 'never_share' || fp === 'never_share' || f.privacy === 'private' || fp === 'private') return false;
-      if (neverShareCustomPattern.test(f.label || (f as any).title || '')) return false;
-      return true;
-    });
-  }
-
-  // Enforce fieldPrivacy restrictions on public profile views
-  const fieldPrivacy = profile.fieldPrivacy || {};
-  if (fieldPrivacy.photo === 'never_share' || fieldPrivacy.photo === 'private') {
-    sanitized.avatar = '';
-  }
-  if (fieldPrivacy.coverImage === 'never_share' || fieldPrivacy.coverImage === 'private' || (settings as any).coverImage === false) {
-    sanitized.coverImage = undefined;
-  }
-  if (fieldPrivacy.phone === 'never_share' || fieldPrivacy.phone === 'private') {
-    sanitized.phone = '';
-    sanitized.whatsapp = '';
-    sanitized.phoneType = '';
-  }
-  if (fieldPrivacy.email === 'never_share' || fieldPrivacy.email === 'private') {
-    sanitized.email = '';
-  }
-  if (fieldPrivacy.website === 'never_share' || fieldPrivacy.website === 'private') {
-    sanitized.website = '';
-    sanitized.websites = [];
-  }
-  if (fieldPrivacy.location === 'never_share' || fieldPrivacy.location === 'private') {
-    sanitized.location = '';
-    sanitized.country = '';
-    sanitized.officeAddress = '';
-    sanitized.googleMapsUrl = '';
-  }
-  if (fieldPrivacy.resume === 'never_share' || fieldPrivacy.resume === 'private' || settings.resume === false) {
-    sanitized.resumeUrl = undefined;
-    sanitized.resumeFileName = undefined;
-  }
-  if (fieldPrivacy.birthday === 'never_share') sanitized.birthday = undefined;
-  if (fieldPrivacy.pronouns === 'never_share') sanitized.pronouns = undefined;
-  if (fieldPrivacy.bio === 'never_share' || fieldPrivacy.bio === 'private') {
-    sanitized.bio = '';
-    sanitized.shortBio = '';
-    sanitized.about = '';
-    sanitized.fullBio = '';
-  }
-  if (fieldPrivacy.introductionMedia === 'never_share' || fieldPrivacy.introductionMedia === 'private') {
-    sanitized.introductionMedia = null;
-  }
-
-  // Strip internal hardware/account fields
-  if (sanitized.nfcCard) {
-    sanitized.nfcCard = {
-      cardNumber: sanitized.nfcCard.cardNumber,
-      chipId: '',
-      finish: sanitized.nfcCard.finish
-    };
-  }
-  delete sanitized.avatarPublicId;
-  delete sanitized.coverImagePublicId;
-
-  sanitized.username = profile.username || profile.slug;
-  sanitized.sectionOrder = profile.sectionOrder || DEFAULT_SECTION_ORDER;
-  sanitized.sectionVisibility = visibility;
-
-  return sanitized;
+export function sanitizeProfileForPublic(
+  profile: ProfileData,
+  isOwner: boolean = false,
+  options?: { isConnected?: boolean; audience?: ProfileAudience }
+): ProfileData {
+  const audience: ProfileAudience =
+    options?.audience || (isOwner ? 'owner' : options?.isConnected ? 'connection' : 'public');
+  return sanitizeProfileForAudience(profile, audience);
 }
 
 export async function createProfileForUser(
@@ -826,6 +569,7 @@ export async function updateProfile(
     'companyInfo',
     'sectionVisibility',
     'sharingSettings',
+    'connectionSettings',
     'fieldPrivacy',
     'customThemeColors',
     'customCta',

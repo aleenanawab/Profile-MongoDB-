@@ -30,6 +30,7 @@ import {
   ExternalMediaProvider
 } from '@/types/profile';
 import { ThemeConfig } from '@/components/ui/themeStyles';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface ProfileIntroductionMediaProps {
   profile: ProfileData;
@@ -473,8 +474,11 @@ export function ProfileIntroductionMediaSection({
     }
   };
 
-  // If visitor mode and either no media or hidden, return null
-  if (!isEditing && (!media || !isVisible)) {
+  // If visitor mode and either no media or hidden, return null; if owner preview and no media, return null
+  if (!isEditing && !media) {
+    return null;
+  }
+  if (!isEditing && !canEdit && !isVisible) {
     return null;
   }
 
@@ -514,7 +518,14 @@ export function ProfileIntroductionMediaSection({
             </div>
 
             <div className="flex items-center gap-2">
-              {!isVisible && (
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={isVisible}
+                  label="Voice or Video Intro"
+                  onToggle={handleToggleVisibility}
+                />
+              )}
+              {isEditing && !isVisible && (
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
                   <EyeOff className="w-2.5 h-2.5" />
                   Hidden

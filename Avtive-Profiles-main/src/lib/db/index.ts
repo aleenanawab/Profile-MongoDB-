@@ -97,7 +97,10 @@ export {
 
 export {
   recordShareEvent,
-  listEventsForShareLink
+  recordShareEventSafe,
+  hasRecentDedupEvent,
+  listEventsForShareLink,
+  queryShareHistoryForOwner
 } from './shareEvents';
 
 export {

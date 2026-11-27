@@ -49,6 +49,7 @@ import {
   toggleCanonicalSectionVisibility,
 } from '@/lib/sections';
 import { isProfileDirty, diffProfile, arePrimitivesEqual, areArraysEqual } from '@/lib/profileDiff';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 
 // ─── DraggableLinkItem ────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ export const LIVE_PROFILE_ATOM_KEYS: (keyof ProfileData)[] = [
   'sectionOrder',
   'sectionVisibility',
   'sharingSettings',
+  'connectionSettings',
   'fieldPrivacy',
   'industry',
   'headline',
@@ -559,6 +561,7 @@ function getProfileSnapshot(p: ProfileData): string {
     sectionOrder: p.sectionOrder,
     sectionVisibility: p.sectionVisibility,
     sharingSettings: p.sharingSettings,
+    connectionSettings: p.connectionSettings,
     companyInfo: p.companyInfo,
     teamMembers: p.teamMembers
   });
@@ -823,6 +826,7 @@ export function ProfileEditorProvider({
       sectionOrder: canonicalSectionOrder,
       sectionVisibility: sectionVisibility,
       sharingSettings: sharingSettings,
+      connectionSettings: profile.connectionSettings,
       companyInfo: profile.companyInfo,
       teamMembers: profile.teamMembers,
       profileVisibility: profileVisibility,
@@ -1235,19 +1239,31 @@ export function ProfileEditorProvider({
   );
 
   const toggleVisibilityField = useCallback((field: keyof SharingSettings) => {
-    setSharingSettings((prev) => ({ ...prev, [field]: !prev[field] }));
+    isUserInitiatedChangeRef.current = true;
+    setSharingSettings((prev) => {
+      const current = prev[field] !== false;
+      return { ...prev, [field]: !current };
+    });
   }, []);
 
   // ── Copy Link ─────────────────────────────────────────────────────────────
   const handleCopyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(publicProfileUrl);
+      setCopySuccess(true);
+      if (profile.id && profile.id !== 'default') {
+        void trackOwnerShareEvent({
+          profileId: profile.id,
+          eventType: 'link_copied',
+          channel: 'link',
+          targetType: 'public_profile'
+        });
+      }
+      setTimeout(() => setCopySuccess(false), 2500);
     } catch {
-      // ignore — still show success
+      // Clipboard blocked
     }
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2500);
-  }, [publicProfileUrl]);
+  }, [publicProfileUrl, profile.id]);
 
   // ── Profile Section Editor callbacks (used by SlidingEditorPanel inline editor) ──
   const handleProfileSectionLiveUpdate = useCallback(

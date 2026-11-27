@@ -30,6 +30,7 @@ import {
   SHAREABLE_FIELD_MAP,
   SHAREABLE_FIELDS
 } from '@/lib/sharing/presets';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 interface SharedLinksTabProps {
   profile: ProfileData;
@@ -149,6 +150,19 @@ export function SharedLinksTab({
     try {
       await navigator.clipboard.writeText(url);
       setCopiedId(link.id);
+      const trackRes = await trackOwnerShareEvent({
+        profileId: link.profileId,
+        shareLinkId: link.id,
+        eventType: 'link_copied',
+        channel: 'link',
+        targetType: 'share_link',
+        selectedFields: link.selectedFields,
+        selectedFieldsCount: link.selectedFields.length,
+        recipientNames: link.recipients.map((r) => r.name).filter(Boolean)
+      });
+      if (!trackRes.recorded) {
+        setErrorMsg(`Link copied, but Share History failed to record (${trackRes.error || 'error'}).`);
+      }
       setTimeout(() => setCopiedId((prev) => (prev === link.id ? null : prev)), 2200);
     } catch {
       setErrorMsg('Clipboard access blocked.');
@@ -172,6 +186,9 @@ export function SharedLinksTab({
       }
       setLinks((prev) => prev.map((l) => (l.id === linkId ? data.link : l)));
       if (editingLinkId === linkId) setEditingLinkId(null);
+      if (data.historyRecorded === false) {
+        setErrorMsg(`Link revoked, but Share History failed to record (${data.historyError || 'error'}).`);
+      }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Revoke failed.');
     } finally {
@@ -235,6 +252,9 @@ export function SharedLinksTab({
       }
       setLinks((prev) => prev.map((l) => (l.id === link.id ? data.link : l)));
       setEditingLinkId(null);
+      if (data.historyRecorded === false) {
+        setErrorMsg(`Link updated, but Share History failed to record (${data.historyError || 'error'}).`);
+      }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Update failed.');
     } finally {
@@ -270,9 +290,15 @@ export function SharedLinksTab({
   const eventLabelText = (evType: ShareEventRecord['eventType']) => {
     switch (evType) {
       case 'share_created': return 'Share link created';
-      case 'link_opened': return 'Link opened';
+      case 'link_copied': return 'Link copied by owner';
+      case 'native_shared': return 'Shared via device share sheet';
+      case 'qr_generated': return 'QR code generated';
       case 'qr_opened': return 'QR code scanned / opened';
+      case 'nfc_shared': return 'Written / shared via NFC';
       case 'nfc_opened': return 'NFC link opened';
+      case 'email_sent': return 'Sent by email';
+      case 'vcard_downloaded': return 'vCard downloaded';
+      case 'link_opened': return 'Link opened';
       case 'link_expired': return 'Link expired';
       case 'link_revoked': return 'Access revoked by owner';
       case 'access_updated': return 'Access settings updated';

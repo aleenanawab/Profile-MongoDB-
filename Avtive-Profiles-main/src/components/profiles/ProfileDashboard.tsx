@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { ProfileData, UserSession, ProfileTheme } from '@/types/profile';
 import { DualScreenWorkspace } from '@/components/layout/DualScreenWorkspace';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 interface ProfileDashboardProps {
   initialProfiles: ProfileData[];
@@ -161,15 +162,29 @@ export function ProfileDashboard({ initialProfiles, user }: ProfileDashboardProp
     }
   };
 
-  const handleCopyLink = (profile: ProfileData, e?: React.MouseEvent) => {
+  const handleCopyLink = async (profile: ProfileData, e?: React.MouseEvent) => {
     e?.stopPropagation();
     const identifier = profile.slug || profile.id;
     const url = typeof window !== 'undefined'
       ? `${window.location.origin}/profile/${identifier}`
       : `https://www.avtive.app/profile/${identifier}`;
 
-    navigator.clipboard.writeText(url);
-    showToast(`✓ Copied link for ${profile.profileName || profile.name}`);
+    try {
+      await navigator.clipboard.writeText(url);
+      const trackRes = await trackOwnerShareEvent({
+        profileId: profile.id,
+        eventType: 'link_copied',
+        channel: 'link',
+        targetType: 'public_profile'
+      });
+      if (!trackRes.recorded) {
+        showToast(`✓ Copied link, but Share History failed to record`);
+      } else {
+        showToast(`✓ Copied link for ${profile.profileName || profile.name}`);
+      }
+    } catch {
+      showToast('Clipboard access blocked.');
+    }
     setOpenMenuId(null);
   };
 

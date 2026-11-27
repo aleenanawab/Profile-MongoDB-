@@ -68,6 +68,11 @@
   }
 }
 
+.avtive-serif-name {
+  font-family: 'Playfair Display', Georgia, Cambria, "Times New Roman", Times, serif;
+  letter-spacing: -0.015em;
+}
+
 /* FIGMA UI SYSTEM UTILITIES */
 .figma-phone-frame {
   background: #0A0A0A;

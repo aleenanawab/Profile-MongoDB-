@@ -19,6 +19,7 @@ import {
 import { ProfileData, CustomFieldItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface CustomFieldsSectionProps {
   profile: ProfileData;
@@ -92,7 +93,25 @@ export function CustomFieldsSection({
     setErrorMessage(undefined);
   };
 
-  const visibleFields = fieldsDraft.filter((f) => isEditing || (f.visible !== false && (f as any).isPublic !== false));
+  const visibleFields = fieldsDraft.filter((f) => isEditing || canEdit || (f.visible !== false && (f as any).isPublic !== false));
+
+  const handleToggleFieldVisibility = async (fieldId: string) => {
+    const next = fieldsDraft.map((f) => {
+      if (f.id !== fieldId) return f;
+      const nextVis = f.visible === false ? true : false;
+      return { ...f, visible: nextVis, isPublic: nextVis };
+    });
+    setFieldsDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('customFields', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ customFields: next });
+      } catch (err) {
+        console.error('Failed to persist custom field visibility:', err);
+      }
+    }
+  };
 
   if (visibleFields.length === 0 && !canEdit && !isEditing) {
     return null;
@@ -321,12 +340,17 @@ export function CustomFieldsSection({
             const val = field.value || (field as any).content || '';
             const isMultiLine = field.type === 'markdown' || val.includes('\n') || val.length > 55;
             const title = field.label || (field as any).title || 'Custom Field';
+            const isFieldVisible = field.visible !== false && (field as any).isPublic !== false;
 
             return (
               <div
                 key={field.id}
                 onClick={() => canEdit && onSelectSection?.('customFields', field.id)}
-                className={`min-w-0 p-3 rounded-xl border border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] flex items-start gap-2.5 transition-all hover:border-black/10 dark:hover:border-white/20 ${
+                className={`min-w-0 p-3 rounded-xl border ${
+                  !isFieldVisible
+                    ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                    : 'border-black/5 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02]'
+                } flex items-start gap-2.5 transition-all hover:border-black/10 dark:hover:border-white/20 ${
                   isMultiLine ? '@md:col-span-2' : ''
                 } ${
                   canEdit ? 'cursor-pointer group/cfitem hover:ring-2 hover:ring-zinc-900/20 dark:hover:ring-white/25 hover:bg-zinc-100/70 dark:hover:bg-white/[0.04]' : ''
@@ -344,12 +368,21 @@ export function CustomFieldsSection({
                     <span className={`block text-[10px] font-bold uppercase tracking-wider ${theme.textMuted} truncate`}>
                       {title}
                     </span>
-                    {canEdit && (
-                      <span className="opacity-0 group/cfitem:opacity-100 transition-opacity text-[9px] font-mono text-zinc-600 dark:text-zinc-400 font-bold flex items-center gap-0.5">
-                        <Pencil className="w-2.5 h-2.5" />
-                        Edit
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {canEdit && (
+                        <VisibilityEyeButton
+                          visible={isFieldVisible}
+                          label={title}
+                          onToggle={() => handleToggleFieldVisibility(field.id)}
+                        />
+                      )}
+                      {canEdit && (
+                        <span className="opacity-0 group/cfitem:opacity-100 transition-opacity text-[9px] font-mono text-zinc-600 dark:text-zinc-400 font-bold flex items-center gap-0.5">
+                          <Pencil className="w-2.5 h-2.5" />
+                          Edit
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="mt-1">
                     {renderFieldValue(field)}

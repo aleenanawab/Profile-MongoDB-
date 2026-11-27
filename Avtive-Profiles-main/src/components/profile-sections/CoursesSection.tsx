@@ -23,6 +23,7 @@ export function CoursesSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: CoursesSectionProps) {
   const courses: CourseItem[] = Array.isArray(profile.courses)
@@ -45,6 +46,9 @@ export function CoursesSection({
       emptyPromptText="No courses added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ courses: items });
+      }}
       createNewItem={() => ({
         id: `course-${Date.now()}`,
         name: '',

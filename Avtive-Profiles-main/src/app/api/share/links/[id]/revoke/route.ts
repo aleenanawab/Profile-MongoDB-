@@ -20,7 +20,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    return NextResponse.json({ success: true, link: result.link }, { status: 200 });
+    return NextResponse.json(
+      {
+        success: true,
+        link: result.link,
+        historyRecorded: result.historyRecorded ?? true,
+        ...(result.historyError ? { historyError: result.historyError } : {})
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Share Link Revoke Error:', error);
     return NextResponse.json({ error: 'Failed to revoke share link.' }, { status: 500 });

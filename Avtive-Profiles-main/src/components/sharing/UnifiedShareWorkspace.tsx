@@ -23,7 +23,8 @@ import {
   Clock,
   BookmarkPlus,
   Contact,
-  AlertCircle
+  AlertCircle,
+  History
 } from 'lucide-react';
 import { buildProfileUrlForMode } from '@/lib/profileScreenMode';
 import { PrivacyTier, ProfileData } from '@/types/profile';
@@ -57,8 +58,10 @@ import { RecipientPickerModal } from './RecipientPickerModal';
 import { LiveSharePreview } from './LiveSharePreview';
 import { LinkQrReadyPanel } from './LinkQrReadyPanel';
 import { SharedLinksTab } from './SharedLinksTab';
+import { ShareHistoryTab } from './ShareHistoryTab';
 import { ShareTemplatesTab } from './ShareTemplatesTab';
 import { InPersonShareView } from './InPersonShareView';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 export interface UnifiedShareWorkspaceProps {
   isOpen?: boolean;
@@ -78,7 +81,7 @@ export interface UnifiedShareWorkspaceProps {
   isDark?: boolean;
 }
 
-type MainTab = 'share' | 'links' | 'templates';
+type MainTab = 'share' | 'links' | 'history' | 'templates';
 type ShareSubView = 'configure' | 'recipients' | 'ready' | 'in_person';
 
 export function UnifiedShareWorkspace({
@@ -493,6 +496,12 @@ export function UnifiedShareWorkspace({
 
         setGeneratedLink(data.link);
         setLinksRefreshSignal((s) => s + 1);
+        if (data.historyRecorded === false) {
+          setStatusFeedback({
+            type: 'error',
+            text: `Share link created, but activity history failed to save (${data.historyError || 'database error'}).`
+          });
+        }
         return data.link;
       } catch (err: unknown) {
         setStatusFeedback({
@@ -529,7 +538,25 @@ export function UnifiedShareWorkspace({
       await navigator.clipboard.writeText(url);
       setCopiedDirect(true);
       onCopySuccess?.();
-      setStatusFeedback({ type: 'success', text: 'Secure share link created and copied!' });
+      const trackRes = await trackOwnerShareEvent({
+        profileId: activeProfile.id,
+        shareLinkId: link.id,
+        eventType: 'link_copied',
+        channel: 'link',
+        targetType: 'share_link',
+        selectedFields: link.selectedFields,
+        selectedFieldsCount: link.selectedFields.length,
+        recipientNames: link.recipients.map((r) => r.name).filter(Boolean)
+      });
+      setLinksRefreshSignal((s) => s + 1);
+      if (!trackRes.recorded) {
+        setStatusFeedback({
+          type: 'error',
+          text: `Link copied, but Share History failed to record (${trackRes.error || 'error'}).`
+        });
+      } else {
+        setStatusFeedback({ type: 'success', text: 'Secure share link created and copied!' });
+      }
       setTimeout(() => setCopiedDirect(false), 2400);
     } catch {
       setSubView('ready');
@@ -555,6 +582,25 @@ export function UnifiedShareWorkspace({
           title: link.title,
           url
         });
+        const trackRes = await trackOwnerShareEvent({
+          profileId: activeProfile.id,
+          shareLinkId: link.id,
+          eventType: 'native_shared',
+          channel: 'native',
+          targetType: 'share_link',
+          selectedFields: link.selectedFields,
+          selectedFieldsCount: link.selectedFields.length,
+          recipientNames: link.recipients.map((r) => r.name).filter(Boolean)
+        });
+        setLinksRefreshSignal((s) => s + 1);
+        if (!trackRes.recorded) {
+          setStatusFeedback({
+            type: 'error',
+            text: `Shared via device sheet, but Share History failed to record (${trackRes.error || 'error'}).`
+          });
+        } else {
+          setStatusFeedback({ type: 'success', text: 'Shared via device share sheet!' });
+        }
         return;
       } catch (err: any) {
         if (err?.name === 'AbortError') return;
@@ -641,7 +687,9 @@ export function UnifiedShareWorkspace({
                   ? 'Share Profile'
                   : activeTab === 'links'
                     ? 'Shared Links'
-                    : 'Share Templates'}
+                    : activeTab === 'history'
+                      ? 'Share History'
+                      : 'Share Templates'}
               </h1>
 
               <div className="w-[68px] shrink-0" aria-hidden="true" />
@@ -726,11 +774,12 @@ export function UnifiedShareWorkspace({
               )}
             </div>
 
-            {/* Row 3: 3 Primary Tabs (Share | Shared Links | Templates) */}
-            <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+            {/* Row 3: 4 Primary Tabs (Share | Shared Links | Share History | Templates) */}
+            <div className="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
               {[
                 { id: 'share' as const, label: 'Share', icon: Share2 },
                 { id: 'links' as const, label: 'Shared Links', icon: Link2 },
+                { id: 'history' as const, label: 'Share History', icon: History },
                 { id: 'templates' as const, label: 'Templates', icon: Layers }
               ].map((t) => {
                 const Icon = t.icon;
@@ -740,7 +789,7 @@ export function UnifiedShareWorkspace({
                     key={t.id}
                     type="button"
                     onClick={() => setActiveTab(t.id)}
-                    className={`py-2 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${active
+                    className={`py-2 px-1.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer ${active
                       ? 'bg-black text-white dark:bg-white dark:text-black shadow-2xs'
                       : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                       }`}
@@ -1115,10 +1164,28 @@ export function UnifiedShareWorkspace({
 
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     const scoped = sanitizeProfileForShare(activeProfile, { selectedFields });
                     downloadVCard(scoped);
-                    setStatusFeedback({ type: 'success', text: 'Scoped vCard downloaded (Never Share excluded).' });
+                    const trackRes = await trackOwnerShareEvent({
+                      profileId: activeProfile.id,
+                      shareLinkId: generatedLink?.id,
+                      eventType: 'vcard_downloaded',
+                      channel: 'vcard',
+                      targetType: generatedLink ? 'share_link' : 'public_profile',
+                      selectedFields,
+                      selectedFieldsCount: selectedFields.length,
+                      recipientNames: selectedRecipients.map((r) => r.name).filter(Boolean)
+                    });
+                    setLinksRefreshSignal((s) => s + 1);
+                    if (!trackRes.recorded) {
+                      setStatusFeedback({
+                        type: 'error',
+                        text: `vCard downloaded, but Share History failed to record (${trackRes.error || 'error'}).`
+                      });
+                    } else {
+                      setStatusFeedback({ type: 'success', text: 'Scoped vCard downloaded (Never Share excluded).' });
+                    }
                   }}
                   className="flex flex-col items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
                 >
@@ -1140,6 +1207,58 @@ export function UnifiedShareWorkspace({
                   <span className="text-[10px] font-semibold text-zinc-700 dark:text-zinc-200">Send via...</span>
                 </button>
               </div>
+
+              {/* Direct Public Profile URL quick copy & track */}
+              {activeProfile.profileVisibility !== 'private' && (
+                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-2 text-[11px]">
+                  <div className="min-w-0">
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-200 block">
+                      Direct Public Profile URL
+                    </span>
+                    <span className="font-mono text-zinc-500 dark:text-zinc-400 truncate block">
+                      /profile/{activeProfile.slug || activeProfile.id}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const identifier = activeProfile.slug || activeProfile.id;
+                      const url =
+                        typeof window !== 'undefined'
+                          ? `${window.location.origin}/profile/${identifier}`
+                          : `/profile/${identifier}`;
+                      try {
+                        await navigator.clipboard.writeText(url);
+                        onCopySuccess?.();
+                        const trackRes = await trackOwnerShareEvent({
+                          profileId: activeProfile.id,
+                          eventType: 'link_copied',
+                          channel: 'link',
+                          targetType: 'public_profile'
+                        });
+                        setLinksRefreshSignal((s) => s + 1);
+                        if (!trackRes.recorded) {
+                          setStatusFeedback({
+                            type: 'error',
+                            text: `Public URL copied, but Share History failed to record (${trackRes.error || 'error'}).`
+                          });
+                        } else {
+                          setStatusFeedback({
+                            type: 'success',
+                            text: 'Public profile link copied and logged to Share History!'
+                          });
+                        }
+                      } catch {
+                        setStatusFeedback({ type: 'error', text: 'Clipboard access blocked.' });
+                      }
+                    }}
+                    className="min-h-[34px] px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-200 inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Public URL</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Grouped Individual Information Controls */}
@@ -1382,7 +1501,18 @@ export function UnifiedShareWorkspace({
           </div>
         )}
 
-        {/* TAB 3: SHARE TEMPLATES */}
+        {/* TAB 3: CENTRALIZED SHARE HISTORY */}
+        {subView === 'configure' && activeTab === 'history' && (
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111111] overflow-hidden">
+            <ShareHistoryTab
+              refreshSignal={linksRefreshSignal}
+              isAuthRequired={isAuthRequired}
+              onAuthRequired={markAuthRequired}
+            />
+          </div>
+        )}
+
+        {/* TAB 4: SHARE TEMPLATES */}
         {subView === 'configure' && activeTab === 'templates' && (
           <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111111] overflow-hidden">
             <ShareTemplatesTab

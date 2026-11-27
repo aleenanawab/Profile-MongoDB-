@@ -5,6 +5,7 @@ import { Award, Plus, X, ExternalLink } from 'lucide-react';
 import { ProfileData, CertificationItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface CertificationsSectionProps {
   profile: ProfileData;
@@ -78,7 +79,26 @@ export function CertificationsSection({
     setErrorMessage(undefined);
   };
 
-  const hasCerts = certsDraft.length > 0;
+  const visibleCerts = (isEditing || canEdit)
+    ? certsDraft
+    : certsDraft.filter((c) => c.visible !== false);
+  const hasCerts = visibleCerts.length > 0;
+
+  const handleToggleCertVisibility = async (id: string) => {
+    const next = certsDraft.map((c) =>
+      c.id === id ? { ...c, visible: c.visible === false ? true : false } : c
+    );
+    setCertsDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('certifications', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ certifications: next });
+      } catch (err) {
+        console.error('Failed to persist certification visibility:', err);
+      }
+    }
+  };
 
   if (!hasCerts && !canEdit && !isEditing) {
     return null;
@@ -141,10 +161,16 @@ export function CertificationsSection({
 
       {hasCerts ? (
         <div className="space-y-3">
-          {certsDraft.map((cert) => (
+          {visibleCerts.map((cert) => {
+            const isCertVisible = cert.visible !== false;
+            return (
             <div
               key={cert.id}
-              className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} shadow-2xs relative`}
+              className={`p-4 rounded-2xl border shadow-2xs relative ${
+                !isCertVisible
+                  ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                  : `${theme.cardBg} ${theme.cardBorder}`
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               {isEditing ? (
@@ -247,18 +273,27 @@ export function CertificationsSection({
                       <h3 className={`text-xs @md:text-sm font-bold break-words ${theme.textPrimary}`}>
                         {cert.name || (cert as any).title}
                       </h3>
-                      {cert.url && (
-                        <a
-                          href={cert.url.startsWith('http://') || cert.url.startsWith('https://') ? cert.url : `https://${cert.url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`inline-flex items-center gap-1 text-[11px] font-semibold hover:underline shrink-0 ${theme.accentText}`}
-                          title="Verify credential"
-                        >
-                          <span>Verify</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {cert.url && (
+                          <a
+                            href={cert.url.startsWith('http://') || cert.url.startsWith('https://') ? cert.url : `https://${cert.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-flex items-center gap-1 text-[11px] font-semibold hover:underline shrink-0 ${theme.accentText}`}
+                            title="Verify credential"
+                          >
+                            <span>Verify</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                        {canEdit && !isEditing && (
+                          <VisibilityEyeButton
+                            visible={isCertVisible}
+                            label={cert.name || (cert as any).title || 'certification'}
+                            onToggle={() => handleToggleCertVisibility(cert.id)}
+                          />
+                        )}
+                      </div>
                     </div>
 
                     <p className={`text-[11px] font-semibold ${theme.accentText}`}>
@@ -280,7 +315,8 @@ export function CertificationsSection({
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
 
           {isEditing && (
             <button

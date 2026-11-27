@@ -7,6 +7,7 @@ import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from '@/components/ui/formControls';
 import { SearchableCombobox } from '@/components/forms/SearchableCombobox';
 import { POPULAR_SKILLS } from '@/data/skillsDataset';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 export interface SkillsSectionProps {
   profile: ProfileData;
@@ -51,7 +52,8 @@ const normalizeSkillItems = (rawSkills?: any[]): SkillItem[] => {
         name: s?.name || '',
         category: s?.category || 'Industry Knowledge',
         level: s?.level || 'Intermediate',
-        pinned: Boolean(s?.pinned)
+        pinned: Boolean(s?.pinned),
+        visible: s?.visible !== false
       };
     })
     .filter((s) => typeof s.name === 'string' && s.name.trim().length > 0);
@@ -174,6 +176,30 @@ export function SkillsSection({
   };
 
   const sortedSkillsForView = [...skillsDraft].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+  const visibleSkillsForView = canEdit
+    ? sortedSkillsForView
+    : sortedSkillsForView.filter((s) => s.visible !== false);
+
+  const handleToggleSkillVisibility = async (skill: SkillItem) => {
+    const next = skillsDraft.map((s) => {
+      const matches = (skill.id && s.id === skill.id) || s.name === skill.name;
+      return matches ? { ...s, visible: s.visible === false ? true : false } : s;
+    });
+    setSkillsDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('skills', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ skills: next });
+      } catch (err) {
+        console.error('Failed to persist skill visibility:', err);
+      }
+    }
+  };
+
+  if (!isEditing && !canEdit && visibleSkillsForView.length === 0) {
+    return null;
+  }
 
   return (
     <section
@@ -311,25 +337,40 @@ export function SkillsSection({
             </div>
           ))}
         </div>
-      ) : hasSkills ? (
+      ) : visibleSkillsForView.length > 0 ? (
         <div className="flex flex-wrap gap-2 pt-1">
-          {sortedSkillsForView.map((skill, idx) => (
-            <span
-              key={skill.id || `view-skill-${idx}`}
-              className={`inline-flex items-center gap-1.5 max-w-full break-words px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold shadow-xs transition-all ${skill.pinned
-                ? 'bg-amber-500/15 border-amber-500/35 text-amber-500 dark:text-amber-300 ring-1 ring-amber-500/20'
-                : `${theme.badgeBg} ${theme.badgeText}`
+          {visibleSkillsForView.map((skill, idx) => {
+            const isSkillVisible = skill.visible !== false;
+            return (
+              <span
+                key={skill.id || `view-skill-${idx}`}
+                className={`inline-flex items-center gap-1.5 max-w-full break-words px-3 py-1.5 min-h-[36px] rounded-xl border text-xs font-semibold shadow-xs transition-all ${
+                  !isSkillVisible
+                    ? 'border-dashed border-amber-500/45 bg-amber-500/[0.06] text-amber-800 dark:text-amber-300 opacity-75'
+                    : skill.pinned
+                      ? 'bg-amber-500/15 border-amber-500/35 text-amber-500 dark:text-amber-300 ring-1 ring-amber-500/20'
+                      : `${theme.badgeBg} ${theme.badgeText}`
                 }`}
-            >
-              {skill.pinned && <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />}
-              <span>{skill.name}</span>
-              {skill.level && (
-                <span className={`text-[10px] font-mono ${theme.textMuted} font-normal`}>
-                  • {skill.level}
-                </span>
-              )}
-            </span>
-          ))}
+              >
+                {skill.pinned && <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />}
+                <span>{skill.name}</span>
+                {skill.level && (
+                  <span className={`text-[10px] font-mono ${theme.textMuted} font-normal`}>
+                    • {skill.level}
+                  </span>
+                )}
+                {canEdit && (
+                  <VisibilityEyeButton
+                    visible={isSkillVisible}
+                    label={skill.name}
+                    showHiddenBadge={false}
+                    onToggle={() => handleToggleSkillVisibility(skill)}
+                    className="ml-1"
+                  />
+                )}
+              </span>
+            );
+          })}
         </div>
       ) : (
         <div className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center`}>
@@ -423,7 +464,27 @@ export function ServicesSection({
     setErrorMessage(undefined);
   };
 
-  const hasServices = servicesDraft.length > 0;
+  const visibleServices = (isEditing || canEdit)
+    ? servicesDraft
+    : servicesDraft.filter((s) => s.visible !== false);
+  const hasServices = visibleServices.length > 0;
+
+  const handleToggleServiceVisibility = async (id: string) => {
+    const next = servicesDraft.map((s) =>
+      s.id === id ? { ...s, visible: s.visible === false ? true : false } : s
+    );
+    setServicesDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('services', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ services: next });
+      } catch (err) {
+        console.error('Failed to persist service visibility:', err);
+      }
+    }
+  };
+
   if (!hasServices && !canEdit && !isEditing) {
     return null;
   }
@@ -487,10 +548,16 @@ export function ServicesSection({
       </div>
 
       <div className="grid grid-cols-1 @md:grid-cols-2 gap-3" onClick={(e) => isEditing && e.stopPropagation()}>
-        {servicesDraft.map((service) => (
+        {visibleServices.map((service) => {
+          const isServiceVisible = service.visible !== false;
+          return (
           <div
             key={service.id}
-            className={`min-w-0 p-4 rounded-xl ${theme.cardBg} border ${theme.cardBorder} ${theme.hoverBorder} space-y-2 shadow-xs transition-all`}
+            className={`min-w-0 p-4 rounded-xl border space-y-2 shadow-xs transition-all ${
+              !isServiceVisible
+                ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                : `${theme.cardBg} ${theme.cardBorder} ${theme.hoverBorder}`
+            }`}
           >
             {isEditing ? (
               <div className="space-y-2.5">
@@ -532,11 +599,20 @@ export function ServicesSection({
                   <span className={`text-xs font-bold ${theme.textPrimary}`}>
                     {service.title}
                   </span>
-                  {service.badge && (
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-mono shrink-0`}>
-                      {service.badge}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {service.badge && (
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} font-mono shrink-0`}>
+                        {service.badge}
+                      </span>
+                    )}
+                    {canEdit && !isEditing && (
+                      <VisibilityEyeButton
+                        visible={isServiceVisible}
+                        label={service.title || 'service'}
+                        onToggle={() => handleToggleServiceVisibility(service.id)}
+                      />
+                    )}
+                  </div>
                 </div>
                 {service.description && (
                   <p className={`text-xs ${theme.textSecondary} leading-relaxed pt-0.5`}>
@@ -558,7 +634,8 @@ export function ServicesSection({
               </>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {!hasServices && (canEdit || isEditing) && (
           <div className={`col-span-1 @md:col-span-2 p-5 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center`}>

@@ -28,7 +28,7 @@ import {
   buildEventDedupKey
 } from '@/lib/sharing/crypto';
 import {
-  recordShareEvent,
+  recordShareEventSafe,
   hasRecentDedupEvent,
   listEventsForShareLink
 } from './shareEvents';
@@ -161,6 +161,8 @@ export async function createShareLink(
   success: boolean;
   link?: ShareLinkClientView;
   blockedNeverShare?: string[];
+  historyRecorded?: boolean;
+  historyError?: string;
   error?: string;
   status: number;
 }> {
@@ -281,18 +283,27 @@ export async function createShareLink(
 
   await col.insertOne(doc as any);
 
-  await recordShareEvent({
+  const eventResult = await recordShareEventSafe({
     shareLinkId: linkId,
     ownerUserId: params.ownerUserId,
     profileId: profile.id,
     eventType: 'share_created',
-    channel: doc.shareChannel
-  }).catch(() => { });
+    actorType: 'owner',
+    targetType: 'share_link',
+    channel: doc.shareChannel,
+    selectedFields: authorizedFields,
+    selectedFieldsCount: authorizedFields.length,
+    recipientNames: cleanRecipients.map((r) => r.name),
+    profileName: doc.profileName,
+    profileSlug: doc.profileSlug
+  });
 
   return {
     success: true,
     link: toShareLinkClientView(doc, params.originUrl),
     blockedNeverShare,
+    historyRecorded: eventResult.recorded,
+    ...(eventResult.error ? { historyError: eventResult.error } : {}),
     status: 201
   };
 }
@@ -400,6 +411,8 @@ export async function updateShareLinkForOwner(
 ): Promise<{
   success: boolean;
   link?: ShareLinkClientView;
+  historyRecorded?: boolean;
+  historyError?: string;
   error?: string;
   status: number;
 }> {
@@ -490,16 +503,27 @@ export async function updateShareLinkForOwner(
     return { success: false, error: 'Failed to update share link.', status: 500 };
   }
 
-  await recordShareEvent({
+  const updatedRecord = mapDocToShareLinkRecord(updated);
+  const eventResult = await recordShareEventSafe({
     shareLinkId,
     ownerUserId,
     profileId: String(existingDoc.profileId),
-    eventType: 'access_updated'
-  }).catch(() => { });
+    eventType: 'access_updated',
+    actorType: 'owner',
+    targetType: 'share_link',
+    channel: updatedRecord.shareChannel || 'link',
+    selectedFields: updatedRecord.selectedFields,
+    selectedFieldsCount: updatedRecord.selectedFields.length,
+    recipientNames: updatedRecord.recipients.map((r) => r.name),
+    profileName: updatedRecord.profileName,
+    profileSlug: updatedRecord.profileSlug
+  });
 
   return {
     success: true,
-    link: toShareLinkClientView(mapDocToShareLinkRecord(updated), originUrl),
+    link: toShareLinkClientView(updatedRecord, originUrl),
+    historyRecorded: eventResult.recorded,
+    ...(eventResult.error ? { historyError: eventResult.error } : {}),
     status: 200
   };
 }
@@ -511,6 +535,8 @@ export async function revokeShareLinkForOwner(
 ): Promise<{
   success: boolean;
   link?: ShareLinkClientView;
+  historyRecorded?: boolean;
+  historyError?: string;
   error?: string;
   status: number;
 }> {
@@ -547,18 +573,34 @@ export async function revokeShareLinkForOwner(
     return { success: false, error: 'Failed to revoke share link.', status: 500 };
   }
 
+  const updatedRecord = mapDocToShareLinkRecord(updated);
+  let historyRecorded = true;
+  let historyError: string | undefined;
+
   if (!existingDoc.revoked) {
-    await recordShareEvent({
+    const eventResult = await recordShareEventSafe({
       shareLinkId,
       ownerUserId,
       profileId: String(existingDoc.profileId),
-      eventType: 'link_revoked'
-    }).catch(() => { });
+      eventType: 'link_revoked',
+      actorType: 'owner',
+      targetType: 'share_link',
+      channel: updatedRecord.shareChannel || 'link',
+      selectedFields: updatedRecord.selectedFields,
+      selectedFieldsCount: updatedRecord.selectedFields.length,
+      recipientNames: updatedRecord.recipients.map((r) => r.name),
+      profileName: updatedRecord.profileName,
+      profileSlug: updatedRecord.profileSlug
+    });
+    historyRecorded = eventResult.recorded;
+    historyError = eventResult.error;
   }
 
   return {
     success: true,
-    link: toShareLinkClientView(mapDocToShareLinkRecord(updated), originUrl),
+    link: toShareLinkClientView(updatedRecord, originUrl),
+    historyRecorded,
+    ...(historyError ? { historyError } : {}),
     status: 200
   };
 }
@@ -627,12 +669,20 @@ export async function consumeAndResolveShareLink(
         { id: record.id, status: { $ne: 'expired' } },
         { $set: { status: 'expired', updatedAt: nowIso } }
       );
-      await recordShareEvent({
+      await recordShareEventSafe({
         shareLinkId: record.id,
         ownerUserId: record.ownerUserId,
         profileId: record.profileId,
-        eventType: 'link_expired'
-      }).catch(() => { });
+        eventType: 'link_expired',
+        actorType: 'system',
+        targetType: 'share_link',
+        channel: record.shareChannel || 'link',
+        selectedFields: record.selectedFields,
+        selectedFieldsCount: record.selectedFields.length,
+        recipientNames: record.recipients.map((r) => r.name),
+        profileName: record.profileName,
+        profileSlug: record.profileSlug
+      });
     }
     return { outcome: 'expired' };
   }
@@ -702,23 +752,39 @@ export async function consumeAndResolveShareLink(
     const updatedRecord = mapDocToShareLinkRecord(consumedDoc);
     remainingViews = Math.max(0, (updatedRecord.accessLimit || 1) - updatedRecord.accessCount);
 
-    await recordShareEvent({
+    await recordShareEventSafe({
       shareLinkId: record.id,
       ownerUserId: record.ownerUserId,
       profileId: record.profileId,
       eventType,
-      channel
-    }).catch(() => { });
+      actorType: 'visitor',
+      targetType: 'share_link',
+      channel,
+      selectedFields: record.selectedFields,
+      selectedFieldsCount: record.selectedFields.length,
+      recipientNames: record.recipients.map((r) => r.name),
+      profileName: record.profileName,
+      profileSlug: record.profileSlug
+    });
 
     if (remainingViews === 0) {
-      await col.updateOne({ id: record.id }, { $set: { status: 'expired' } }).catch(() => { });
-      await recordShareEvent({
+      await col.updateOne({ id: record.id }, { $set: { status: 'expired' } }).catch((err) => {
+        console.error('[shareLinks] Failed to mark 1-view link expired:', err instanceof Error ? err.message : String(err));
+      });
+      await recordShareEventSafe({
         shareLinkId: record.id,
         ownerUserId: record.ownerUserId,
         profileId: record.profileId,
         eventType: 'link_expired',
-        channel
-      }).catch(() => { });
+        actorType: 'system',
+        targetType: 'share_link',
+        channel,
+        selectedFields: record.selectedFields,
+        selectedFieldsCount: record.selectedFields.length,
+        recipientNames: record.recipients.map((r) => r.name),
+        profileName: record.profileName,
+        profileSlug: record.profileSlug
+      });
     }
   } else {
     // Unlimited views (until revoked or 7d expiry): apply short deduplication window to avoid inflating analytics on accidental double-hits
@@ -751,14 +817,21 @@ export async function consumeAndResolveShareLink(
         return { outcome: 'expired' };
       }
 
-      await recordShareEvent({
+      await recordShareEventSafe({
         shareLinkId: record.id,
         ownerUserId: record.ownerUserId,
         profileId: record.profileId,
         eventType,
+        actorType: 'visitor',
+        targetType: 'share_link',
         channel,
-        dedupKey
-      }).catch(() => { });
+        dedupKey,
+        selectedFields: record.selectedFields,
+        selectedFieldsCount: record.selectedFields.length,
+        recipientNames: record.recipients.map((r) => r.name),
+        profileName: record.profileName,
+        profileSlug: record.profileSlug
+      });
     } else {
       const validDoc = await col.findOne(checkFilter);
       if (!validDoc) {

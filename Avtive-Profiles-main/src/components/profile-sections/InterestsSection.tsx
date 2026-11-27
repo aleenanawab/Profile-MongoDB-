@@ -23,6 +23,7 @@ export function InterestsSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: InterestsSectionProps) {
   const interests: InterestItem[] = Array.isArray(profile.interests)
@@ -45,6 +46,9 @@ export function InterestsSection({
       emptyPromptText="No interests added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ interests: items });
+      }}
       createNewItem={() => ({
         id: `int-${Date.now()}`,
         name: '',

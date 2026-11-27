@@ -77,7 +77,9 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         link: result.link,
-        blockedNeverShare: result.blockedNeverShare || []
+        blockedNeverShare: result.blockedNeverShare || [],
+        historyRecorded: result.historyRecorded ?? true,
+        ...(result.historyError ? { historyError: result.historyError } : {})
       },
       { status: 201 }
     );

@@ -5,6 +5,7 @@ import { Pencil } from 'lucide-react';
 import { ProfileData } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 import { getAbout } from '@/lib/profileGetters';
 
@@ -35,6 +36,7 @@ export function AboutSection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const hasBio = Boolean(getAbout(profile) || profile.tagline);
+  const isBioVisible = profile.sharingSettings?.bio !== false && profile.sectionVisibility?.personalDetails !== false;
   const isDirty =
     taglineDraft !== (profile.tagline || '') ||
     aboutDraft !== getAbout(profile);
@@ -57,9 +59,21 @@ export function AboutSection({
     }
   }, [profile.id, profile.tagline, profile.about, profile.fullBio, isEditing, isDirty]);
 
-  if (!hasBio && !canEdit && !isEditing) {
+  if ((!hasBio || !isBioVisible) && !canEdit && !isEditing) {
     return null;
   }
+
+  const handleToggleBioVisibility = async () => {
+    const nextBioVisible = profile.sharingSettings?.bio === false;
+    const nextSharing = {
+      ...(profile.sharingSettings || {}),
+      bio: nextBioVisible
+    };
+    onUpdateField?.('sharingSettings', nextSharing);
+    if (onSavePartial) {
+      await onSavePartial({ sharingSettings: nextSharing }).catch(() => {});
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -104,16 +118,25 @@ export function AboutSection({
         }`}
       title={canEdit && !isEditing ? 'Click to edit Story & Bio' : undefined}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h2 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>
           About
         </h2>
-        {canEdit && !isEditing && (
-          <span className="opacity-0 group-hover/about:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
-            <Pencil className="w-2.5 h-2.5" />
-            Edit Story
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {canEdit && !isEditing && (
+            <VisibilityEyeButton
+              visible={profile.sharingSettings?.bio !== false}
+              label="About description"
+              onToggle={handleToggleBioVisibility}
+            />
+          )}
+          {canEdit && !isEditing && (
+            <span className="opacity-0 group-hover/about:opacity-100 transition-opacity text-[10px] font-mono font-semibold text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
+              <Pencil className="w-2.5 h-2.5" />
+              Edit Story
+            </span>
+          )}
+        </div>
       </div>
 
       {isEditing ? (
@@ -155,7 +178,7 @@ export function AboutSection({
           />
         </div>
       ) : hasBio ? (
-        <div className="space-y-2 min-w-0">
+        <div className={`space-y-2 min-w-0 transition-opacity ${canEdit && profile.sharingSettings?.bio === false ? 'opacity-55' : ''}`}>
           {profile.tagline && (
             <p className={`text-xs @md:text-sm font-medium italic break-words ${theme.accentText}`}>
               &ldquo;{profile.tagline}&rdquo;

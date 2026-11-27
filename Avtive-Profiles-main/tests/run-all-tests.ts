@@ -20,7 +20,8 @@ const testFiles = [
   'tests/oauth-and-stabilization.test.ts',
   'tests/background-and-media-features.test.ts',
   'tests/phase1-sharing-system.test.ts',
-  'tests/phase2-editor-redesign.test.tsx'
+  'tests/phase2-editor-redesign.test.tsx',
+  'tests/share-history-and-p1-p2-p3.test.tsx'
 ];
 
 console.log('\n===============================================================');

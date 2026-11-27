@@ -5,6 +5,7 @@ import { Plus, X, GraduationCap } from 'lucide-react';
 import { ProfileData, EducationItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface EducationSectionProps {
   profile: ProfileData;
@@ -78,7 +79,26 @@ export function EducationSection({
     setErrorMessage(undefined);
   };
 
-  const hasEducation = educationDraft.length > 0;
+  const visibleEducation = (isEditing || canEdit)
+    ? educationDraft
+    : educationDraft.filter((edu) => edu.visible !== false);
+  const hasEducation = visibleEducation.length > 0;
+
+  const handleToggleEducationVisibility = async (id: string) => {
+    const next = educationDraft.map((item) =>
+      item.id === id ? { ...item, visible: item.visible === false ? true : false } : item
+    );
+    setEducationDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('education', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ education: next });
+      } catch (err) {
+        console.error('Failed to persist education visibility:', err);
+      }
+    }
+  };
 
   if (!hasEducation && !canEdit && !isEditing) {
     return null;
@@ -139,10 +159,16 @@ export function EducationSection({
 
       {hasEducation ? (
         <div className="space-y-3">
-          {educationDraft.map((edu) => (
+          {visibleEducation.map((edu) => {
+            const isItemVisible = edu.visible !== false;
+            return (
             <div
               key={edu.id}
-              className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} space-y-2.5 shadow-2xs relative`}
+              className={`p-4 rounded-2xl border space-y-2.5 shadow-2xs relative ${
+                !isItemVisible
+                  ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                  : `${theme.cardBg} ${theme.cardBorder}`
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               {isEditing ? (
@@ -257,11 +283,20 @@ export function EducationSection({
                       </p>
                     </div>
 
-                    {(edu.period || edu.year || edu.startYear || edu.endYear) && (
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.cardBorder} shrink-0 font-mono`}>
-                        {edu.period || `${edu.startYear || ''} - ${edu.endYear || ''}` || edu.year}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {(edu.period || edu.year || edu.startYear || edu.endYear) && (
+                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.cardBorder} shrink-0 font-mono`}>
+                          {edu.period || `${edu.startYear || ''} - ${edu.endYear || ''}` || edu.year}
+                        </span>
+                      )}
+                      {canEdit && !isEditing && (
+                        <VisibilityEyeButton
+                          visible={isItemVisible}
+                          label={edu.institution || (edu as any).school || 'education'}
+                          onToggle={() => handleToggleEducationVisibility(edu.id)}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   {edu.grade && (
@@ -284,7 +319,8 @@ export function EducationSection({
                 </>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center space-y-2`}>

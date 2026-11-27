@@ -5,6 +5,7 @@ import { ArrowRight, Pencil, Plus, X, FolderGit2, ExternalLink } from 'lucide-re
 import { ProfileData, ProjectItem } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { FormLabel, FormInput, FormTextarea, SectionSaveBar } from '@/components/ui/formControls';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface PortfolioSectionProps {
   profile: ProfileData;
@@ -83,7 +84,27 @@ export function PortfolioSection({
   const effectiveProjects = isEditing
     ? projectsDraft
     : (Array.isArray(profile.projects) && profile.projects.length > 0 ? profile.projects : projectsDraft);
-  const hasProjects = effectiveProjects.length > 0;
+  const visibleProjects = (isEditing || canEdit)
+    ? effectiveProjects
+    : effectiveProjects.filter((p) => p.visible !== false);
+  const hasProjects = visibleProjects.length > 0;
+
+  const handleToggleProjectVisibility = async (id: string) => {
+    const base = effectiveProjects;
+    const next = base.map((p) =>
+      p.id === id ? { ...p, visible: p.visible === false ? true : false } : p
+    );
+    setProjectsDraft(next);
+    setSnapshot(next);
+    onUpdateField?.('projects', next);
+    if (onSavePartial) {
+      try {
+        await onSavePartial({ projects: next });
+      } catch (err) {
+        console.error('Failed to persist project visibility:', err);
+      }
+    }
+  };
 
   if (!hasProjects && !canEdit && !isEditing) {
     return null;
@@ -159,7 +180,9 @@ export function PortfolioSection({
       {/* Visual Project Cards */}
       {hasProjects ? (
         <div className="space-y-4">
-          {effectiveProjects.map((project) => (
+          {visibleProjects.map((project) => {
+            const isProjectVisible = project.visible !== false;
+            return (
             <div
               key={project.id}
               onClick={() => {
@@ -167,8 +190,11 @@ export function PortfolioSection({
                   onSelectProject(project);
                 }
               }}
-              className={`group/card relative rounded-2xl overflow-hidden ${theme.cardBg} border ${theme.cardBorder} ${isEditing ? '' : 'cursor-pointer ' + theme.hoverBorder
-                } transition-all shadow-2xs hover:shadow-md`}
+              className={`group/card relative rounded-2xl overflow-hidden border ${
+                !isProjectVisible
+                  ? 'border-dashed border-amber-500/45 bg-amber-500/[0.04] opacity-70'
+                  : `${theme.cardBg} ${theme.cardBorder} ${isEditing ? '' : theme.hoverBorder}`
+              } ${isEditing ? '' : 'cursor-pointer'} transition-all shadow-2xs hover:shadow-md`}
             >
               {isEditing ? (
                 /* Editable Project Item */
@@ -292,11 +318,20 @@ export function PortfolioSection({
                             {project.category}
                           </span>
                         )}
-                        {(project.startDate || project.endDate) && (
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.subCardBorder} shrink-0 font-mono ml-auto`}>
-                            {project.startDate} {project.endDate ? `- ${project.endDate}` : ''}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                          {(project.startDate || project.endDate) && (
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${theme.badgeBg} ${theme.badgeText} border ${theme.subCardBorder} shrink-0 font-mono`}>
+                              {project.startDate} {project.endDate ? `- ${project.endDate}` : ''}
+                            </span>
+                          )}
+                          {canEdit && !isEditing && (
+                            <VisibilityEyeButton
+                              visible={isProjectVisible}
+                              label={project.title || 'project'}
+                              onToggle={() => handleToggleProjectVisibility(project.id)}
+                            />
+                          )}
+                        </div>
                       </div>
 
                       <h3 className={`text-base font-bold ${theme.textPrimary} group-hover:${theme.accentText} transition-colors`}>
@@ -335,7 +370,8 @@ export function PortfolioSection({
                 </>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className={`p-4 rounded-2xl ${theme.cardBg} border ${theme.cardBorder} text-center space-y-2`}>

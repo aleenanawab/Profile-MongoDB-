@@ -6,6 +6,7 @@ import {
   SHAREABLE_FIELDS
 } from './presets';
 import { normalizeSectionKey } from '@/lib/sections';
+import { filterVisibleItems } from '@/lib/privacy/audience';
 
 export interface ShareSanitizeOptions {
   selectedFields: string[];
@@ -176,7 +177,7 @@ export function sanitizeProfileForShare(
   if (!nextSharing.contactInfo) {
     cloned.customContacts = [];
   } else if (Array.isArray(cloned.customContacts)) {
-    cloned.customContacts = cloned.customContacts.filter((c) => {
+    cloned.customContacts = filterVisibleItems(cloned.customContacts).filter((c) => {
       if (!nextSharing.phone && (c.type === 'phone' || c.type === 'whatsapp')) return false;
       if (!nextSharing.email && c.type === 'email') return false;
       if (!nextSharing.website && c.type === 'website') return false;
@@ -191,54 +192,56 @@ export function sanitizeProfileForShare(
     cloned.socialLinks = [];
     cloned.links = [];
   } else {
-    if (Array.isArray(cloned.socials)) {
-      cloned.socials = cloned.socials.filter((s) => s && s.visible !== false);
-    }
-    if (Array.isArray(cloned.socialLinks)) {
-      cloned.socialLinks = cloned.socialLinks.filter((s) => s && s.visible !== false);
-    }
+    cloned.socials = filterVisibleItems(cloned.socials);
+    cloned.socialLinks = filterVisibleItems(cloned.socialLinks);
   }
 
-  // Career & extended sections
-  if (!nextSharing.skills) cloned.skills = [];
-  if (!nextSharing.services) cloned.services = [];
+  // Career & extended sections (filter individual visible !== false items consistently)
+  cloned.skills = nextSharing.skills ? filterVisibleItems(cloned.skills) : [];
+  cloned.services = nextSharing.services ? filterVisibleItems(cloned.services) : [];
   if (!nextSharing.experience) {
     cloned.experiences = [];
     cloned.experience = [];
+  } else {
+    cloned.experiences = filterVisibleItems(cloned.experiences);
+    cloned.experience = filterVisibleItems(cloned.experience);
   }
-  if (!nextSharing.education) cloned.education = [];
-  if (!nextSharing.projects) cloned.projects = [];
-  if (!nextSharing.certifications) cloned.certifications = [];
+  cloned.education = nextSharing.education ? filterVisibleItems(cloned.education) : [];
+  cloned.projects = nextSharing.projects ? filterVisibleItems(cloned.projects) : [];
+  cloned.certifications = nextSharing.certifications ? filterVisibleItems(cloned.certifications) : [];
   if (!nextSharing.resume) {
     cloned.resumeUrl = undefined;
     cloned.resumeFileName = undefined;
   }
-  if (!nextSharing.featured) {
-    cloned.featured = [];
-  } else if (Array.isArray(cloned.featured)) {
-    cloned.featured = cloned.featured.filter((f) => f && f.visible !== false);
-  }
-  if (!nextSharing.languages) cloned.languages = [];
+  cloned.featured = nextSharing.featured ? filterVisibleItems(cloned.featured) : [];
+  cloned.languages = nextSharing.languages ? filterVisibleItems(cloned.languages) : [];
   if (!nextSharing.volunteer) {
     cloned.volunteer = [];
     cloned.volunteerExperiences = [];
+  } else {
+    cloned.volunteer = filterVisibleItems(cloned.volunteer);
+    cloned.volunteerExperiences = filterVisibleItems(cloned.volunteerExperiences);
   }
   if (!nextSharing.recommendations) {
     cloned.recommendations = [];
     cloned.testimonials = [];
-  } else if (Array.isArray(cloned.recommendations)) {
-    cloned.recommendations = cloned.recommendations.filter((r) => r && r.visible !== false);
+  } else {
+    cloned.recommendations = filterVisibleItems(cloned.recommendations);
+    cloned.testimonials = filterVisibleItems(cloned.testimonials);
   }
   if (!nextSharing.honorsAwards) {
     cloned.honors = [];
     cloned.honorsAwards = [];
+  } else {
+    cloned.honors = filterVisibleItems(cloned.honors);
+    cloned.honorsAwards = filterVisibleItems(cloned.honorsAwards);
   }
-  if (!nextSharing.publications) cloned.publications = [];
-  if (!nextSharing.patents) cloned.patents = [];
-  if (!nextSharing.courses) cloned.courses = [];
-  if (!nextSharing.testScores) cloned.testScores = [];
-  if (!nextSharing.organizations) cloned.organizations = [];
-  if (!nextSharing.interests) cloned.interests = [];
+  cloned.publications = nextSharing.publications ? filterVisibleItems(cloned.publications) : [];
+  cloned.patents = nextSharing.patents ? filterVisibleItems(cloned.patents) : [];
+  cloned.courses = nextSharing.courses ? filterVisibleItems(cloned.courses) : [];
+  cloned.testScores = nextSharing.testScores ? filterVisibleItems(cloned.testScores) : [];
+  cloned.organizations = nextSharing.organizations ? filterVisibleItems(cloned.organizations) : [];
+  cloned.interests = nextSharing.interests ? filterVisibleItems(cloned.interests) : [];
   if (!nextSharing.companySection) {
     cloned.companyInfo = undefined;
     cloned.teamMembers = [];

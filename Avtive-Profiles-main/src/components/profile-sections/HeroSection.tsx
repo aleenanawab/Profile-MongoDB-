@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Pencil, Camera, Globe, Mail, Phone, UserPlus, Share2, MessageSquare, Building2, Users, SlidersHorizontal, Loader2, Trash2 } from 'lucide-react';
+import { Pencil, Camera, Globe, Mail, Phone, UserPlus, UserCheck, Share2, Download, MessageSquare, Building2, Users, SlidersHorizontal, Loader2, Trash2 } from 'lucide-react';
 import { ProfileData, normalizeProfileType, SocialLink, CompanyInfo } from '@/types/profile';
 import { ThemeConfig, getThemeConfig } from '@/components/ui/themeStyles';
 import { GithubIcon, LinkedInIcon, TwitterXIcon, WhatsAppIcon } from '@/components/ui/BrandIcons';
@@ -31,6 +31,7 @@ interface HeroSectionProps {
   onOpenEdit?: () => void;
   onOpenShare?: () => void;
   onOpenConnect?: () => void;
+  onSaveContact?: () => void;
   onNavigateToCompany?: (companyId?: string) => void;
   onNavigateBack?: () => void;
   onOpenVirtualCard?: () => void;
@@ -52,6 +53,7 @@ export function HeroSection({
   userProfiles,
   canEdit = false,
   isEditing = false,
+  isConnected = false,
   isMobilePreview = false,
   theme = getThemeConfig(profile.theme || 'editorial'),
   onUpdateField,
@@ -59,6 +61,7 @@ export function HeroSection({
   onOpenEdit,
   onOpenShare,
   onOpenConnect,
+  onSaveContact,
   onSelectSection,
   onToggleSections,
   onSectionsMouseEnter,
@@ -989,7 +992,7 @@ export function HeroSection({
                     title={canEdit ? 'Click to edit name' : undefined}
                   >
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
-                      <h1 className={`${isMobilePreview ? 'text-2xl' : 'text-2xl @md:text-3xl @2xl:text-4xl'} font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words min-w-0 max-w-full`}>
+                      <h1 className={`avtive-serif-name ${isMobilePreview ? 'text-2xl' : 'text-2xl @md:text-3xl @2xl:text-4xl'} font-bold tracking-tight ${theme.textPrimary} flex items-center gap-2 break-words min-w-0 max-w-full`}>
                         <span>{profile.name}</span>
                       </h1>
                       {profile.pronouns && (canEdit || profile.sharingSettings?.pronouns === true) && (
@@ -1184,6 +1187,7 @@ export function HeroSection({
                       )}
 
                       {socials.map((s, idx) => {
+                        if (!canEdit && s.visible === false) return null;
                         const url = s.url?.trim() || '';
                         if (!url) return null;
                         const formattedUrl = url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tel:')
@@ -1325,19 +1329,35 @@ export function HeroSection({
                   <button
                     type="button"
                     onClick={onOpenConnect}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3.5 text-xs gap-1.5' : 'px-3.5 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnPrimary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs gap-1.5' : 'px-3.5 @md:px-4 text-xs @md:text-sm gap-1.5'} rounded-xl ${theme.btnPrimary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                   >
-                    <UserPlus className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
-                    <span className="truncate">Connect</span>
+                    {isConnected ? (
+                      <UserCheck className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
+                    ) : (
+                      <UserPlus className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
+                    )}
+                    <span className="truncate">{isConnected ? 'Connected' : 'Connect'}</span>
                   </button>
+
+                  {onSaveContact && profile.profileVisibility !== 'private' && (
+                    <button
+                      type="button"
+                      onClick={onSaveContact}
+                      className={`min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs gap-1.5' : 'px-3.5 @md:px-4 text-xs @md:text-sm gap-1.5'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center shrink-0 select-none`}
+                      title="Save contact card (.vcf)"
+                    >
+                      <Download className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
+                      <span className="truncate">Save</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
                     onClick={onOpenShare}
-                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3.5 text-xs gap-1.5' : 'px-3.5 @md:px-5 text-xs @md:text-sm gap-1.5 @md:gap-2'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
+                    className={`flex-1 min-w-0 min-h-[44px] py-2.5 ${isMobilePreview ? 'px-3 text-xs gap-1.5' : 'px-3.5 @md:px-4 text-xs @md:text-sm gap-1.5'} rounded-xl ${theme.btnSecondary} font-bold shadow-xs hover:opacity-90 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center select-none`}
                   >
                     <Share2 className={`${isMobilePreview ? 'w-3.5 h-3.5' : 'w-3.5 h-3.5 @md:w-4 @md:h-4'} shrink-0`} />
-                    <span className="truncate">Share</span>
+                    <span className="truncate">Share my details</span>
                   </button>
                 </>
               )

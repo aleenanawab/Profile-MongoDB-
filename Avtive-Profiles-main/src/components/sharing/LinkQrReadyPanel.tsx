@@ -24,6 +24,7 @@ import { summarizeShareExclusions } from '@/lib/sharing/sanitize';
 import { sanitizeProfileForShare } from '@/lib/sharing/sanitize';
 import { downloadVCard } from '@/lib/vcard';
 import { generateCardPdf } from '@/lib/cardPdfGenerator';
+import { trackOwnerShareEvent } from '@/lib/sharing/trackShareEvent';
 
 interface LinkQrReadyPanelProps {
   profile: ProfileData;
@@ -60,6 +61,8 @@ export function LinkQrReadyPanel({
   const qrDataUrl = qrState.urlKey === qrKey ? qrState.dataUrl : '';
   const isGeneratingQr = Boolean(qrTargetUrl && qrState.urlKey !== qrKey);
 
+  const qrTrackedKeyRef = React.useRef<string>('');
+
   useEffect(() => {
     if (!qrTargetUrl) return;
     let cancelled = false;
@@ -74,6 +77,27 @@ export function LinkQrReadyPanel({
       .then((url) => {
         if (!cancelled) {
           setQrState({ urlKey: qrKey, dataUrl: url });
+          if (qrTrackedKeyRef.current !== qrKey) {
+            qrTrackedKeyRef.current = qrKey;
+            void trackOwnerShareEvent({
+              profileId: profile.id,
+              shareLinkId: link.id,
+              eventType: 'qr_generated',
+              channel: 'qr',
+              targetType: 'share_link',
+              selectedFields: link.selectedFields,
+              selectedFieldsCount: link.selectedFields.length,
+              recipientNames: link.recipients.map((r) => r.name).filter(Boolean),
+              dedupToken: `qr:${link.id}:${qrStyle}`
+            }).then((res) => {
+              if (!res.recorded && !cancelled) {
+                setActionStatus({
+                  type: 'error',
+                  message: `QR ready, but Share History failed to record (${res.error || 'error'}).`
+                });
+              }
+            });
+          }
         }
       })
       .catch((err) => {
@@ -85,7 +109,7 @@ export function LinkQrReadyPanel({
     return () => {
       cancelled = true;
     };
-  }, [qrTargetUrl, qrStyle, qrKey]);
+  }, [qrTargetUrl, qrStyle, qrKey, profile.id, link.id, link.selectedFields, link.recipients]);
 
   const exclusionSummary = summarizeShareExclusions(profile, link.selectedFields);
   const sanitizedProfile = sanitizeProfileForShare(profile, { selectedFields: link.selectedFields });
@@ -95,7 +119,21 @@ export function LinkQrReadyPanel({
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setActionStatus({ type: 'success', message: 'Secure link copied to clipboard.' });
+      const trackRes = await trackOwnerShareEvent({
+        profileId: profile.id,
+        shareLinkId: link.id,
+        eventType: 'link_copied',
+        channel: 'link',
+        targetType: 'share_link',
+        selectedFields: link.selectedFields,
+        selectedFieldsCount: link.selectedFields.length,
+        recipientNames: link.recipients.map((r) => r.name).filter(Boolean)
+      });
+      setActionStatus(
+        trackRes.recorded
+          ? { type: 'success', message: 'Secure link copied to clipboard.' }
+          : { type: 'error', message: `Link copied, but Share History failed to record (${trackRes.error || 'error'}).` }
+      );
       setTimeout(() => setCopied(false), 2400);
     } catch {
       setActionStatus({ type: 'error', message: 'Clipboard access blocked. Copy the URL manually.' });
@@ -113,10 +151,24 @@ export function LinkQrReadyPanel({
     setActionStatus({ type: 'success', message: 'QR PNG downloaded.' });
   };
 
-  const handleDownloadVCard = () => {
+  const handleDownloadVCard = async () => {
     try {
       downloadVCard(sanitizedProfile);
-      setActionStatus({ type: 'success', message: 'Scoped vCard (.vcf) downloaded.' });
+      const trackRes = await trackOwnerShareEvent({
+        profileId: profile.id,
+        shareLinkId: link.id,
+        eventType: 'vcard_downloaded',
+        channel: 'vcard',
+        targetType: 'share_link',
+        selectedFields: link.selectedFields,
+        selectedFieldsCount: link.selectedFields.length,
+        recipientNames: link.recipients.map((r) => r.name).filter(Boolean)
+      });
+      setActionStatus(
+        trackRes.recorded
+          ? { type: 'success', message: 'Scoped vCard (.vcf) downloaded.' }
+          : { type: 'error', message: `vCard downloaded, but Share History failed to record (${trackRes.error || 'error'}).` }
+      );
     } catch {
       setActionStatus({ type: 'error', message: 'Failed to export vCard.' });
     }
@@ -142,7 +194,21 @@ export function LinkQrReadyPanel({
           text: link.eventLabel ? `Shared profile (${link.eventLabel})` : `Shared Avtive profile for ${profile.name}`,
           url: shareUrl
         });
-        setActionStatus({ type: 'success', message: 'Shared via device share sheet.' });
+        const trackRes = await trackOwnerShareEvent({
+          profileId: profile.id,
+          shareLinkId: link.id,
+          eventType: 'native_shared',
+          channel: 'native',
+          targetType: 'share_link',
+          selectedFields: link.selectedFields,
+          selectedFieldsCount: link.selectedFields.length,
+          recipientNames: link.recipients.map((r) => r.name).filter(Boolean)
+        });
+        setActionStatus(
+          trackRes.recorded
+            ? { type: 'success', message: 'Shared via device share sheet.' }
+            : { type: 'error', message: `Shared via device sheet, but Share History failed to record (${trackRes.error || 'error'}).` }
+        );
         return;
       } catch (err: any) {
         if (err?.name === 'AbortError') return;
@@ -201,10 +267,17 @@ export function LinkQrReadyPanel({
       if (!res.ok) {
         throw new Error(data.error || 'Failed to send email.');
       }
-      setActionStatus({
-        type: 'success',
-        message: `Email sent to ${data.sent?.length || emailRecipients.length} recipient(s).`
-      });
+      setActionStatus(
+        data.historyRecorded === false
+          ? {
+              type: 'error',
+              message: `Email sent to ${data.sent?.length || emailRecipients.length} recipient(s), but Share History failed to record.`
+            }
+          : {
+              type: 'success',
+              message: `Email sent to ${data.sent?.length || emailRecipients.length} recipient(s).`
+            }
+      );
     } catch (err: any) {
       setActionStatus({ type: 'error', message: err.message || 'Email delivery failed.' });
     } finally {

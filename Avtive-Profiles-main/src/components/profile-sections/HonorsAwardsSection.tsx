@@ -23,6 +23,7 @@ export function HonorsAwardsSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: HonorsAwardsSectionProps) {
   const honorsAwards: HonorsAwardItem[] = Array.isArray(profile.honorsAwards)
@@ -46,6 +47,9 @@ export function HonorsAwardsSection({
       emptyPromptText="No honors or awards added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ honorsAwards: items });
+      }}
       createNewItem={() => ({
         id: `honor-${Date.now()}`,
         title: '',

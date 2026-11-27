@@ -219,6 +219,20 @@ export async function ensureIndexes(dbInstance?: Db, force: boolean = false): Pr
   await safeCreateIndex(
     shareEventsCol,
     COLLECTIONS.SHARE_EVENTS,
+    { ownerUserId: 1, profileId: 1, timestamp: -1 },
+    'idx_share_events_owner_profile_time',
+    false
+  );
+  await safeCreateIndex(
+    shareEventsCol,
+    COLLECTIONS.SHARE_EVENTS,
+    { ownerUserId: 1, eventType: 1, timestamp: -1 },
+    'idx_share_events_owner_type_time',
+    false
+  );
+  await safeCreateIndex(
+    shareEventsCol,
+    COLLECTIONS.SHARE_EVENTS,
     { dedupKey: 1 },
     'idx_share_events_dedup_key',
     false,

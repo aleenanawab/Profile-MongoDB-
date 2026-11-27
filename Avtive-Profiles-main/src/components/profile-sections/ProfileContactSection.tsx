@@ -8,6 +8,7 @@ import { FormLabel, FormInput, SectionSaveBar } from '@/components/ui/formContro
 import { SearchableCombobox } from '@/components/forms/SearchableCombobox';
 import { COUNTRIES } from '@/data/countriesDataset';
 import { isFieldShared } from '@/lib/sections';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 
 interface ProfileContactSectionProps {
   profile: ProfileData;
@@ -169,12 +170,29 @@ export function ProfileContactSection({
     (profile.email && (canEdit || sharing.email !== false)) ||
     (profile.phone && (canEdit || sharing.phone !== false)) ||
     (profile.whatsapp && (canEdit || sharing.phone !== false)) ||
-    profile.location ||
-    profile.country ||
-    profile.officeAddress ||
-    profile.website ||
-    (Array.isArray(profile.websites) && profile.websites.length > 0)
+    ((profile.location || profile.country) && (canEdit || sharing.location !== false)) ||
+    (profile.officeAddress && (canEdit || sharing.location !== false)) ||
+    (profile.website && (canEdit || sharing.website !== false)) ||
+    (Array.isArray(profile.websites) && profile.websites.length > 0 && (canEdit || sharing.website !== false)) ||
+    (profile.birthday && (canEdit || sharing.birthday === true))
   );
+
+  const handleToggleChannelVisibility = async (
+    channelKey: 'email' | 'phone' | 'website' | 'location' | 'birthday'
+  ) => {
+    const currentVal =
+      channelKey === 'birthday'
+        ? sharing.birthday === true
+        : sharing[channelKey] !== false;
+    const nextSharing = {
+      ...sharing,
+      [channelKey]: !currentVal
+    };
+    onUpdateField?.('sharingSettings', nextSharing);
+    if (onSavePartial) {
+      await onSavePartial({ sharingSettings: nextSharing }).catch(() => {});
+    }
+  };
 
   if (!isEditing && !hasContactInfo && !canEdit) {
     return null;
@@ -388,66 +406,93 @@ export function ProfileContactSection({
       ) : hasContactInfo ? (
         <div className="grid grid-cols-1 @md:grid-cols-2 gap-2 pt-1">
           {profile.email && (canEdit || isFieldShared(profile, 'email', canEdit)) && (
-            <a
-              href={`mailto:${profile.email}`}
-              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
-            >
-              <div className="w-7 h-7 rounded-lg bg-slate-500/10 flex items-center justify-center shrink-0">
-                <Mail className={`w-3.5 h-3.5 ${theme.accentText}`} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
-                  Email
-                </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
-                  {profile.email}
-                </span>
-              </div>
-            </a>
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.email === false ? 'opacity-55 border-dashed' : ''}`}>
+              <a
+                href={`mailto:${profile.email}`}
+                className="min-w-0 flex-1 flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-7 h-7 rounded-lg bg-slate-500/10 flex items-center justify-center shrink-0">
+                  <Mail className={`w-3.5 h-3.5 ${theme.accentText}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
+                    Email
+                  </span>
+                  <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
+                    {profile.email}
+                  </span>
+                </div>
+              </a>
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={sharing.email !== false}
+                  label="Email"
+                  onToggle={() => handleToggleChannelVisibility('email')}
+                />
+              )}
+            </div>
           )}
 
           {profile.phone && (canEdit || isFieldShared(profile, 'phone', canEdit)) && (
-            <a
-              href={`tel:${profile.phone.replace(/[^0-9+]/g, '')}`}
-              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
-            >
-              <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                <Phone className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
-                  Phone {profile.phoneType ? `(${profile.phoneType})` : ''}
-                </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
-                  {profile.phone}
-                </span>
-              </div>
-            </a>
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.phone === false ? 'opacity-55 border-dashed' : ''}`}>
+              <a
+                href={`tel:${profile.phone.replace(/[^0-9+]/g, '')}`}
+                className="min-w-0 flex-1 flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                  <Phone className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
+                    Phone {profile.phoneType ? `(${profile.phoneType})` : ''}
+                  </span>
+                  <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
+                    {profile.phone}
+                  </span>
+                </div>
+              </a>
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={sharing.phone !== false}
+                  label="Phone"
+                  onToggle={() => handleToggleChannelVisibility('phone')}
+                />
+              )}
+            </div>
           )}
 
           {profile.whatsapp && (canEdit || isFieldShared(profile, 'whatsapp', canEdit)) && (
-            <a
-              href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(profile.name)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
-            >
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
-                  WhatsApp
-                </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
-                  {profile.whatsapp}
-                </span>
-              </div>
-            </a>
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.phone === false ? 'opacity-55 border-dashed' : ''}`}>
+              <a
+                href={`https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(profile.name)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-0 flex-1 flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+              >
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
+                    WhatsApp
+                  </span>
+                  <span className={`block text-xs font-semibold ${theme.textPrimary} break-words`}>
+                    {profile.whatsapp}
+                  </span>
+                </div>
+              </a>
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={sharing.phone !== false}
+                  label="WhatsApp"
+                  onToggle={() => handleToggleChannelVisibility('phone')}
+                />
+              )}
+            </div>
           )}
 
-          {(profile.location || profile.country) && (
-            <div className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
+          {(profile.location || profile.country) && (canEdit || isFieldShared(profile, 'location', canEdit)) && (
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.location === false ? 'opacity-55 border-dashed' : ''}`}>
               <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
                 <MapPin className="w-3.5 h-3.5 text-amber-500" />
               </div>
@@ -470,11 +515,18 @@ export function ProfileContactSection({
                   </span>
                 )}
               </div>
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={sharing.location !== false}
+                  label="Location"
+                  onToggle={() => handleToggleChannelVisibility('location')}
+                />
+              )}
             </div>
           )}
 
-          {profile.officeAddress && (
-            <div className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
+          {profile.officeAddress && (canEdit || isFieldShared(profile, 'officeAddress', canEdit)) && (
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.location === false ? 'opacity-55 border-dashed' : ''}`}>
               <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
                 <Building2 className="w-3.5 h-3.5 text-orange-500" />
               </div>
@@ -486,55 +538,82 @@ export function ProfileContactSection({
                   {profile.officeAddress}
                 </span>
               </div>
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={sharing.location !== false}
+                  label="Office Address"
+                  onToggle={() => handleToggleChannelVisibility('location')}
+                />
+              )}
             </div>
           )}
 
           {/* Multiple Websites or single website */}
-          {Array.isArray(profile.websites) && profile.websites.length > 0 ? (
+          {Array.isArray(profile.websites) && profile.websites.length > 0 && (canEdit || isFieldShared(profile, 'website', canEdit)) ? (
             profile.websites.map((ws, i) => (
-              <a
+              <div
                 key={i}
-                href={ws.url.startsWith('http') ? ws.url : `https://${ws.url}`}
+                className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.website === false ? 'opacity-55 border-dashed' : ''}`}
+              >
+                <a
+                  href={ws.url.startsWith('http') ? ws.url : `https://${ws.url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-w-0 flex-1 flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                    <Globe className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
+                      {ws.label || 'Website'}
+                    </span>
+                    <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
+                      {ws.url.replace(/^https?:\/\//, '')}
+                    </span>
+                  </div>
+                </a>
+                {canEdit && !isEditing && i === 0 && (
+                  <VisibilityEyeButton
+                    visible={sharing.website !== false}
+                    label="Website"
+                    onToggle={() => handleToggleChannelVisibility('website')}
+                  />
+                )}
+              </div>
+            ))
+          ) : profile.website && (canEdit || isFieldShared(profile, 'website', canEdit)) ? (
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.website === false ? 'opacity-55 border-dashed' : ''}`}>
+              <a
+                href={profile.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
+                className="min-w-0 flex-1 flex items-center gap-2.5 hover:opacity-80 transition-opacity"
               >
                 <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
                   <Globe className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
-                    {ws.label || 'Website'}
+                    Website
                   </span>
                   <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
-                    {ws.url.replace(/^https?:\/\//, '')}
+                    {profile.website.replace(/^https?:\/\//, '')}
                   </span>
                 </div>
               </a>
-            ))
-          ) : profile.website ? (
-            <a
-              href={profile.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} hover:opacity-80 transition-opacity`}
-            >
-              <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                <Globe className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className={`block text-[10px] font-bold uppercase font-mono ${theme.textMuted}`}>
-                  Website
-                </span>
-                <span className={`block text-xs font-semibold ${theme.textPrimary} break-all`}>
-                  {profile.website.replace(/^https?:\/\//, '')}
-                </span>
-              </div>
-            </a>
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={sharing.website !== false}
+                  label="Website"
+                  onToggle={() => handleToggleChannelVisibility('website')}
+                />
+              )}
+            </div>
           ) : null}
 
           {profile.birthday && (canEdit || profile.sharingSettings?.birthday === true) && (
-            <div className={`min-w-0 overflow-hidden flex items-center gap-2.5 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg}`}>
+            <div className={`min-w-0 overflow-hidden flex items-center gap-2 p-2.5 rounded-xl border ${theme.cardBorder} ${theme.subCardBg} transition-opacity ${canEdit && sharing.birthday !== true ? 'opacity-55 border-dashed' : ''}`}>
               <div className="w-7 h-7 rounded-lg bg-pink-500/10 flex items-center justify-center shrink-0">
                 <Calendar className="w-3.5 h-3.5 text-pink-500" />
               </div>
@@ -546,6 +625,13 @@ export function ProfileContactSection({
                   {profile.birthday}
                 </span>
               </div>
+              {canEdit && !isEditing && (
+                <VisibilityEyeButton
+                  visible={sharing.birthday === true}
+                  label="Birthday"
+                  onToggle={() => handleToggleChannelVisibility('birthday')}
+                />
+              )}
             </div>
           )}
         </div>

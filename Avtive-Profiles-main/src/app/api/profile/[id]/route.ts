@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { getProfileByIdOrSlug, deleteProfile, sanitizeProfileForPublic } from '@/lib/db';
+import { getProfileByIdOrSlug, deleteProfile, sanitizeProfileForPublic, checkIsConnected } from '@/lib/db';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -27,12 +27,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const isOwner = Boolean(profile.userId && session.id === profile.userId);
-    const sanitized = sanitizeProfileForPublic(profile, isOwner);
+    const isConnected = Boolean(!isOwner && await checkIsConnected(session.id, profile.id));
+    const sanitized = sanitizeProfileForPublic(profile, isOwner, { isConnected });
 
     return NextResponse.json({
       success: true,
       profile: sanitized,
-      isOwner
+      isOwner,
+      isConnected
     });
   } catch (error) {
     console.error('Get Profile API Error:', error);

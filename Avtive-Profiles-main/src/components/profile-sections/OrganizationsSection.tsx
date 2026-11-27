@@ -23,6 +23,7 @@ export function OrganizationsSection({
   canEdit = false,
   isEditing = false,
   onUpdateField,
+  onSavePartial,
   onSelectSection
 }: OrganizationsSectionProps) {
   const organizations: OrganizationItem[] = Array.isArray(profile.organizations)
@@ -45,6 +46,9 @@ export function OrganizationsSection({
       emptyPromptText="No organizations added yet."
       onSelectSection={onSelectSection}
       onItemsChange={handleItemsChange}
+      onToggleItemVisibility={(items) => {
+        void onSavePartial?.({ organizations: items });
+      }}
       createNewItem={() => ({
         id: `org-${Date.now()}`,
         name: '',

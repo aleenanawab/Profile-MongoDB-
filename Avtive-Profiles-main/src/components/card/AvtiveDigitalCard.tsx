@@ -26,7 +26,8 @@ import {
   ProfileTheme,
   normalizeProfileType
 } from '@/types/profile';
-import { getCanonicalSectionOrder, normalizeSectionKey, isCanonicalSectionVisible } from '@/lib/sections';
+import { getCanonicalSectionOrder, normalizeSectionKey, isCanonicalSectionVisible, toggleCanonicalSectionVisibility } from '@/lib/sections';
+import { VisibilityEyeButton } from '@/components/ui/VisibilityEyeButton';
 import { HeroSection } from '@/components/profile-sections/HeroSection';
 import { AboutSection } from '@/components/profile-sections/AboutSection';
 import { SkillsSection, ServicesSection, SkillsServicesSection } from '@/components/profile-sections/SkillsServicesSection';
@@ -277,6 +278,7 @@ export function AvtiveDigitalCard({
               onOpenEdit={onOpenEdit}
               onOpenShare={onOpenShare}
               onOpenConnect={onOpenConnect}
+              onSaveContact={onSaveContact}
               onOpenVirtualCard={() => {
                 const el = document.getElementById('virtual-card-section') || document.getElementById('section-virtual-card');
                 if (el) {
@@ -781,7 +783,7 @@ export function AvtiveDigitalCard({
                   const fieldId = sectionKey.replace('custom-field-', '');
                   const customField = (activeProfile.customFields || []).find((f) => f.id === fieldId || `custom-field-${f.id}` === sectionKey);
                   if (customField) {
-                    if (!isSectionVisible(sectionKey) || customField.visible === false) return null;
+                    if (!isSectionVisible(sectionKey) || (!canEdit && !isEditing && customField.visible === false)) return null;
                     const val = customField.value || (customField as any).content || '';
                     const title = customField.label || (customField as any).title || 'Custom Field';
                     const isLink = customField.type === 'link' || val.startsWith('http://') || val.startsWith('https://');
@@ -894,11 +896,78 @@ export function AvtiveDigitalCard({
             }
           };
 
+          const handleToggleSectionEye = (rawKey: string, canonicalKey: string) => {
+            if (rawKey.startsWith('custom-field-')) {
+              const fieldId = rawKey.replace('custom-field-', '');
+              const cfList = activeProfile.customFields || [];
+              const target = cfList.find((f) => f.id === fieldId || `custom-field-${f.id}` === rawKey);
+              if (target) {
+                const nextFields = cfList.map((f) =>
+                  f.id === target.id ? { ...f, visible: f.visible === false ? true : false } : f
+                );
+                void handleSavePartial({ customFields: nextFields });
+                return;
+              }
+            }
+
+            const currentlyVisible = isCanonicalSectionVisible(visibility, sharing, canonicalKey);
+            const { nextVisibility, nextSharingPatch } = toggleCanonicalSectionVisibility(
+              { ...visibility, [canonicalKey]: currentlyVisible, [rawKey]: currentlyVisible },
+              canonicalKey
+            );
+            void handleSavePartial({
+              sectionVisibility: nextVisibility,
+              sharingSettings: {
+                ...sharing,
+                ...nextSharingPatch
+              }
+            });
+          };
+
+          const SECTION_DISPLAY_LABELS: Record<string, string> = {
+            personalDetails: 'About',
+            contactInfo: 'Contact',
+            customFields: 'Custom Fields',
+            skills: 'Skills',
+            services: 'Services',
+            projects: 'Portfolio',
+            experience: 'Experience',
+            education: 'Education',
+            certifications: 'Certifications',
+            volunteer: 'Volunteer',
+            honorsAwards: 'Honors & Awards',
+            publications: 'Publications',
+            patents: 'Patents',
+            courses: 'Courses',
+            testScores: 'Test Scores',
+            organizations: 'Organizations',
+            languages: 'Languages',
+            recommendations: 'Recommendations',
+            interests: 'Interests',
+            featured: 'Featured',
+            socialLinks: 'Social Links',
+            virtualCard: 'Virtual Card',
+            resume: 'Resume',
+            companyInfo: 'Company',
+            teamMembers: 'Team'
+          };
+
           const renderSection = (sectionKey: string) => {
             const content = renderSectionContent(sectionKey);
             if (!content) return null;
 
             const canonicalKey = normalizeSectionKey(sectionKey);
+            const isSectionCurrentlyVisible = sectionKey.startsWith('custom-field-')
+              ? (() => {
+                  const fieldId = sectionKey.replace('custom-field-', '');
+                  const cf = (activeProfile.customFields || []).find(
+                    (f) => f.id === fieldId || `custom-field-${f.id}` === sectionKey
+                  );
+                  return (cf ? cf.visible !== false : true) && visibility[sectionKey] !== false;
+                })()
+              : isCanonicalSectionVisible(visibility, sharing, canonicalKey);
+            const sectionFriendlyLabel = SECTION_DISPLAY_LABELS[canonicalKey] || canonicalKey;
+
             const extraAliases: Record<string, string> = {
               about: 'personalDetails',
               personalDetails: 'about',
@@ -926,10 +995,29 @@ export function AvtiveDigitalCard({
                 key={sectionKey}
                 id={`section-${canonicalKey}`}
                 data-section={canonicalKey}
-                className="scroll-mt-16 relative"
+                className={`scroll-mt-16 relative ${
+                  canEdit && !isEditing && !isSectionCurrentlyVisible
+                    ? 'opacity-65 bg-amber-500/[0.03]'
+                    : ''
+                }`}
               >
                 {alias && alias !== canonicalKey && <div id={`section-${alias}`} className="absolute -top-16" />}
                 {sectionKey !== canonicalKey && <div id={`section-${sectionKey}`} className="absolute -top-16" />}
+                {canEdit && !isEditing && (
+                  <div
+                    className={`flex items-center justify-between gap-2 px-4 @md:px-6 @2xl:px-8 pt-2.5 pb-0.5 ${theme.cardBg}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className={`text-[10px] font-mono uppercase tracking-wider ${theme.textMuted}`}>
+                      {sectionFriendlyLabel}
+                    </span>
+                    <VisibilityEyeButton
+                      visible={isSectionCurrentlyVisible}
+                      label={`${sectionFriendlyLabel} section`}
+                      onToggle={() => handleToggleSectionEye(sectionKey, canonicalKey)}
+                    />
+                  </div>
+                )}
                 {content}
               </div>
             );
